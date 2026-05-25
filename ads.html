@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bearbee Arena | Ads Reward</title>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            background:#000;
+            color:#fff;
+            font-family:'Segoe UI',sans-serif;
+            padding-bottom:90px;
+        }
+
+        .top-bar{
+            position:sticky;
+            top:0;
+            background:#0d0d0d;
+            border-bottom:1px solid #222;
+            padding:15px 18px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            z-index:999;
+        }
+
+        .top-bar a{
+            color:#ffd700;
+            text-decoration:none;
+            font-weight:800;
+        }
+
+        .top-title{
+            color:#ffd700;
+            font-weight:900;
+            letter-spacing:1px;
+        }
+
+        .wrap{
+            max-width:900px;
+            margin:auto;
+            padding:20px;
+        }
+
+        .stats{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:14px;
+            margin-bottom:18px;
+        }
+
+        .stat-box{
+            background:#111;
+            border:1px solid #333;
+            border-radius:16px;
+            padding:16px;
+            text-align:center;
+            box-shadow:0 0 20px rgba(255,215,0,0.08);
+        }
+
+        .stat-box h3{
+            color:#ffd700;
+            font-size:15px;
+            margin-bottom:8px;
+        }
+
+        .stat-box span{
+            font-size:26px;
+            font-weight:900;
+        }
+
+        .panel{
+            background:#111;
+            border:1px solid #222;
+            border-radius:22px;
+            padding:18px;
+            box-shadow:0 0 25px rgba(255,215,0,0.12);
+            margin-bottom:18px;
+        }
+
+        .panel h1{
+            color:#ffd700;
+            font-size:28px;
+            margin-bottom:8px;
+            text-align:center;
+        }
+
+        .panel p{
+            color:#aaa;
+            font-size:14px;
+            line-height:1.6;
+            text-align:center;
+        }
+
+        select{
+            width:100%;
+            margin-top:15px;
+            padding:13px;
+            border-radius:12px;
+            border:1px solid #333;
+            background:#050505;
+            color:#fff;
+            font-weight:900;
+            outline:none;
+        }
+
+        .ad-placeholder{
+            margin-top:18px;
+            min-height:190px;
+            border:2px dashed #ffd700;
+            border-radius:18px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+            padding:18px;
+            color:#ffd700;
+            background:
+            radial-gradient(circle, rgba(255,215,0,0.12), transparent 65%),
+            #070707;
+            font-weight:900;
+        }
+
+        .reward-grid{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:15px;
+            margin-top:18px;
+        }
+
+        .reward-card{
+            background:#0d0d0d;
+            border:1px solid #333;
+            border-radius:18px;
+            padding:16px;
+            text-align:center;
+        }
+
+        .reward-icon{
+            font-size:48px;
+            margin-bottom:10px;
+        }
+
+        .reward-card h3{
+            color:#ffd700;
+            margin-bottom:8px;
+        }
+
+        .reward-card p{
+            color:#aaa;
+            font-size:14px;
+            line-height:1.5;
+        }
+
+        .btn{
+            width:100%;
+            display:block;
+            padding:13px;
+            border:none;
+            border-radius:12px;
+            background:#ffd700;
+            color:#000;
+            font-weight:900;
+            cursor:pointer;
+            text-decoration:none;
+            margin-top:12px;
+            transition:0.2s;
+            text-align:center;
+        }
+
+        .btn:hover{
+            background:#fff;
+        }
+
+        .btn.dark{
+            background:#1b1b1b;
+            color:#ffd700;
+            border:1px solid #ffd700;
+        }
+
+        .btn:disabled{
+            opacity:0.45;
+            cursor:not-allowed;
+        }
+
+        .log{
+            margin-top:15px;
+            background:#050505;
+            border:1px solid #222;
+            border-radius:14px;
+            padding:14px;
+            color:#00ffcc;
+            min-height:50px;
+            font-weight:800;
+            text-align:center;
+        }
+
+        .nav{
+            position:fixed;
+            bottom:0;
+            left:0;
+            width:100%;
+            background:#0d0d0d;
+            border-top:1px solid #222;
+            display:flex;
+            justify-content:space-around;
+            align-items:center;
+            padding:15px 0;
+            z-index:999;
+        }
+
+        .nav a{
+            color:#ffd700;
+            font-size:14px;
+            font-weight:bold;
+            text-decoration:none;
+        }
+
+        @media(max-width:700px){
+            .reward-grid{
+                grid-template-columns:1fr;
+            }
+
+            .panel h1{
+                font-size:24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="top-bar">
+        <a href="./index.html">← Geri</a>
+        <div class="top-title">ADS REWARD</div>
+        <div></div>
+    </div>
+
+    <div class="wrap">
+
+        <div class="stats">
+            <div class="stat-box">
+                <h3>COIN</h3>
+                🪙 <span id="coinText">0</span>
+            </div>
+
+            <div class="stat-box">
+                <h3>REKLAM XALI</h3>
+                ⭐ <span id="adPointText">0</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h1>Reklam İzlə və Xal Qazan</h1>
+            <p>
+                Bu səhifə ümumi reklam otağıdır. Hansı reklam sistemi qoşsan, reklam tamamlananda coin/xal verəcək.
+            </p>
+
+            <select id="providerSelect">
+                <option value="adsgram">AdsGram</option>
+                <option value="rewarded">Rewarded Video</option>
+                <option value="offerwall">Offerwall</option>
+                <option value="custom">Custom Reklam</option>
+            </select>
+
+            <div class="ad-placeholder" id="adContainer">
+                Reklam burada görünəcək
+            </div>
+
+            <div class="log" id="logBox">
+                Reklam statusu burada görünəcək.
+            </div>
+        </div>
+
+        <div class="panel">
+            <h1>Reklam Tapşırıqları</h1>
+
+            <div class="reward-grid">
+
+                <div class="reward-card">
+                    <div class="reward-icon">🎥</div>
+                    <h3>Qısa Reklam</h3>
+                    <p>Reklam tamamlanandan sonra +10 xal və +10 coin.</p>
+                    <button class="btn" onclick="watchAdReward('short_video', 10)">
+                        İzlə +10
+                    </button>
+                </div>
+
+                <div class="reward-card">
+                    <div class="reward-icon">📺</div>
+                    <h3>Orta Reklam</h3>
+                    <p>Reklam tamamlanandan sonra +25 xal və +25 coin.</p>
+                    <button class="btn" onclick="watchAdReward('medium_video', 25)">
+                        İzlə +25
+                    </button>
+                </div>
+
+                <div class="reward-card">
+                    <div class="reward-icon">💎</div>
+                    <h3>Böyük Reklam</h3>
+                    <p>Reklam tamamlanandan sonra +50 xal və +50 coin.</p>
+                    <button class="btn" onclick="watchAdReward('premium_video', 50)">
+                        İzlə +50
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="panel">
+            <h1>Reklam Kod Yeri</h1>
+            <p>
+                Real reklam kodunu JavaScript-də <b>showRewardedAd()</b> funksiyasının içinə yerləşdirəcəksən.
+                Reklam tamamlananda <b>resolve(true)</b>, tamamlanmayanda <b>resolve(false)</b> qalmalıdır.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="nav">
+        <a href="./index.html">ARENA</a>
+        <a href="./click-room.html">CLICK</a>
+        <a href="./race.html">RACE</a>
+        <a href="./ads.html">ADS</a>
+    </div>
+
+    <script>
+        let coins = parseInt(localStorage.getItem("coins")) || 0;
+        let adPoints = parseInt(localStorage.getItem("adPoints")) || 0;
+
+        const coinText = document.getElementById("coinText");
+        const adPointText = document.getElementById("adPointText");
+        const logBox = document.getElementById("logBox");
+        const adContainer = document.getElementById("adContainer");
+        const providerSelect = document.getElementById("providerSelect");
+
+        function updateUI(){
+            coinText.innerText = coins;
+            adPointText.innerText = adPoints;
+
+            localStorage.setItem("coins", coins);
+            localStorage.setItem("adPoints", adPoints);
+        }
+
+        async function watchAdReward(adType, reward){
+            const provider = providerSelect.value;
+
+            const watched = await showRewardedAd(provider, adType);
+
+            if(watched){
+                coins += reward;
+                adPoints += reward;
+
+                updateUI();
+
+                logBox.innerText = "Reklam tamamlandı! +" + reward + " coin və +" + reward + " xal verildi.";
+            }else{
+                logBox.innerText = "Reklam tamamlanmadı. Xal verilmədi.";
+            }
+        }
+
+        function showRewardedAd(provider, adType){
+            return new Promise((resolve) => {
+
+                /*
+                    BÜTÜN REKLAM SAYTLARI ÜÇÜN ƏSAS YER BURADIR.
+
+                    provider dəyərləri:
+                    adsgram
+                    rewarded
+                    offerwall
+                    custom
+
+                    adType dəyərləri:
+                    short_video
+                    medium_video
+                    premium_video
+
+                    Real reklam qoşanda qayda:
+                    - reklam sonadək izlənilsə: resolve(true)
+                    - istifadəçi bağlasa/xəta olsa: resolve(false)
+                */
+
+                adContainer.innerText = provider.toUpperCase() + " reklam başladı: " + adType;
+                logBox.innerText = "Reklam başladı. Tamamlanmasını gözlə...";
+
+                // Demo reklam simulyasiyası
+                setTimeout(() => {
+                    adContainer.innerText = "Reklam tamamlandı: " + adType;
+                    resolve(true);
+                }, 1200);
+
+            });
+        }
+
+        updateUI();
+    </script>
+
+</body>
+</html>
