@@ -6,6 +6,7 @@
     <title>Bearbee Arena | Click Room + Card Market</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
     <style>
@@ -649,7 +650,7 @@
                     </div>
 
                     <div class="log" id="adLog">
-                        AdsGram Block ID boşdursa test reklam işləyəcək.
+                        AdsGram Block ID əlavə ediləndə real reklam işləyəcək.
                     </div>
                 </section>
 
@@ -709,9 +710,11 @@
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         /*
-            AdsGram real block id tapanda bura yaz:
-            const ADSGRAM_BLOCK_ID = "sənin-block-id";
-            Boş qalsa test reklam simulyasiyası işləyir.
+            CANLI REKLAM:
+            AdsGram block id tapanda bura yaz:
+            const ADSGRAM_BLOCK_ID = "sənin-real-block-id";
+
+            Boş qalsa mükafat verilməyəcək.
         */
         const ADSGRAM_BLOCK_ID = "";
         let AdController = null;
@@ -744,8 +747,18 @@
         const marketplace = document.getElementById("marketplace");
         const tapBear = document.getElementById("tapBear");
 
+
+        function initTelegramMiniApp(){
+            if(window.Telegram && window.Telegram.WebApp){
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+            }
+        }
+
         async function init(){
             try{
+                initTelegramMiniApp();
                 await initAuth();
                 await createOrLoadProfile();
 
@@ -915,13 +928,8 @@
         function showRewardedAd(adType){
             return new Promise(async (resolve) => {
                 if(!ADSGRAM_BLOCK_ID){
-                    adLog.innerText = "Test reklam başladı: " + adType;
-
-                    setTimeout(() => {
-                        adLog.innerText = "Test reklam bitdi: " + adType;
-                        resolve(true);
-                    }, 1400);
-
+                    adLog.innerText = "Canlı reklam üçün AdsGram Block ID əlavə edilməyib. Mükafat verilmədi.";
+                    resolve(false);
                     return;
                 }
 
@@ -943,7 +951,7 @@
 
                 }catch(error){
                     console.log(error);
-                    adLog.innerText = "Reklam tamamlanmadı.";
+                    adLog.innerText = "Reklam tamamlanmadı. Mükafat verilmədi.";
                     resolve(false);
                 }
             });
@@ -1047,10 +1055,6 @@
 
         async function loadMyCards(){
             try{
-                /*
-                    Lazım olan relation:
-                    user_cards.card_template_id -> card_templates.id
-                */
                 const result = await client
                     .from("user_cards")
                     .select(`
@@ -1069,67 +1073,54 @@
                     .order("id", { ascending:false });
 
                 if(result.error){
+                    myCards.innerHTML = "";
                     cardLog.innerText = "Kart cədvəli/RLS hazır deyil: " + result.error.message;
-                    renderDemoStarterCards();
                     return;
                 }
 
                 myCardsCache = result.data || [];
 
                 if(myCardsCache.length === 0){
-                    myCards.innerHTML = "";
-                    cardLog.innerText = "Kartın yoxdur. Starter kart SQL/RPC ilə verilməlidir.";
-                    renderDemoStarterCards();
-                    return;
+                    const starterResult = await client.rpc("give_starter_card");
+
+                    if(starterResult.error){
+                        myCards.innerHTML = "";
+                        cardLog.innerText = "Starter kart verilə bilmədi: " + starterResult.error.message;
+                        return;
+                    }
+
+                    const retry = await client
+                        .from("user_cards")
+                        .select(`
+                            id,
+                            owner_id,
+                            level,
+                            card_templates (
+                                id,
+                                name,
+                                rarity,
+                                image_url,
+                                click_boost
+                            )
+                        `)
+                        .eq("owner_id", currentUser.id)
+                        .order("id", { ascending:false });
+
+                    if(retry.error || !retry.data || retry.data.length === 0){
+                        myCards.innerHTML = "";
+                        cardLog.innerText = "Starter kart yaradıldı, amma kartlar hələ görünmür. SQL policy yoxla.";
+                        return;
+                    }
+
+                    myCardsCache = retry.data;
                 }
 
                 renderMyCards(myCardsCache);
-                cardLog.innerText = "Kartlar yükləndi.";
+                cardLog.innerText = "Canlı kartlar yükləndi.";
             }catch(error){
+                myCards.innerHTML = "";
                 cardLog.innerText = "Kart yükləmə xətası: " + error.message;
-                renderDemoStarterCards();
             }
-        }
-
-        function renderDemoStarterCards(){
-            const demoCards = [
-                {
-                    id:"demo_1",
-                    level:1,
-                    card_templates:{
-                        id:1,
-                        name:"Cyber Bear I",
-                        rarity:"rare",
-                        image_url:"",
-                        click_boost:1
-                    }
-                },
-                {
-                    id:"demo_2",
-                    level:1,
-                    card_templates:{
-                        id:2,
-                        name:"Neon Claw",
-                        rarity:"epic",
-                        image_url:"",
-                        click_boost:2
-                    }
-                },
-                {
-                    id:"demo_3",
-                    level:1,
-                    card_templates:{
-                        id:3,
-                        name:"Golden Core",
-                        rarity:"legendary",
-                        image_url:"",
-                        click_boost:3
-                    }
-                }
-            ];
-
-            renderMyCards(demoCards);
-            cardLog.innerText = "Demo kartlar göstərilir. Real kartlar üçün Supabase card tables lazımdır.";
         }
 
         function renderMyCards(cards){
@@ -1340,5 +1331,4 @@
 
 </body>
 </html>
-
 
