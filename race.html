@@ -887,15 +887,15 @@
     </nav>
 
     <script>
-        const SUPABASE_URL = "https://ywpqvvriakbbhvrtpvso.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cHF2dnJpYWtiYmh2cnRwdnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MTc0NjcsImV4cCI6MjA5NTE5MzQ2N30.C8Y7bCgTsnz8jFUoUBv8gJTvH5i7LwzLVAq43sEV2Kk";
+        const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg";
 
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const MAX_PLAYERS = 3;
         const WIN_REWARD = 50;
 
-        let coins = Number(localStorage.getItem("coins")) || 0;
+        let coins = 0; // Coin serverdən oxunmalıdır. Brauzerdə dəyişdirilmir.
         let wins = Number(localStorage.getItem("raceWins")) || 0;
         let turbo = Number(localStorage.getItem("raceTurbo")) || 0;
 
@@ -943,7 +943,7 @@
             winsText.innerText = wins;
             turboText.innerText = "⚡ TURBO: " + turbo;
 
-            localStorage.setItem("coins", coins);
+            // Coin localStorage-da saxlanmır, istifadəçi kənardan dəyişə bilməsin.
             localStorage.setItem("raceWins", wins);
             localStorage.setItem("raceTurbo", turbo);
         }
@@ -1033,9 +1033,8 @@
                 const winner = payload.payload;
 
                 if(winner.id === playerId){
-                    coins += WIN_REWARD;
                     wins += 1;
-                    message.innerText = "Sən qalib oldun! +" + WIN_REWARD + " coin";
+                    message.innerText = "Sən qalib oldun! Coin server tərəfindən təsdiqlənəcək.";
                 }else{
                     message.innerText = winner.name + " qalib oldu.";
                 }
@@ -1461,3 +1460,4 @@
     </script>
 </body>
 </html>
+
