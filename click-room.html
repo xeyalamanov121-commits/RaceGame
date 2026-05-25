@@ -748,6 +748,14 @@
             try{
                 await initAuth();
                 await createOrLoadProfile();
+
+                // İlk girişdə istifadəçiyə 1 starter kart ver.
+                // Funksiya yoxdursa oyun dayanmasın, sadəcə kart logunda xəbər göstərilsin.
+                const starterResult = await client.rpc("give_starter_card");
+                if(starterResult.error){
+                    cardLog.innerText = "Starter kart RPC xətası: " + starterResult.error.message;
+                }
+
                 await loadMyCards();
                 await loadMarketplace();
                 updateUI();
@@ -1332,4 +1340,5 @@
 
 </body>
 </html>
+
 
