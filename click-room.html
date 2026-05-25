@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bearbee Arena | Click Room + Card Market</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
+    <style>
+        :root{
+            --bg:#02060d;
+            --panel:#08111c;
+            --panel2:#0c1624;
+            --line:#1e3b5a;
+            --blue:#1597ff;
+            --gold:#ffd700;
+            --green:#22ff66;
+            --red:#ff2438;
+            --purple:#9b3dff;
+            --text:#fff;
+            --muted:#98a8ba;
+        }
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            -webkit-tap-highlight-color:transparent;
+        }
+
+        body{
+            min-height:100vh;
+            background:
+                radial-gradient(circle at top, rgba(0,93,255,0.22), transparent 36%),
+                radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 32%),
+                linear-gradient(180deg, #01040a, #030812 60%, #000);
+            color:var(--text);
+            font-family:'Segoe UI', Arial, sans-serif;
+            padding-bottom:92px;
+            overflow-x:hidden;
+        }
+
+        body::before{
+            content:"";
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background:
+                linear-gradient(90deg, transparent 0 95%, rgba(21,151,255,0.07) 96% 100%),
+                linear-gradient(0deg, transparent 0 95%, rgba(255,255,255,0.025) 96% 100%);
+            background-size:34px 34px;
+            opacity:0.42;
+            mask-image:linear-gradient(to bottom, #000, transparent 86%);
+        }
+
+        .page{
+            width:min(1050px, 100%);
+            margin:0 auto;
+            padding:16px 14px 0;
+        }
+
+        .top-bar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:12px;
+            margin-bottom:16px;
+        }
+
+        .back{
+            color:var(--gold);
+            text-decoration:none;
+            font-weight:1000;
+            background:rgba(8,18,32,0.82);
+            border:1px solid rgba(60,91,128,0.65);
+            border-radius:14px;
+            padding:12px 14px;
+        }
+
+        .logo{
+            text-align:center;
+            line-height:0.9;
+            user-select:none;
+            filter:drop-shadow(0 0 12px rgba(255,215,0,0.25));
+        }
+
+        .logo .bearbee{
+            font-size:24px;
+            font-weight:1000;
+            font-style:italic;
+            letter-spacing:2px;
+            color:#f4f7ff;
+            text-shadow:0 3px 0 #29354a;
+        }
+
+        .logo .arena{
+            font-size:34px;
+            font-weight:1000;
+            font-style:italic;
+            letter-spacing:3px;
+            color:var(--gold);
+            text-shadow:0 4px 0 #6a3e00;
+        }
+
+        .status{
+            display:grid;
+            grid-template-columns:repeat(4, 1fr);
+            gap:12px;
+            margin-bottom:16px;
+        }
+
+        .status-box{
+            background:rgba(8,18,32,0.88);
+            border:1px solid rgba(60,91,128,0.65);
+            border-radius:18px;
+            padding:14px;
+            text-align:center;
+            box-shadow:0 0 24px rgba(21,151,255,0.08);
+        }
+
+        .status-box h3{
+            color:var(--muted);
+            font-size:13px;
+            margin-bottom:6px;
+            text-transform:uppercase;
+            letter-spacing:1px;
+        }
+
+        .status-box span{
+            color:var(--gold);
+            font-size:24px;
+            font-weight:1000;
+        }
+
+        .layout{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:16px;
+        }
+
+        .panel{
+            background:
+                linear-gradient(180deg, rgba(12,22,36,0.96), rgba(4,9,16,0.96));
+            border:1px solid rgba(71,101,136,0.62);
+            border-radius:22px;
+            box-shadow:
+                inset 0 0 22px rgba(21,151,255,0.08),
+                0 0 26px rgba(21,151,255,0.08);
+            padding:16px;
+            margin-bottom:16px;
+            position:relative;
+            overflow:hidden;
+        }
+
+        .panel-title{
+            color:var(--gold);
+            text-align:center;
+            font-size:22px;
+            font-weight:1000;
+            letter-spacing:1px;
+            margin-bottom:10px;
+        }
+
+        .panel-sub{
+            color:var(--muted);
+            text-align:center;
+            font-size:14px;
+            line-height:1.5;
+            margin-bottom:14px;
+        }
+
+        .click-panel{
+            text-align:center;
+        }
+
+        .bear-ring{
+            width:270px;
+            height:270px;
+            margin:16px auto;
+            border-radius:50%;
+            padding:6px;
+            background:
+                conic-gradient(from 120deg, #1597ff, #ffd700, #9b3dff, #1597ff);
+            box-shadow:
+                0 0 40px rgba(21,151,255,0.30),
+                0 0 35px rgba(255,215,0,0.18);
+            cursor:pointer;
+            user-select:none;
+            transition:0.08s;
+        }
+
+        .bear-ring:active{
+            transform:scale(0.95);
+        }
+
+        .bear-button{
+            width:100%;
+            height:100%;
+            border-radius:50%;
+            overflow:hidden;
+            background:
+                radial-gradient(circle at 40% 25%, rgba(255,215,0,0.22), transparent 34%),
+                linear-gradient(180deg, #07101b, #02060d);
+            border:4px solid rgba(0,0,0,0.76);
+            display:grid;
+            place-items:center;
+            position:relative;
+        }
+
+        .bear-button img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+        }
+
+        .bear-fallback{
+            font-size:96px;
+            filter:drop-shadow(0 0 16px rgba(255,215,0,0.45));
+        }
+
+        .energy-line{
+            width:100%;
+            height:18px;
+            background:#111c2a;
+            border:1px solid #26476a;
+            border-radius:22px;
+            overflow:hidden;
+            margin:14px 0;
+        }
+
+        .energy-fill{
+            height:100%;
+            width:100%;
+            background:linear-gradient(90deg, #22ff66, #00d7ff);
+            transition:0.2s;
+        }
+
+        .btn{
+            width:100%;
+            border:none;
+            cursor:pointer;
+            border-radius:13px;
+            padding:13px 14px;
+            font-size:15px;
+            font-weight:1000;
+            letter-spacing:0.7px;
+            color:#fff;
+            text-decoration:none;
+            text-align:center;
+            transition:0.16s;
+            text-transform:uppercase;
+            display:block;
+        }
+
+        .btn:active{
+            transform:scale(0.97);
+        }
+
+        .btn-blue{
+            background:linear-gradient(180deg, #1678e8, #064fad);
+            border:1px solid #58b9ff;
+            box-shadow:0 0 18px rgba(21,151,255,0.20);
+        }
+
+        .btn-green{
+            background:linear-gradient(180deg, #20c235, #087816);
+            border:1px solid #66ff7e;
+            box-shadow:0 0 18px rgba(34,255,102,0.20);
+        }
+
+        .btn-purple{
+            background:linear-gradient(180deg, #973dff, #5515a0);
+            border:1px solid #c692ff;
+            box-shadow:0 0 18px rgba(155,61,255,0.20);
+        }
+
+        .btn-gold{
+            background:linear-gradient(180deg, #ffd700, #a56b00);
+            border:1px solid #ffef92;
+            color:#111;
+        }
+
+        .btn-red{
+            background:linear-gradient(180deg, #e0182e, #8d0a18);
+            border:1px solid #ff6674;
+        }
+
+        .btn-dark{
+            background:linear-gradient(180deg, #152339, #0a1220);
+            border:1px solid #33557d;
+        }
+
+        .btn:disabled{
+            opacity:0.45;
+            cursor:not-allowed;
+            transform:none;
+        }
+
+        .tap-effect{
+            position:absolute;
+            color:var(--gold);
+            font-size:30px;
+            font-weight:1000;
+            pointer-events:none;
+            animation:floatUp 0.9s forwards;
+            z-index:1000;
+            text-shadow:0 0 12px rgba(255,215,0,0.65);
+        }
+
+        @keyframes floatUp{
+            0%{ opacity:1; transform:translateY(0) scale(1); }
+            100%{ opacity:0; transform:translateY(-85px) scale(1.25); }
+        }
+
+        .grid-3{
+            display:grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap:12px;
+        }
+
+        .box-card, .card-item, .listing-card{
+            border:1px solid #31577d;
+            background:linear-gradient(180deg, #0d1928, #07101b);
+            border-radius:18px;
+            padding:14px;
+            text-align:center;
+            box-shadow:0 0 18px rgba(21,151,255,0.08);
+        }
+
+        .box-icon{
+            font-size:42px;
+            margin-bottom:8px;
+        }
+
+        .box-card h3,
+        .card-item h3,
+        .listing-card h3{
+            color:var(--gold);
+            font-size:16px;
+            margin-bottom:6px;
+        }
+
+        .box-card p,
+        .card-item p,
+        .listing-card p{
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.4;
+            margin-bottom:8px;
+        }
+
+        .timer{
+            color:#00ffcc;
+            font-weight:1000;
+            margin:8px 0;
+        }
+
+        .cards-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fill, minmax(135px, 1fr));
+            gap:12px;
+        }
+
+        .card-item{
+            position:relative;
+            cursor:pointer;
+            min-height:190px;
+        }
+
+        .card-item.active{
+            border:2px solid var(--gold);
+            box-shadow:0 0 22px rgba(255,215,0,0.24);
+        }
+
+        .card-item.active::after{
+            content:"SEÇİLİB";
+            position:absolute;
+            top:9px;
+            right:9px;
+            background:var(--gold);
+            color:#111;
+            border-radius:8px;
+            padding:4px 7px;
+            font-size:10px;
+            font-weight:1000;
+        }
+
+        .card-art{
+            width:100%;
+            height:82px;
+            border-radius:14px;
+            margin-bottom:10px;
+            background:
+                radial-gradient(circle, rgba(255,215,0,0.18), transparent 58%),
+                linear-gradient(135deg, #163a62, #17172f 55%, #291148);
+            display:grid;
+            place-items:center;
+            font-size:44px;
+            border:1px solid rgba(255,255,255,0.08);
+            overflow:hidden;
+        }
+
+        .card-art img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
+
+        .rarity{
+            display:inline-block;
+            border-radius:999px;
+            padding:4px 8px;
+            font-size:11px;
+            font-weight:1000;
+            margin:5px 0;
+            background:#142033;
+            color:#bde5ff;
+        }
+
+        .rarity.legendary{
+            background:linear-gradient(90deg, #ffd700, #ff8c00);
+            color:#111;
+        }
+
+        .rarity.epic{
+            background:linear-gradient(90deg, #9b3dff, #1597ff);
+            color:#fff;
+        }
+
+        .rarity.rare{
+            background:linear-gradient(90deg, #1597ff, #22ff66);
+            color:#001018;
+        }
+
+        .input-row{
+            display:grid;
+            grid-template-columns:1fr 110px;
+            gap:8px;
+            margin-top:8px;
+        }
+
+        input{
+            width:100%;
+            background:#030a13;
+            border:1px solid #2a547d;
+            border-radius:12px;
+            color:#fff;
+            outline:none;
+            padding:12px;
+            font-size:14px;
+            font-weight:900;
+            text-align:center;
+        }
+
+        .market-top{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px;
+            margin-bottom:12px;
+        }
+
+        .log{
+            margin-top:12px;
+            background:#030a13;
+            border:1px solid #263f5d;
+            border-radius:14px;
+            padding:12px;
+            color:#00ffcc;
+            min-height:45px;
+            font-weight:800;
+            font-size:14px;
+            text-align:center;
+            line-height:1.45;
+        }
+
+        .nav{
+            position:fixed;
+            left:0;
+            bottom:0;
+            width:100%;
+            height:82px;
+            background:rgba(6,11,18,0.96);
+            border-top:1px solid rgba(70,100,132,0.55);
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            z-index:999;
+            backdrop-filter:blur(12px);
+        }
+
+        .nav a{
+            color:#8793a3;
+            text-decoration:none;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            gap:5px;
+            font-weight:1000;
+            letter-spacing:1px;
+            font-size:12px;
+        }
+
+        .nav a.active{
+            color:var(--gold);
+            text-shadow:0 0 14px rgba(255,215,0,0.45);
+        }
+
+        .nav .icon{
+            font-size:25px;
+        }
+
+        .full{
+            grid-column:1 / -1;
+        }
+
+        @media(max-width:850px){
+            .layout{
+                grid-template-columns:1fr;
+            }
+
+            .status{
+                grid-template-columns:repeat(2, 1fr);
+            }
+
+            .grid-3{
+                grid-template-columns:1fr;
+            }
+
+            .market-top{
+                grid-template-columns:1fr;
+            }
+
+            .bear-ring{
+                width:230px;
+                height:230px;
+            }
+
+            .logo .bearbee{
+                font-size:20px;
+            }
+
+            .logo .arena{
+                font-size:28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="page">
+
+        <div class="top-bar">
+            <a href="./index.html" class="back">← Geri</a>
+            <div class="logo">
+                <div class="bearbee">BEARBEE</div>
+                <div class="arena">CLICK</div>
+            </div>
+            <button class="btn btn-dark" onclick="refreshAll()">Yenilə</button>
+        </div>
+
+        <section class="status">
+            <div class="status-box">
+                <h3>Coin</h3>
+                🪙 <span id="coinText">0</span>
+            </div>
+            <div class="status-box">
+                <h3>Enerji</h3>
+                ⚡ <span id="energyText">100</span>/100
+            </div>
+            <div class="status-box">
+                <h3>Click Gücü</h3>
+                🚀 <span id="boostText">1x</span>
+            </div>
+            <div class="status-box">
+                <h3>Ad Xal</h3>
+                ⭐ <span id="adPointText">0</span>
+            </div>
+        </section>
+
+        <section class="layout">
+
+            <div>
+
+                <section class="panel click-panel">
+                    <h1 class="panel-title">Cyber Bear Click</h1>
+                    <p class="panel-sub">
+                        Kart seç, cyber ayıya klik et. Kartın boost-u click gücünü artırır.
+                        Coin/xal server tərəfdən təsdiqlənməlidir.
+                    </p>
+
+                    <div class="bear-ring" id="tapBear">
+                        <div class="bear-button">
+                            <img src="./assets/cyber-bear.png" alt="Cyber Bear" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="bear-fallback" style="display:none;">🐻</div>
+                        </div>
+                    </div>
+
+                    <div class="energy-line">
+                        <div class="energy-fill" id="energyFill"></div>
+                    </div>
+
+                    <button class="btn btn-purple" onclick="watchEnergyAd()">
+                        🎥 Reklama bax və Enerjini 100 et
+                    </button>
+
+                    <button class="btn btn-gold" onclick="claimClickReward()">
+                        🪙 Click xallarını serverə göndər
+                    </button>
+
+                    <div class="log" id="clickLog">
+                        Hazırdır. Cyber ayıya klik et.
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2 class="panel-title">Reklamlı Qutular</h2>
+                    <p class="panel-sub">
+                        Qutu yalnız reklam tamamlanandan sonra mükafat istəyi göndərir.
+                    </p>
+
+                    <div class="grid-3">
+                        <div class="box-card">
+                            <div class="box-icon">🎁</div>
+                            <h3>2 dəq qutu</h3>
+                            <p>Reklamdan sonra server reward istəyi.</p>
+                            <div class="timer" id="timer2">Hazırdır</div>
+                            <button class="btn btn-blue" id="boxBtn2" onclick="openRewardBox(2, 20)">Aç</button>
+                        </div>
+
+                        <div class="box-card">
+                            <div class="box-icon">📦</div>
+                            <h3>5 dəq qutu</h3>
+                            <p>Reklamdan sonra server reward istəyi.</p>
+                            <div class="timer" id="timer5">Hazırdır</div>
+                            <button class="btn btn-blue" id="boxBtn5" onclick="openRewardBox(5, 60)">Aç</button>
+                        </div>
+
+                        <div class="box-card">
+                            <div class="box-icon">💎</div>
+                            <h3>10 dəq qutu</h3>
+                            <p>Reklamdan sonra server reward istəyi.</p>
+                            <div class="timer" id="timer10">Hazırdır</div>
+                            <button class="btn btn-blue" id="boxBtn10" onclick="openRewardBox(10, 150)">Aç</button>
+                        </div>
+                    </div>
+
+                    <div class="log" id="adLog">
+                        AdsGram Block ID boşdursa test reklam işləyəcək.
+                    </div>
+                </section>
+
+            </div>
+
+            <div>
+
+                <section class="panel">
+                    <h2 class="panel-title">Mənim Cyber Kartlarım</h2>
+                    <p class="panel-sub">
+                        Kart seçəndə click boost dəyişir. Kartı satışa qoymaq üçün qiymət yaz.
+                    </p>
+
+                    <div class="cards-grid" id="myCards"></div>
+
+                    <div class="log" id="cardLog">
+                        Kartlar yüklənir...
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2 class="panel-title">Kart Birjası</h2>
+                    <p class="panel-sub">
+                        Oyun coini ilə kart al-sat. Alış/satış RPC ilə serverdə edilməlidir.
+                    </p>
+
+                    <div class="market-top">
+                        <button class="btn btn-blue" onclick="loadMarketplace()">Birjanı yenilə</button>
+                        <button class="btn btn-dark" onclick="loadMyCards()">Kartlarımı yenilə</button>
+                    </div>
+
+                    <div class="cards-grid" id="marketplace"></div>
+
+                    <div class="log" id="marketLog">
+                        Birja yüklənir...
+                    </div>
+                </section>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <nav class="nav">
+        <a href="./index.html"><span class="icon">🏠</span>ARENA</a>
+        <a href="./click-room.html" class="active"><span class="icon">🐻</span>CLICK</a>
+        <a href="./race.html"><span class="icon">🏁</span>RACE</a>
+        <a href="./ads.html"><span class="icon">🎥</span>ADS</a>
+    </nav>
+
+    <script>
+        const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
+
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg";
+
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        /*
+            AdsGram real block id tapanda bura yaz:
+            const ADSGRAM_BLOCK_ID = "sənin-block-id";
+            Boş qalsa test reklam simulyasiyası işləyir.
+        */
+        const ADSGRAM_BLOCK_ID = "";
+        let AdController = null;
+
+        const MAX_ENERGY = 100;
+
+        let currentUser = null;
+        let profile = null;
+        let coins = 0;
+        let energy = MAX_ENERGY;
+        let adPoints = 0;
+
+        let pendingClicks = 0;
+        let pendingCoins = 0;
+
+        let selectedCard = null;
+        let selectedBoost = 1;
+        let myCardsCache = [];
+
+        const coinText = document.getElementById("coinText");
+        const energyText = document.getElementById("energyText");
+        const energyFill = document.getElementById("energyFill");
+        const boostText = document.getElementById("boostText");
+        const adPointText = document.getElementById("adPointText");
+        const clickLog = document.getElementById("clickLog");
+        const adLog = document.getElementById("adLog");
+        const cardLog = document.getElementById("cardLog");
+        const marketLog = document.getElementById("marketLog");
+        const myCards = document.getElementById("myCards");
+        const marketplace = document.getElementById("marketplace");
+        const tapBear = document.getElementById("tapBear");
+
+        async function init(){
+            try{
+                await initAuth();
+                await createOrLoadProfile();
+                await loadMyCards();
+                await loadMarketplace();
+                updateUI();
+                updateBoxTimers();
+                setInterval(updateBoxTimers, 1000);
+            }catch(error){
+                console.error(error);
+                clickLog.innerText = "Başlatma xətası: " + error.message;
+            }
+        }
+
+        async function initAuth(){
+            const sessionResult = await client.auth.getSession();
+
+            if(!sessionResult.data.session){
+                const signIn = await client.auth.signInAnonymously();
+
+                if(signIn.error){
+                    throw signIn.error;
+                }
+            }
+
+            const userResult = await client.auth.getUser();
+
+            if(userResult.error || !userResult.data.user){
+                throw userResult.error || new Error("User tapılmadı");
+            }
+
+            currentUser = userResult.data.user;
+        }
+
+        async function createOrLoadProfile(){
+            const localName = localStorage.getItem("racePlayerName") || "Player" + Math.floor(1000 + Math.random() * 9000);
+
+            const rpcResult = await client.rpc("create_my_profile", {
+                p_player_name: localName
+            });
+
+            if(rpcResult.error){
+                throw rpcResult.error;
+            }
+
+            await loadProfile();
+        }
+
+        async function loadProfile(){
+            const result = await client
+                .from("profiles")
+                .select("player_name, coins, energy, ad_points, box_2_ready_at, box_5_ready_at, box_10_ready_at")
+                .eq("user_id", currentUser.id)
+                .single();
+
+            if(result.error){
+                throw result.error;
+            }
+
+            profile = result.data;
+            coins = profile.coins || 0;
+            energy = profile.energy ?? MAX_ENERGY;
+            adPoints = profile.ad_points || 0;
+
+            updateUI();
+        }
+
+        function updateUI(){
+            coinText.innerText = coins;
+            energyText.innerText = energy;
+            adPointText.innerText = adPoints;
+            boostText.innerText = selectedBoost + "x";
+
+            energyFill.style.width = energy + "%";
+
+            if(energy <= 20){
+                energyFill.style.background = "linear-gradient(90deg, #ff2438, #ff8c00)";
+            }else if(energy <= 50){
+                energyFill.style.background = "linear-gradient(90deg, #ff8c00, #ffd700)";
+            }else{
+                energyFill.style.background = "linear-gradient(90deg, #22ff66, #00d7ff)";
+            }
+        }
+
+        tapBear.addEventListener("click", function(e){
+            if(energy <= 0){
+                alert("Enerji bitdi! Reklama bax.");
+                return;
+            }
+
+            const gain = 2 * selectedBoost;
+
+            energy -= 1;
+            pendingClicks += 1;
+            pendingCoins += gain;
+
+            updateUI();
+
+            clickLog.innerText = "Pending reward: +" + pendingCoins + " coin (" + pendingClicks + " click). Serverə göndər.";
+
+            const plus = document.createElement("div");
+            plus.className = "tap-effect";
+            plus.innerText = "+" + gain;
+            plus.style.left = e.pageX + "px";
+            plus.style.top = e.pageY + "px";
+            document.body.appendChild(plus);
+
+            setTimeout(() => plus.remove(), 900);
+        });
+
+        async function claimClickReward(){
+            if(pendingClicks <= 0){
+                alert("Göndəriləcək click yoxdur.");
+                return;
+            }
+
+            try{
+                /*
+                    Təhlükəsiz sistem üçün Supabase-də claim_click_reward RPC olmalıdır.
+                    Bu RPC serverdə click limitini yoxlamalı, sonra coin verməlidir.
+                */
+
+                const result = await client.rpc("claim_click_reward", {
+                    p_click_count: pendingClicks,
+                    p_selected_card_id: selectedCard ? selectedCard.user_card_id : null
+                });
+
+                if(result.error){
+                    clickLog.innerText = "Server reward RPC yoxdur və ya xəta verdi: " + result.error.message;
+                    return;
+                }
+
+                pendingClicks = 0;
+                pendingCoins = 0;
+
+                await loadProfile();
+
+                clickLog.innerText = "Click reward serverdə təsdiqləndi.";
+            }catch(error){
+                clickLog.innerText = "Reward xətası: " + error.message;
+            }
+        }
+
+        function initAdsGram(){
+            if(!ADSGRAM_BLOCK_ID){
+                return null;
+            }
+
+            if(window.Adsgram && !AdController){
+                AdController = window.Adsgram.init({
+                    blockId: ADSGRAM_BLOCK_ID,
+                    debug: true,
+                    debugConsole: true
+                });
+            }
+
+            return AdController;
+        }
+
+        function showRewardedAd(adType){
+            return new Promise(async (resolve) => {
+                if(!ADSGRAM_BLOCK_ID){
+                    adLog.innerText = "Test reklam başladı: " + adType;
+
+                    setTimeout(() => {
+                        adLog.innerText = "Test reklam bitdi: " + adType;
+                        resolve(true);
+                    }, 1400);
+
+                    return;
+                }
+
+                try{
+                    const controller = initAdsGram();
+
+                    if(!controller){
+                        adLog.innerText = "AdsGram yüklənmədi.";
+                        resolve(false);
+                        return;
+                    }
+
+                    adLog.innerText = "AdsGram reklam açılır: " + adType;
+
+                    await controller.show();
+
+                    adLog.innerText = "Reklam tamamlandı: " + adType;
+                    resolve(true);
+
+                }catch(error){
+                    console.log(error);
+                    adLog.innerText = "Reklam tamamlanmadı.";
+                    resolve(false);
+                }
+            });
+        }
+
+        async function watchEnergyAd(){
+            const watched = await showRewardedAd("energy_100");
+
+            if(!watched){
+                alert("Reklam tamamlanmadı.");
+                return;
+            }
+
+            try{
+                const result = await client.rpc("claim_ad_reward", {
+                    p_reward_type: "energy_100"
+                });
+
+                if(result.error){
+                    adLog.innerText = "claim_ad_reward RPC yoxdur və ya xəta verdi: " + result.error.message;
+                    return;
+                }
+
+                await loadProfile();
+                adLog.innerText = "Enerji serverdə təsdiqləndi.";
+            }catch(error){
+                adLog.innerText = "Enerji reward xətası: " + error.message;
+            }
+        }
+
+        async function openRewardBox(minutes, reward){
+            const key = "box_" + minutes + "_ready_at";
+            const readyTime = Number(profile ? profile[key] : 0) || 0;
+            const now = Date.now();
+
+            if(now < readyTime){
+                alert("Bu qutu hələ hazır deyil.");
+                return;
+            }
+
+            const watched = await showRewardedAd("box_" + minutes);
+
+            if(!watched){
+                alert("Reklam tamamlanmadı.");
+                return;
+            }
+
+            try{
+                const result = await client.rpc("claim_box_reward", {
+                    p_box_minutes: minutes
+                });
+
+                if(result.error){
+                    adLog.innerText = "claim_box_reward RPC yoxdur və ya xəta verdi: " + result.error.message;
+                    return;
+                }
+
+                await loadProfile();
+                updateBoxTimers();
+
+                adLog.innerText = minutes + " dəqiqəlik qutu serverdə təsdiqləndi.";
+            }catch(error){
+                adLog.innerText = "Qutu reward xətası: " + error.message;
+            }
+        }
+
+        function updateBoxTimers(){
+            updateSingleTimer(2);
+            updateSingleTimer(5);
+            updateSingleTimer(10);
+        }
+
+        function updateSingleTimer(minutes){
+            const timer = document.getElementById("timer" + minutes);
+            const button = document.getElementById("boxBtn" + minutes);
+
+            if(!profile){
+                timer.innerText = "Yüklənir...";
+                button.disabled = true;
+                return;
+            }
+
+            const key = "box_" + minutes + "_ready_at";
+            const readyTime = Number(profile[key]) || 0;
+            const now = Date.now();
+
+            if(now >= readyTime){
+                timer.innerText = "Hazırdır";
+                button.disabled = false;
+                return;
+            }
+
+            const diff = readyTime - now;
+            const totalSeconds = Math.ceil(diff / 1000);
+            const min = Math.floor(totalSeconds / 60);
+            const sec = totalSeconds % 60;
+
+            timer.innerText = min + " dəq " + sec + " san";
+            button.disabled = true;
+        }
+
+        async function loadMyCards(){
+            try{
+                /*
+                    Lazım olan relation:
+                    user_cards.card_template_id -> card_templates.id
+                */
+                const result = await client
+                    .from("user_cards")
+                    .select(`
+                        id,
+                        owner_id,
+                        level,
+                        card_templates (
+                            id,
+                            name,
+                            rarity,
+                            image_url,
+                            click_boost
+                        )
+                    `)
+                    .eq("owner_id", currentUser.id)
+                    .order("id", { ascending:false });
+
+                if(result.error){
+                    cardLog.innerText = "Kart cədvəli/RLS hazır deyil: " + result.error.message;
+                    renderDemoStarterCards();
+                    return;
+                }
+
+                myCardsCache = result.data || [];
+
+                if(myCardsCache.length === 0){
+                    myCards.innerHTML = "";
+                    cardLog.innerText = "Kartın yoxdur. Starter kart SQL/RPC ilə verilməlidir.";
+                    renderDemoStarterCards();
+                    return;
+                }
+
+                renderMyCards(myCardsCache);
+                cardLog.innerText = "Kartlar yükləndi.";
+            }catch(error){
+                cardLog.innerText = "Kart yükləmə xətası: " + error.message;
+                renderDemoStarterCards();
+            }
+        }
+
+        function renderDemoStarterCards(){
+            const demoCards = [
+                {
+                    id:"demo_1",
+                    level:1,
+                    card_templates:{
+                        id:1,
+                        name:"Cyber Bear I",
+                        rarity:"rare",
+                        image_url:"",
+                        click_boost:1
+                    }
+                },
+                {
+                    id:"demo_2",
+                    level:1,
+                    card_templates:{
+                        id:2,
+                        name:"Neon Claw",
+                        rarity:"epic",
+                        image_url:"",
+                        click_boost:2
+                    }
+                },
+                {
+                    id:"demo_3",
+                    level:1,
+                    card_templates:{
+                        id:3,
+                        name:"Golden Core",
+                        rarity:"legendary",
+                        image_url:"",
+                        click_boost:3
+                    }
+                }
+            ];
+
+            renderMyCards(demoCards);
+            cardLog.innerText = "Demo kartlar göstərilir. Real kartlar üçün Supabase card tables lazımdır.";
+        }
+
+        function renderMyCards(cards){
+            myCards.innerHTML = "";
+
+            cards.forEach((item, index) => {
+                const t = item.card_templates || {};
+                const div = document.createElement("div");
+                div.className = "card-item" + (selectedCard && selectedCard.user_card_id === item.id ? " active" : "");
+
+                const rarity = String(t.rarity || "rare").toLowerCase();
+                const img = t.image_url ? `<img src="${escapeHtml(t.image_url)}" alt="${escapeHtml(t.name || "Card")}">` : "🎴";
+
+                div.innerHTML = `
+                    <div class="card-art">${img}</div>
+                    <h3>${escapeHtml(t.name || "Cyber Card")}</h3>
+                    <span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span>
+                    <p>Boost: ${Number(t.click_boost) || 1}x</p>
+                    <p>Level: ${Number(item.level) || 1}</p>
+
+                    <div class="input-row">
+                        <input type="number" min="1" id="price_${String(item.id).replaceAll("_","")}" placeholder="Qiymət">
+                        <button class="btn btn-gold" onclick="event.stopPropagation(); listCardForSale('${item.id}')">Sat</button>
+                    </div>
+                `;
+
+                div.addEventListener("click", () => {
+                    selectedCard = {
+                        user_card_id: item.id,
+                        template_id: t.id,
+                        name: t.name,
+                        boost: Number(t.click_boost) || 1
+                    };
+
+                    selectedBoost = Number(t.click_boost) || 1;
+                    renderMyCards(cards);
+                    updateUI();
+                    cardLog.innerText = "Seçildi: " + (t.name || "Cyber Card") + " / Boost: " + selectedBoost + "x";
+                });
+
+                myCards.appendChild(div);
+
+                if(index === 0 && !selectedCard){
+                    selectedCard = {
+                        user_card_id: item.id,
+                        template_id: t.id,
+                        name: t.name,
+                        boost: Number(t.click_boost) || 1
+                    };
+
+                    selectedBoost = Number(t.click_boost) || 1;
+                    updateUI();
+                }
+            });
+        }
+
+        async function listCardForSale(userCardId){
+            const safeId = String(userCardId).replaceAll("_","");
+            const input = document.getElementById("price_" + safeId);
+            const price = Number(input ? input.value : 0);
+
+            if(!price || price <= 0){
+                alert("Düzgün qiymət yaz.");
+                return;
+            }
+
+            if(String(userCardId).startsWith("demo_")){
+                cardLog.innerText = "Demo kart satışa qoyulmur. Real kart üçün Supabase lazımdır.";
+                return;
+            }
+
+            try{
+                const result = await client.rpc("list_card_for_sale", {
+                    p_user_card_id: Number(userCardId),
+                    p_price: price
+                });
+
+                if(result.error){
+                    cardLog.innerText = "Satış RPC xətası: " + result.error.message;
+                    return;
+                }
+
+                cardLog.innerText = "Kart satışa qoyuldu.";
+                await loadMyCards();
+                await loadMarketplace();
+            }catch(error){
+                cardLog.innerText = "Satış xətası: " + error.message;
+            }
+        }
+
+        async function loadMarketplace(){
+            try{
+                const result = await client
+                    .from("card_listings")
+                    .select(`
+                        id,
+                        seller_id,
+                        price,
+                        status,
+                        user_card_id,
+                        user_cards (
+                            id,
+                            owner_id,
+                            level,
+                            card_templates (
+                                id,
+                                name,
+                                rarity,
+                                image_url,
+                                click_boost
+                            )
+                        )
+                    `)
+                    .eq("status", "active")
+                    .order("id", { ascending:false });
+
+                if(result.error){
+                    marketLog.innerText = "Birja cədvəli/RLS hazır deyil: " + result.error.message;
+                    marketplace.innerHTML = "";
+                    return;
+                }
+
+                renderMarketplace(result.data || []);
+                marketLog.innerText = "Birja yükləndi.";
+            }catch(error){
+                marketLog.innerText = "Birja xətası: " + error.message;
+            }
+        }
+
+        function renderMarketplace(listings){
+            marketplace.innerHTML = "";
+
+            if(listings.length === 0){
+                marketplace.innerHTML = `
+                    <div class="listing-card">
+                        <div class="card-art">🛒</div>
+                        <h3>Aktiv satış yoxdur</h3>
+                        <p>Kartlar satışa qoyulanda burada görünəcək.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listings.forEach(listing => {
+                const card = listing.user_cards || {};
+                const t = card.card_templates || {};
+                const div = document.createElement("div");
+                div.className = "listing-card";
+
+                const rarity = String(t.rarity || "rare").toLowerCase();
+                const img = t.image_url ? `<img src="${escapeHtml(t.image_url)}" alt="${escapeHtml(t.name || "Card")}">` : "🎴";
+
+                const isMine = listing.seller_id === currentUser.id;
+
+                div.innerHTML = `
+                    <div class="card-art">${img}</div>
+                    <h3>${escapeHtml(t.name || "Cyber Card")}</h3>
+                    <span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span>
+                    <p>Boost: ${Number(t.click_boost) || 1}x</p>
+                    <p>Qiymət: ${Number(listing.price)} 🪙</p>
+                    <button class="btn ${isMine ? "btn-dark" : "btn-green"}" ${isMine ? "disabled" : ""} onclick="buyCard(${listing.id})">
+                        ${isMine ? "Sənin satışındır" : "Al"}
+                    </button>
+                `;
+
+                marketplace.appendChild(div);
+            });
+        }
+
+        async function buyCard(listingId){
+            try{
+                const result = await client.rpc("buy_card_listing", {
+                    p_listing_id: listingId
+                });
+
+                if(result.error){
+                    marketLog.innerText = "Alış RPC xətası: " + result.error.message;
+                    return;
+                }
+
+                marketLog.innerText = "Kart alındı.";
+                await loadProfile();
+                await loadMyCards();
+                await loadMarketplace();
+            }catch(error){
+                marketLog.innerText = "Alış xətası: " + error.message;
+            }
+        }
+
+        async function refreshAll(){
+            await loadProfile();
+            await loadMyCards();
+            await loadMarketplace();
+            updateBoxTimers();
+        }
+
+        function escapeHtml(text){
+            return String(text)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        init();
+    </script>
+
+</body>
+</html>
+
