@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bearbee Arena | Race</title>
+
+    <!-- GitHub Pages compatible: plain HTML + CSS + JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root{
+            --bg:#02060d;
+            --panel:#08111c;
+            --panel2:#0c1624;
+            --line:#1e3b5a;
+            --blue:#1597ff;
+            --gold:#ffd700;
+            --green:#22ff66;
+            --red:#ff2438;
+            --purple:#9b3dff;
+            --text:#ffffff;
+            --muted:#9aa7b8;
+        }
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            -webkit-tap-highlight-color:transparent;
+        }
+
+        body{
+            min-height:100vh;
+            background:
+                radial-gradient(circle at top, rgba(0,93,255,0.20), transparent 35%),
+                radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 30%),
+                linear-gradient(180deg, #01040a, #030812 60%, #000);
+            color:var(--text);
+            font-family:'Segoe UI', Arial, sans-serif;
+            padding-bottom:92px;
+            overflow-x:hidden;
+        }
+
+        body::before{
+            content:"";
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background:
+                linear-gradient(90deg, transparent 0 95%, rgba(21,151,255,0.07) 96% 100%),
+                linear-gradient(0deg, transparent 0 95%, rgba(255,255,255,0.025) 96% 100%);
+            background-size:34px 34px;
+            opacity:0.45;
+            mask-image:linear-gradient(to bottom, #000, transparent 85%);
+        }
+
+        .page{
+            width:min(980px, 100%);
+            margin:0 auto;
+            padding:18px 16px 0;
+        }
+
+        .top{
+            display:grid;
+            grid-template-columns:1fr auto 1fr;
+            gap:12px;
+            align-items:center;
+            margin-bottom:16px;
+        }
+
+        .profile{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            background:rgba(9,17,30,0.82);
+            border:1px solid rgba(60,91,128,0.65);
+            border-radius:18px;
+            padding:10px;
+            box-shadow:0 0 24px rgba(21,151,255,0.08);
+            min-width:0;
+        }
+
+        .avatar{
+            width:62px;
+            height:62px;
+            border-radius:50%;
+            background:
+                radial-gradient(circle at 35% 25%, #ffd27a, #7a3b14 72%);
+            border:3px solid var(--gold);
+            display:grid;
+            place-items:center;
+            font-size:33px;
+            box-shadow:0 0 18px rgba(255,215,0,0.35);
+            flex:0 0 auto;
+        }
+
+        .profile-info{
+            min-width:0;
+        }
+
+        .name-row{
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+
+        .player-name{
+            font-size:22px;
+            font-weight:900;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            max-width:180px;
+        }
+
+        .mini-btn{
+            border:1px solid #28496d;
+            background:#0b1727;
+            color:#bde5ff;
+            border-radius:8px;
+            padding:5px 8px;
+            cursor:pointer;
+            font-weight:800;
+        }
+
+        .coin{
+            margin-top:4px;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            color:var(--gold);
+            font-size:20px;
+            font-weight:900;
+        }
+
+        .logo{
+            text-align:center;
+            line-height:0.86;
+            filter:drop-shadow(0 0 12px rgba(255,215,0,0.28));
+            user-select:none;
+        }
+
+        .logo .bearbee{
+            font-size:30px;
+            font-weight:1000;
+            font-style:italic;
+            letter-spacing:2px;
+            color:#f4f7ff;
+            text-shadow:0 3px 0 #29354a;
+        }
+
+        .logo .arena{
+            font-size:40px;
+            font-weight:1000;
+            font-style:italic;
+            letter-spacing:3px;
+            color:var(--gold);
+            text-shadow:0 4px 0 #6a3e00;
+        }
+
+        .score-settings{
+            justify-self:end;
+            display:flex;
+            gap:12px;
+            align-items:center;
+        }
+
+        .wins-box, .settings{
+            background:rgba(9,17,30,0.82);
+            border:1px solid rgba(60,91,128,0.65);
+            border-radius:16px;
+            box-shadow:0 0 24px rgba(21,151,255,0.08);
+        }
+
+        .wins-box{
+            padding:12px 18px;
+            min-width:145px;
+            display:flex;
+            align-items:center;
+            gap:12px;
+            font-size:20px;
+            font-weight:900;
+        }
+
+        .wins-box span{
+            display:block;
+            font-size:13px;
+            color:var(--muted);
+            font-weight:800;
+        }
+
+        .settings{
+            width:64px;
+            height:64px;
+            display:grid;
+            place-items:center;
+            font-size:32px;
+        }
+
+        .room-card{
+            border:2px solid rgba(21,151,255,0.65);
+            background:
+                linear-gradient(180deg, rgba(8,18,32,0.96), rgba(3,8,15,0.96)),
+                radial-gradient(circle at top, rgba(21,151,255,0.20), transparent 70%);
+            border-radius:22px;
+            padding:18px;
+            box-shadow:
+                inset 0 0 28px rgba(21,151,255,0.12),
+                0 0 30px rgba(21,151,255,0.12);
+            margin-bottom:16px;
+            position:relative;
+            overflow:hidden;
+        }
+
+        .room-card::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            background:linear-gradient(90deg, transparent, rgba(21,151,255,0.09), transparent);
+            transform:skewX(-20deg) translateX(-120%);
+            animation:shine 5s infinite;
+        }
+
+        @keyframes shine{
+            0%, 45%{ transform:skewX(-20deg) translateX(-120%); }
+            65%,100%{ transform:skewX(-20deg) translateX(140%); }
+        }
+
+        .room-title{
+            color:#78d9ff;
+            font-size:24px;
+            font-weight:1000;
+            letter-spacing:3px;
+            text-align:center;
+            margin-bottom:8px;
+        }
+
+        .room-code{
+            font-size:68px;
+            color:#fff;
+            text-align:center;
+            font-weight:1000;
+            letter-spacing:10px;
+            text-shadow:0 0 18px rgba(21,151,255,0.95);
+            margin-bottom:16px;
+        }
+
+        .room-actions{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:14px;
+            margin-bottom:14px;
+        }
+
+        .btn{
+            width:100%;
+            border:none;
+            cursor:pointer;
+            border-radius:13px;
+            padding:14px 14px;
+            font-size:16px;
+            font-weight:1000;
+            letter-spacing:1px;
+            color:#fff;
+            text-decoration:none;
+            text-align:center;
+            transition:0.16s;
+            text-transform:uppercase;
+        }
+
+        .btn:active{
+            transform:scale(0.97);
+        }
+
+        .btn-blue{
+            background:linear-gradient(180deg, #1678e8, #064fad);
+            border:1px solid #58b9ff;
+            box-shadow:0 0 18px rgba(21,151,255,0.20);
+        }
+
+        .btn-red{
+            background:linear-gradient(180deg, #e0182e, #8d0a18);
+            border:1px solid #ff6674;
+            box-shadow:0 0 18px rgba(255,36,56,0.20);
+        }
+
+        .btn-green{
+            background:linear-gradient(180deg, #20c235, #087816);
+            border:1px solid #66ff7e;
+            box-shadow:0 0 18px rgba(34,255,102,0.20);
+        }
+
+        .btn-purple{
+            background:linear-gradient(180deg, #973dff, #5515a0);
+            border:1px solid #c692ff;
+            box-shadow:0 0 18px rgba(155,61,255,0.20);
+        }
+
+        .btn-dark{
+            background:linear-gradient(180deg, #152339, #0a1220);
+            border:1px solid #33557d;
+        }
+
+        .btn:disabled{
+            opacity:0.45;
+            cursor:not-allowed;
+            transform:none;
+        }
+
+        .join-row{
+            display:grid;
+            grid-template-columns:1fr 150px;
+            gap:12px;
+            margin-bottom:14px;
+        }
+
+        input{
+            width:100%;
+            background:#030a13;
+            border:1px solid #2a547d;
+            border-radius:13px;
+            color:#fff;
+            outline:none;
+            padding:13px 14px;
+            font-size:16px;
+            font-weight:900;
+            letter-spacing:2px;
+            text-align:center;
+        }
+
+        .room-stats{
+            border-top:1px solid rgba(21,151,255,0.45);
+            padding-top:13px;
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px;
+            color:#9eb8d2;
+            font-size:18px;
+            font-weight:900;
+        }
+
+        .room-stats strong{
+            color:var(--gold);
+        }
+
+        .room-stats .status-live{
+            color:var(--green);
+        }
+
+        .panel{
+            background:linear-gradient(180deg, rgba(12,22,36,0.96), rgba(4,9,16,0.96));
+            border:1px solid rgba(71,101,136,0.62);
+            border-radius:20px;
+            box-shadow:0 0 24px rgba(21,151,255,0.08);
+            padding:16px;
+            margin-bottom:16px;
+        }
+
+        .players{
+            display:grid;
+            gap:0;
+        }
+
+        .player-row{
+            display:grid;
+            grid-template-columns:70px 1fr auto;
+            align-items:center;
+            gap:12px;
+            padding:12px 4px;
+            border-bottom:1px solid rgba(90,115,143,0.22);
+        }
+
+        .player-row:last-child{
+            border-bottom:0;
+        }
+
+        .small-avatar{
+            width:56px;
+            height:56px;
+            border-radius:50%;
+            border:2px solid var(--gold);
+            display:grid;
+            place-items:center;
+            font-size:28px;
+            background:#142033;
+        }
+
+        .empty-avatar{
+            border:2px dashed #596777;
+            color:#788492;
+            background:transparent;
+        }
+
+        .host-tag{
+            display:inline-block;
+            background:var(--gold);
+            color:#111;
+            padding:2px 6px;
+            border-radius:6px;
+            font-size:12px;
+            font-weight:1000;
+            margin-right:8px;
+        }
+
+        .p-name{
+            font-size:20px;
+            font-weight:1000;
+        }
+
+        .p-car{
+            color:#a9b6c8;
+            font-weight:800;
+            margin-top:3px;
+        }
+
+        .ready{
+            color:var(--green);
+            font-size:20px;
+            font-weight:1000;
+            text-shadow:0 0 10px rgba(34,255,102,0.35);
+        }
+
+        .not-ready{
+            color:#ffb14a;
+            font-size:16px;
+            font-weight:1000;
+        }
+
+        .section-title{
+            text-align:center;
+            color:#dcecff;
+            font-size:22px;
+            font-weight:1000;
+            letter-spacing:2px;
+            margin:0 0 12px;
+        }
+
+        .car-grid{
+            display:grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap:14px;
+        }
+
+        .car-card{
+            min-height:150px;
+            border-radius:16px;
+            border:1px solid #31577d;
+            background:linear-gradient(180deg, #0d1928, #07101b);
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            cursor:pointer;
+            position:relative;
+            overflow:hidden;
+            transition:0.18s;
+        }
+
+        .car-card.active{
+            border:2px solid var(--gold);
+            box-shadow:0 0 18px rgba(255,215,0,0.35);
+        }
+
+        .car-card.active::after{
+            content:"✓";
+            position:absolute;
+            right:12px;
+            top:10px;
+            width:28px;
+            height:28px;
+            border-radius:50%;
+            background:var(--gold);
+            color:#111;
+            display:grid;
+            place-items:center;
+            font-weight:1000;
+        }
+
+        .car-art{
+            font-size:54px;
+            margin-bottom:8px;
+            filter:drop-shadow(0 10px 10px rgba(0,0,0,0.45));
+        }
+
+        .car-name{
+            color:#fff;
+            font-size:20px;
+            font-weight:1000;
+        }
+
+        .car-card.active .car-name{
+            color:var(--gold);
+        }
+
+        .race-title{
+            text-align:center;
+            color:#a9cfff;
+            font-size:22px;
+            font-weight:1000;
+            letter-spacing:2px;
+            margin:6px 0 12px;
+        }
+
+        .track{
+            display:grid;
+            gap:10px;
+        }
+
+        .lane{
+            position:relative;
+            min-height:78px;
+            border:1px solid #244668;
+            border-radius:12px;
+            overflow:hidden;
+            background:
+                linear-gradient(180deg, rgba(20,33,47,0.92), rgba(6,12,20,0.92));
+        }
+
+        .lane::before{
+            content:"";
+            position:absolute;
+            left:115px;
+            right:76px;
+            top:48px;
+            border-top:4px dashed rgba(255,255,255,0.42);
+        }
+
+        .lane-user{
+            position:absolute;
+            left:10px;
+            top:8px;
+            display:flex;
+            align-items:center;
+            gap:9px;
+            z-index:3;
+            font-weight:1000;
+        }
+
+        .lane-user .face{
+            width:38px;
+            height:38px;
+            border-radius:50%;
+            border:2px solid var(--gold);
+            display:grid;
+            place-items:center;
+            background:#142033;
+        }
+
+        .track-car{
+            position:absolute;
+            top:31px;
+            left:110px;
+            font-size:34px;
+            z-index:5;
+            transition:left 0.12s linear;
+            filter:drop-shadow(0 9px 6px rgba(0,0,0,0.5));
+        }
+
+        .finish{
+            position:absolute;
+            right:52px;
+            top:0;
+            bottom:0;
+            width:4px;
+            background:repeating-linear-gradient(
+                0deg,
+                #fff 0 8px,
+                #111 8px 16px
+            );
+            box-shadow:0 0 0 1px rgba(255,255,255,0.15);
+        }
+
+        .flag{
+            position:absolute;
+            right:18px;
+            top:12px;
+            font-size:28px;
+            z-index:4;
+        }
+
+        .percent{
+            position:absolute;
+            right:10px;
+            bottom:10px;
+            color:var(--gold);
+            font-size:22px;
+            font-weight:1000;
+        }
+
+        .main-action{
+            margin-top:16px;
+            display:grid;
+            grid-template-columns:1fr;
+            gap:12px;
+        }
+
+        .big-start{
+            font-size:25px;
+            padding:18px;
+            border-radius:15px;
+        }
+
+        .action-grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:12px;
+        }
+
+        .message{
+            margin-top:12px;
+            color:#a7c8e9;
+            text-align:center;
+            font-size:16px;
+            font-weight:900;
+            min-height:26px;
+        }
+
+        .hint{
+            margin-top:10px;
+            color:#75c8ff;
+            text-align:center;
+            font-weight:900;
+        }
+
+        .nav{
+            position:fixed;
+            left:0;
+            bottom:0;
+            width:100%;
+            height:82px;
+            background:rgba(6,11,18,0.96);
+            border-top:1px solid rgba(70,100,132,0.55);
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            z-index:999;
+            backdrop-filter:blur(12px);
+        }
+
+        .nav a{
+            color:#8793a3;
+            text-decoration:none;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            gap:5px;
+            font-weight:1000;
+            letter-spacing:1px;
+        }
+
+        .nav a.active{
+            color:var(--gold);
+            text-shadow:0 0 14px rgba(255,215,0,0.45);
+        }
+
+        .nav .icon{
+            font-size:27px;
+        }
+
+        @media(max-width:760px){
+            .page{
+                padding:12px 10px 0;
+            }
+
+            .top{
+                grid-template-columns:1fr auto;
+            }
+
+            .logo{
+                grid-column:1 / -1;
+                grid-row:1;
+                order:-1;
+            }
+
+            .profile{
+                grid-column:1;
+                grid-row:2;
+            }
+
+            .score-settings{
+                grid-column:2;
+                grid-row:2;
+            }
+
+            .settings{
+                display:none;
+            }
+
+            .wins-box{
+                min-width:112px;
+                padding:10px 12px;
+                font-size:18px;
+            }
+
+            .logo .bearbee{
+                font-size:24px;
+            }
+
+            .logo .arena{
+                font-size:34px;
+            }
+
+            .avatar{
+                width:54px;
+                height:54px;
+                font-size:28px;
+            }
+
+            .player-name{
+                max-width:130px;
+                font-size:18px;
+            }
+
+            .room-code{
+                font-size:52px;
+                letter-spacing:7px;
+            }
+
+            .room-actions,
+            .join-row,
+            .room-stats,
+            .action-grid{
+                grid-template-columns:1fr;
+            }
+
+            .car-grid{
+                grid-template-columns:1fr;
+            }
+
+            .player-row{
+                grid-template-columns:54px 1fr auto;
+            }
+
+            .small-avatar{
+                width:48px;
+                height:48px;
+            }
+
+            .p-name{
+                font-size:18px;
+            }
+
+            .lane::before{
+                left:92px;
+                right:55px;
+            }
+
+            .track-car{
+                left:85px;
+            }
+
+            .finish{
+                right:42px;
+            }
+
+            .flag{
+                right:10px;
+            }
+
+            .percent{
+                font-size:18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="page">
+
+        <section class="top">
+            <div class="profile">
+                <div class="avatar">🐻</div>
+                <div class="profile-info">
+                    <div class="name-row">
+                        <div class="player-name" id="playerNameText">Player</div>
+                        <button class="mini-btn" onclick="changeName()">✎</button>
+                    </div>
+                    <div class="coin">🪙 <span id="coinText">0</span></div>
+                </div>
+            </div>
+
+            <div class="logo">
+                <div class="bearbee">BEARBEE</div>
+                <div class="arena">ARENA</div>
+            </div>
+
+            <div class="score-settings">
+                <div class="wins-box">🏆 <div><span>Qələbə</span><b id="winsText">0</b></div></div>
+                <div class="settings">⚙️</div>
+            </div>
+        </section>
+
+        <section class="room-card">
+            <div class="room-title">OTAQ KODU</div>
+            <div class="room-code" id="roomCodeText">----</div>
+
+            <div class="join-row">
+                <input id="roomInput" placeholder="Otaq kodu yaz" maxlength="5">
+                <button class="btn btn-blue" onclick="joinRoom()">Qoşul</button>
+            </div>
+
+            <div class="room-actions">
+                <button class="btn btn-blue" onclick="createRoom()">Yeni otaq yarat</button>
+                <button class="btn btn-blue" onclick="copyRoomLink()">Otaq linkini kopyala</button>
+                <button class="btn btn-red" onclick="leaveRoom()">Otaqdan çıx</button>
+                <button class="btn btn-dark" id="readyBtn" onclick="toggleReady()" disabled>Hazır ol</button>
+            </div>
+
+            <div class="room-stats">
+                <div>Oyunçular: <strong id="playerCountText">0/3</strong></div>
+                <div>Status: <span class="status-live" id="roomStatusText">Otaq yoxdur</span></div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="players" id="playersList">
+                <div class="player-row">
+                    <div class="small-avatar empty-avatar">+</div>
+                    <div>
+                        <div class="p-name">Boş yer</div>
+                        <div class="p-car">Otağa qoşulan gözlənilir...</div>
+                    </div>
+                    <div class="not-ready">...</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2 class="section-title">🚘 MAŞIN SEÇİMİ</h2>
+            <div class="car-grid">
+                <div class="car-card active" onclick="selectCar('🏎️','Sport Car', this)">
+                    <div class="car-art">🏎️</div>
+                    <div class="car-name">Sport Car</div>
+                </div>
+
+                <div class="car-card" onclick="selectCar('🚗','Classic Car', this)">
+                    <div class="car-art">🚗</div>
+                    <div class="car-name">Classic Car</div>
+                </div>
+
+                <div class="car-card" onclick="selectCar('🚙','Jeep Car', this)">
+                    <div class="car-art">🚙</div>
+                    <div class="car-name">Jeep Car</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="race-title" id="raceTitle">🏁 YARIŞ BAŞLAMAYI GÖZLƏYİR...</div>
+
+            <div class="track" id="track">
+                <div class="lane">
+                    <div class="lane-user"><span class="face">+</span>Boş yer</div>
+                    <div class="finish"></div>
+                    <div class="flag">🏁</div>
+                    <div class="percent">0%</div>
+                </div>
+            </div>
+
+            <div class="main-action">
+                <button class="btn btn-green big-start" id="startBtn" onclick="startRace()" disabled>
+                    🏁 Yarışa başla
+                </button>
+
+                <button class="btn btn-blue big-start" id="speedBtn" onclick="speedUp()" disabled>
+                    ⚡ Sürət ver
+                </button>
+
+                <div class="action-grid">
+                    <button class="btn btn-purple" onclick="watchTurboAd()">🎥 Reklama bax +1 Turbo</button>
+                    <button class="btn btn-dark" id="turboText">⚡ TURBO: 0</button>
+                </div>
+            </div>
+
+            <div class="hint">⚡ Turbo aktiv olanda növbəti klik +8 irəliləyiş verəcək!</div>
+            <div class="message" id="message">Otaq yarat və ya otaq kodu ilə qoşul.</div>
+        </section>
+
+    </main>
+
+    <nav class="nav">
+        <a href="index.html"><span class="icon">🏠</span>ARENA</a>
+        <a href="race.html" class="active"><span class="icon">🏁</span>RACE</a>
+        <a href="profile.html"><span class="icon">👤</span>PROFİL</a>
+    </nav>
+
+    <script>
+        const SUPABASE_URL = "https://ywpqvvriakbbhvrtpvso.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cHF2dnJpYWtiYmh2cnRwdnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MTc0NjcsImV4cCI6MjA5NTE5MzQ2N30.C8Y7bCgTsnz8jFUoUBv8gJTvH5i7LwzLVAq43sEV2Kk";
+
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const MAX_PLAYERS = 3;
+        const WIN_REWARD = 50;
+
+        let coins = Number(localStorage.getItem("coins")) || 0;
+        let wins = Number(localStorage.getItem("raceWins")) || 0;
+        let turbo = Number(localStorage.getItem("raceTurbo")) || 0;
+
+        let playerId = localStorage.getItem("racePlayerId");
+        if(!playerId){
+            playerId = "player_" + Math.random().toString(36).slice(2, 10);
+            localStorage.setItem("racePlayerId", playerId);
+        }
+
+        let playerName = localStorage.getItem("racePlayerName");
+        if(!playerName){
+            playerName = "Player" + Math.floor(1000 + Math.random() * 9000);
+            localStorage.setItem("racePlayerName", playerName);
+        }
+
+        let selectedCar = "🏎️";
+        let selectedCarName = "Sport Car";
+        let ready = false;
+        let progress = 0;
+        let raceRunning = false;
+        let currentRoom = "";
+        let channel = null;
+        let players = [];
+        let winnerLocked = false;
+
+        const playerNameText = document.getElementById("playerNameText");
+        const coinText = document.getElementById("coinText");
+        const winsText = document.getElementById("winsText");
+        const turboText = document.getElementById("turboText");
+        const roomInput = document.getElementById("roomInput");
+        const roomCodeText = document.getElementById("roomCodeText");
+        const playerCountText = document.getElementById("playerCountText");
+        const roomStatusText = document.getElementById("roomStatusText");
+        const playersList = document.getElementById("playersList");
+        const track = document.getElementById("track");
+        const raceTitle = document.getElementById("raceTitle");
+        const message = document.getElementById("message");
+        const startBtn = document.getElementById("startBtn");
+        const speedBtn = document.getElementById("speedBtn");
+        const readyBtn = document.getElementById("readyBtn");
+
+        function updateTop(){
+            playerNameText.innerText = playerName;
+            coinText.innerText = coins;
+            winsText.innerText = wins;
+            turboText.innerText = "⚡ TURBO: " + turbo;
+
+            localStorage.setItem("coins", coins);
+            localStorage.setItem("raceWins", wins);
+            localStorage.setItem("raceTurbo", turbo);
+        }
+
+        function changeName(){
+            if(raceRunning){
+                alert("Yarış zamanı ad dəyişmək olmaz.");
+                return;
+            }
+
+            const newName = prompt("Oyunçu adını yaz:", playerName);
+
+            if(newName && newName.trim().length >= 2){
+                playerName = newName.trim().slice(0, 16);
+                localStorage.setItem("racePlayerName", playerName);
+                updateTop();
+                trackSelf();
+            }
+        }
+
+        function createRoom(){
+            const code = Math.floor(10000 + Math.random() * 90000).toString();
+            roomInput.value = code;
+            joinRoom();
+        }
+
+        async function joinRoom(){
+            const code = roomInput.value.trim();
+
+            if(!code){
+                alert("Otaq kodu yaz.");
+                return;
+            }
+
+            if(channel){
+                await channel.untrack();
+                await client.removeChannel(channel);
+            }
+
+            currentRoom = code;
+            roomCodeText.innerText = currentRoom;
+            ready = false;
+            progress = 0;
+            raceRunning = false;
+            winnerLocked = false;
+
+            const url = new URL(window.location.href);
+            url.searchParams.set("room", currentRoom);
+            window.history.replaceState({}, "", url.toString());
+
+            channel = client.channel("bearbee-race-room-" + currentRoom, {
+                config: {
+                    broadcast: { self: true },
+                    presence: { key: playerId }
+                }
+            });
+
+            channel.on("presence", { event: "sync" }, () => {
+                syncPlayers();
+            });
+
+            channel.on("broadcast", { event: "race_start" }, () => {
+                raceRunning = true;
+                winnerLocked = false;
+                progress = 0;
+                ready = true;
+
+                raceTitle.innerText = "🏁 YARIŞ BAŞLADI!";
+                speedBtn.disabled = false;
+                startBtn.disabled = true;
+                readyBtn.disabled = true;
+                message.innerText = "Yarış başladı! Sürət ver!";
+
+                trackSelf();
+            });
+
+            channel.on("broadcast", { event: "winner" }, payload => {
+                if(winnerLocked){
+                    return;
+                }
+
+                winnerLocked = true;
+                raceRunning = false;
+                speedBtn.disabled = true;
+                readyBtn.disabled = false;
+
+                const winner = payload.payload;
+
+                if(winner.id === playerId){
+                    coins += WIN_REWARD;
+                    wins += 1;
+                    message.innerText = "Sən qalib oldun! +" + WIN_REWARD + " coin";
+                }else{
+                    message.innerText = winner.name + " qalib oldu.";
+                }
+
+                raceTitle.innerText = "🏆 YARIŞ BİTDİ";
+                updateTop();
+                trackSelf();
+                updateButtons();
+            });
+
+            channel.subscribe(async status => {
+                if(status === "SUBSCRIBED"){
+                    readyBtn.disabled = false;
+                    roomStatusText.innerText = "Otağa qoşuldun";
+                    message.innerText = "Otağa qoşuldun: " + currentRoom;
+                    await trackSelf();
+                }
+
+                if(status === "CHANNEL_ERROR"){
+                    roomStatusText.innerText = "Bağlantı xətası";
+                    message.innerText = "Supabase bağlantı xətası. URL və anon key yoxla.";
+                }
+            });
+        }
+
+        function syncPlayers(){
+            if(!channel){
+                return;
+            }
+
+            const state = channel.presenceState();
+            players = [];
+
+            Object.keys(state).forEach(key => {
+                const item = state[key][0];
+                if(item){
+                    players.push(item);
+                }
+            });
+
+            players.sort((a, b) => a.joinedAt - b.joinedAt);
+
+            const myIndex = players.findIndex(p => p.id === playerId);
+
+            if(players.length > MAX_PLAYERS && myIndex >= MAX_PLAYERS){
+                message.innerText = "Otaq doludur. Maksimum 3 nəfər.";
+                readyBtn.disabled = true;
+                speedBtn.disabled = true;
+                startBtn.disabled = true;
+                return;
+            }
+
+            renderPlayers();
+            renderTrack();
+            updateButtons();
+        }
+
+        async function trackSelf(){
+            if(!channel){
+                return;
+            }
+
+            await channel.track({
+                id: playerId,
+                name: playerName,
+                avatar: "🐻",
+                car: selectedCar,
+                carName: selectedCarName,
+                ready: ready,
+                progress: progress,
+                racing: raceRunning,
+                joinedAt: getJoinedAt()
+            });
+        }
+
+        function getJoinedAt(){
+            const key = "raceJoinedAt_" + currentRoom;
+            let joinedAt = Number(localStorage.getItem(key));
+
+            if(!joinedAt){
+                joinedAt = Date.now();
+                localStorage.setItem(key, joinedAt);
+            }
+
+            return joinedAt;
+        }
+
+        function renderPlayers(){
+            playersList.innerHTML = "";
+
+            const shown = players.slice(0, MAX_PLAYERS);
+
+            shown.forEach((p, index) => {
+                const row = document.createElement("div");
+                row.className = "player-row";
+
+                const isHost = index === 0;
+                const isMe = p.id === playerId;
+
+                row.innerHTML = `
+                    <div class="small-avatar">${p.avatar || "🐻"}</div>
+                    <div>
+                        <div class="p-name">
+                            ${isHost ? '<span class="host-tag">HOST</span>' : ''}
+                            ${escapeHtml(p.name)} ${isMe ? " / Sən" : ""}
+                        </div>
+                        <div class="p-car">${p.car} ${escapeHtml(p.carName || "Car")}</div>
+                    </div>
+                    <div class="${p.ready ? 'ready' : 'not-ready'}">
+                        ${p.ready ? "HAZIR ✓" : "GÖZLƏYİR"}
+                    </div>
+                `;
+
+                playersList.appendChild(row);
+            });
+
+            for(let i = shown.length; i < MAX_PLAYERS; i++){
+                const empty = document.createElement("div");
+                empty.className = "player-row";
+                empty.innerHTML = `
+                    <div class="small-avatar empty-avatar">+</div>
+                    <div>
+                        <div class="p-name">Boş yer</div>
+                        <div class="p-car">Gözləyir...</div>
+                    </div>
+                    <div class="not-ready">...</div>
+                `;
+                playersList.appendChild(empty);
+            }
+
+            playerCountText.innerText = Math.min(players.length, MAX_PLAYERS) + "/3";
+        }
+
+        function renderTrack(){
+            track.innerHTML = "";
+
+            const shown = players.slice(0, MAX_PLAYERS);
+
+            if(shown.length === 0){
+                track.innerHTML = `
+                    <div class="lane">
+                        <div class="lane-user"><span class="face">+</span>Boş yer</div>
+                        <div class="finish"></div>
+                        <div class="flag">🏁</div>
+                        <div class="percent">0%</div>
+                    </div>
+                `;
+                return;
+            }
+
+            shown.forEach(p => {
+                const lane = document.createElement("div");
+                lane.className = "lane";
+
+                const safeProgress = Math.max(0, Math.min(100, Number(p.progress) || 0));
+                const carLeft = 92 + safeProgress * 0.68;
+
+                lane.innerHTML = `
+                    <div class="lane-user">
+                        <span class="face">${p.avatar || "🐻"}</span>
+                        ${escapeHtml(p.name)}
+                    </div>
+                    <div class="track-car" style="left:calc(${safeProgress}% - 20px);">${p.car}</div>
+                    <div class="finish"></div>
+                    <div class="flag">🏁</div>
+                    <div class="percent">${Math.floor(safeProgress)}%</div>
+                `;
+
+                track.appendChild(lane);
+            });
+        }
+
+        function updateButtons(){
+            const host = getHost();
+            const shownPlayers = players.slice(0, MAX_PLAYERS);
+            const allReady = shownPlayers.length >= 2 && shownPlayers.every(p => p.ready);
+
+            if(!currentRoom){
+                roomStatusText.innerText = "Otaq yoxdur";
+                startBtn.disabled = true;
+                speedBtn.disabled = true;
+                readyBtn.disabled = true;
+                return;
+            }
+
+            if(raceRunning){
+                roomStatusText.innerText = "Yarış gedir";
+                startBtn.disabled = true;
+                speedBtn.disabled = false;
+                return;
+            }
+
+            roomStatusText.innerText = "Oyun başlamayıb";
+
+            if(host && host.id === playerId && allReady){
+                startBtn.disabled = false;
+                message.innerText = "Hamı hazırdır. Yarışı başlada bilərsən.";
+            }else{
+                startBtn.disabled = true;
+            }
+
+            speedBtn.disabled = true;
+            readyBtn.disabled = false;
+            readyBtn.innerText = ready ? "Hazırsan ✓" : "Hazır ol";
+        }
+
+        function getHost(){
+            return players.length ? players[0] : null;
+        }
+
+        function selectCar(car, carName, card){
+            if(raceRunning){
+                alert("Yarış zamanı maşın dəyişmək olmaz.");
+                return;
+            }
+
+            selectedCar = car;
+            selectedCarName = carName;
+
+            document.querySelectorAll(".car-card").forEach(el => el.classList.remove("active"));
+            card.classList.add("active");
+
+            ready = false;
+            trackSelf();
+            updateButtons();
+        }
+
+        function toggleReady(){
+            if(!channel){
+                alert("Əvvəl otağa qoşul.");
+                return;
+            }
+
+            if(raceRunning){
+                return;
+            }
+
+            ready = !ready;
+            trackSelf();
+            updateButtons();
+        }
+
+        function startRace(){
+            if(!channel){
+                alert("Əvvəl otağa qoşul.");
+                return;
+            }
+
+            const host = getHost();
+            const shownPlayers = players.slice(0, MAX_PLAYERS);
+            const allReady = shownPlayers.length >= 2 && shownPlayers.every(p => p.ready);
+
+            if(!host || host.id !== playerId){
+                alert("Yarışı yalnız host başlada bilər.");
+                return;
+            }
+
+            if(!allReady){
+                alert("Ən az 2 oyunçu hazır olmalıdır.");
+                return;
+            }
+
+            channel.send({
+                type:"broadcast",
+                event:"race_start",
+                payload:{
+                    room: currentRoom,
+                    startedAt: Date.now()
+                }
+            });
+        }
+
+        function speedUp(){
+            if(!raceRunning || !channel){
+                return;
+            }
+
+            let boost = 4;
+
+            if(turbo > 0){
+                boost = 8;
+                turbo -= 1;
+                updateTop();
+            }
+
+            progress += boost;
+
+            if(progress > 100){
+                progress = 100;
+            }
+
+            trackSelf();
+
+            if(progress >= 100 && !winnerLocked){
+                winnerLocked = true;
+
+                channel.send({
+                    type:"broadcast",
+                    event:"winner",
+                    payload:{
+                        id: playerId,
+                        name: playerName,
+                        car: selectedCar
+                    }
+                });
+            }
+        }
+
+        async function watchTurboAd(){
+            if(raceRunning){
+                alert("Yarış zamanı reklam açmaq olmaz.");
+                return;
+            }
+
+            const watched = await showRewardedAd("race_turbo");
+
+            if(watched){
+                turbo += 1;
+                updateTop();
+                message.innerText = "Turbo əlavə olundu! Qalan turbo: " + turbo;
+            }else{
+                message.innerText = "Reklam tamamlanmadı.";
+            }
+        }
+
+        function showRewardedAd(adType){
+            return new Promise(resolve => {
+                /*
+                    ADSGRAM REKLAM KODU BURADA OLACAQ.
+
+                    adType:
+                    race_turbo
+
+                    Reklam tam izlənilsə:
+                    resolve(true);
+
+                    Reklam bağlansa/xəta olsa:
+                    resolve(false);
+                */
+
+                message.innerText = "Demo reklam başladı: " + adType;
+
+                setTimeout(() => {
+                    message.innerText = "Demo reklam bitdi. Turbo verildi.";
+                    resolve(true);
+                }, 900);
+            });
+        }
+
+        async function copyRoomLink(){
+            if(!currentRoom){
+                alert("Əvvəl otaq yarat və ya qoşul.");
+                return;
+            }
+
+            const url = new URL(window.location.href);
+            url.searchParams.set("room", currentRoom);
+
+            try{
+                await navigator.clipboard.writeText(url.toString());
+                message.innerText = "Otaq linki kopyalandı.";
+            }catch(e){
+                alert(url.toString());
+            }
+        }
+
+        async function leaveRoom(){
+            if(channel){
+                await channel.untrack();
+                await client.removeChannel(channel);
+                channel = null;
+            }
+
+            currentRoom = "";
+            players = [];
+            ready = false;
+            progress = 0;
+            raceRunning = false;
+            winnerLocked = false;
+
+            roomCodeText.innerText = "----";
+            playerCountText.innerText = "0/3";
+            roomStatusText.innerText = "Otaq yoxdur";
+            readyBtn.disabled = true;
+            startBtn.disabled = true;
+            speedBtn.disabled = true;
+            message.innerText = "Otaqdan çıxdın.";
+
+            renderPlayers();
+            renderTrack();
+
+            const url = new URL(window.location.href);
+            url.searchParams.delete("room");
+            window.history.replaceState({}, "", url.toString());
+        }
+
+        function escapeHtml(text){
+            return String(text)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        window.addEventListener("beforeunload", () => {
+            if(channel){
+                channel.untrack();
+            }
+        });
+
+        updateTop();
+        renderPlayers();
+        renderTrack();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomFromUrl = urlParams.get("room");
+
+        if(roomFromUrl){
+            roomInput.value = roomFromUrl;
+            joinRoom();
+        }
+    </script>
+</body>
+</html>
