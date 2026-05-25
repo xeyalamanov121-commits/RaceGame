@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bearbee Arena | Click Room + Card Market</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
@@ -590,7 +589,7 @@
                     <h1 class="panel-title">Cyber Bear Click</h1>
                     <p class="panel-sub">
                         Kart seç, cyber ayıya klik et. Kartın boost-u click gücünü artırır.
-                        Coin/xal server tərəfdən təsdiqlənməlidir.
+                        Coin və kartlar Telegram ID ilə serverdə saxlanır.
                     </p>
 
                     <div class="bear-ring" id="tapBear">
@@ -674,7 +673,7 @@
                 <section class="panel">
                     <h2 class="panel-title">Kart Birjası</h2>
                     <p class="panel-sub">
-                        Oyun coini ilə kart al-sat. Alış/satış RPC ilə serverdə edilməlidir.
+                        Oyun coini ilə kart al-sat. Alış/satış Telegram ID ilə serverdə edilir.
                     </p>
 
                     <div class="market-top">
@@ -703,11 +702,7 @@
     </nav>
 
     <script>
-        const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
-
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg";
-
-        const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const TG_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-api";
 
         /*
             CANLI REKLAM:
@@ -721,7 +716,7 @@
 
         const MAX_ENERGY = 100;
 
-        let currentUser = null;
+        let telegramUser = null;
         let profile = null;
         let coins = 0;
         let energy = MAX_ENERGY;
@@ -747,7 +742,6 @@
         const marketplace = document.getElementById("marketplace");
         const tapBear = document.getElementById("tapBear");
 
-
         function initTelegramMiniApp(){
             if(window.Telegram && window.Telegram.WebApp){
                 const tg = window.Telegram.WebApp;
@@ -756,81 +750,73 @@
             }
         }
 
+        function getTelegramInitData(){
+            if(!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initData){
+                throw new Error("Oyunu Telegram botun PLAY düyməsindən aç.");
+            }
+
+            return window.Telegram.WebApp.initData;
+        }
+
+        async function api(action, payload = {}){
+            const response = await fetch(TG_API_URL, {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+                    initData:getTelegramInitData(),
+                    action,
+                    payload
+                })
+            });
+
+            const data = await response.json();
+
+            if(!response.ok || !data.ok){
+                throw new Error(data.error || "API xətası");
+            }
+
+            return data;
+        }
+
         async function init(){
             try{
                 initTelegramMiniApp();
-                await initAuth();
-                await createOrLoadProfile();
 
-                // İlk girişdə istifadəçiyə 1 starter kart ver.
-                // Funksiya yoxdursa oyun dayanmasın, sadəcə kart logunda xəbər göstərilsin.
-                const starterResult = await client.rpc("give_starter_card");
-                if(starterResult.error){
-                    cardLog.innerText = "Starter kart RPC xətası: " + starterResult.error.message;
-                }
+                const data = await api("init");
 
-                await loadMyCards();
-                await loadMarketplace();
-                updateUI();
+                telegramUser = data.user;
+                applyProfile(data.profile);
+
+                renderMyCards(data.myCards || []);
+                renderMarketplace(data.marketplace || []);
+
+                cardLog.innerText = "Telegram ID ilə giriş edildi: " + telegramUser.id;
+                marketLog.innerText = "Birja yükləndi.";
+                clickLog.innerText = "Hazırdır. Cyber ayıya klik et.";
+
                 updateBoxTimers();
                 setInterval(updateBoxTimers, 1000);
             }catch(error){
                 console.error(error);
                 clickLog.innerText = "Başlatma xətası: " + error.message;
+                cardLog.innerText = "Telegram giriş alınmadı.";
+                marketLog.innerText = "Telegram giriş alınmadı.";
             }
         }
 
-        async function initAuth(){
-            const sessionResult = await client.auth.getSession();
-
-            if(!sessionResult.data.session){
-                const signIn = await client.auth.signInAnonymously();
-
-                if(signIn.error){
-                    throw signIn.error;
-                }
-            }
-
-            const userResult = await client.auth.getUser();
-
-            if(userResult.error || !userResult.data.user){
-                throw userResult.error || new Error("User tapılmadı");
-            }
-
-            currentUser = userResult.data.user;
-        }
-
-        async function createOrLoadProfile(){
-            const localName = localStorage.getItem("racePlayerName") || "Player" + Math.floor(1000 + Math.random() * 9000);
-
-            const rpcResult = await client.rpc("create_my_profile", {
-                p_player_name: localName
-            });
-
-            if(rpcResult.error){
-                throw rpcResult.error;
-            }
-
-            await loadProfile();
+        function applyProfile(p){
+            profile = p;
+            coins = Number(profile.coins) || 0;
+            energy = profile.energy ?? MAX_ENERGY;
+            adPoints = Number(profile.ad_points) || 0;
+            updateUI();
         }
 
         async function loadProfile(){
-            const result = await client
-                .from("profiles")
-                .select("player_name, coins, energy, ad_points, box_2_ready_at, box_5_ready_at, box_10_ready_at")
-                .eq("user_id", currentUser.id)
-                .single();
-
-            if(result.error){
-                throw result.error;
-            }
-
-            profile = result.data;
-            coins = profile.coins || 0;
-            energy = profile.energy ?? MAX_ENERGY;
-            adPoints = profile.ad_points || 0;
-
-            updateUI();
+            const data = await api("load_profile");
+            applyProfile(data.profile);
         }
 
         function updateUI(){
@@ -883,25 +869,15 @@
             }
 
             try{
-                /*
-                    Təhlükəsiz sistem üçün Supabase-də claim_click_reward RPC olmalıdır.
-                    Bu RPC serverdə click limitini yoxlamalı, sonra coin verməlidir.
-                */
-
-                const result = await client.rpc("claim_click_reward", {
-                    p_click_count: pendingClicks,
-                    p_selected_card_id: selectedCard ? selectedCard.user_card_id : null
+                const data = await api("claim_click_reward", {
+                    click_count: pendingClicks,
+                    selected_card_id: selectedCard ? selectedCard.user_card_id : null
                 });
-
-                if(result.error){
-                    clickLog.innerText = "Server reward RPC yoxdur və ya xəta verdi: " + result.error.message;
-                    return;
-                }
 
                 pendingClicks = 0;
                 pendingCoins = 0;
 
-                await loadProfile();
+                applyProfile(data.profile);
 
                 clickLog.innerText = "Click reward serverdə təsdiqləndi.";
             }catch(error){
@@ -966,16 +942,11 @@
             }
 
             try{
-                const result = await client.rpc("claim_ad_reward", {
-                    p_reward_type: "energy_100"
+                const data = await api("claim_ad_reward", {
+                    reward_type: "energy_100"
                 });
 
-                if(result.error){
-                    adLog.innerText = "claim_ad_reward RPC yoxdur və ya xəta verdi: " + result.error.message;
-                    return;
-                }
-
-                await loadProfile();
+                applyProfile(data.profile);
                 adLog.innerText = "Enerji serverdə təsdiqləndi.";
             }catch(error){
                 adLog.innerText = "Enerji reward xətası: " + error.message;
@@ -1000,16 +971,11 @@
             }
 
             try{
-                const result = await client.rpc("claim_box_reward", {
-                    p_box_minutes: minutes
+                const data = await api("claim_box_reward", {
+                    box_minutes: minutes
                 });
 
-                if(result.error){
-                    adLog.innerText = "claim_box_reward RPC yoxdur və ya xəta verdi: " + result.error.message;
-                    return;
-                }
-
-                await loadProfile();
+                applyProfile(data.profile);
                 updateBoxTimers();
 
                 adLog.innerText = minutes + " dəqiqəlik qutu serverdə təsdiqləndi.";
@@ -1055,67 +1021,8 @@
 
         async function loadMyCards(){
             try{
-                const result = await client
-                    .from("user_cards")
-                    .select(`
-                        id,
-                        owner_id,
-                        level,
-                        card_templates (
-                            id,
-                            name,
-                            rarity,
-                            image_url,
-                            click_boost
-                        )
-                    `)
-                    .eq("owner_id", currentUser.id)
-                    .order("id", { ascending:false });
-
-                if(result.error){
-                    myCards.innerHTML = "";
-                    cardLog.innerText = "Kart cədvəli/RLS hazır deyil: " + result.error.message;
-                    return;
-                }
-
-                myCardsCache = result.data || [];
-
-                if(myCardsCache.length === 0){
-                    const starterResult = await client.rpc("give_starter_card");
-
-                    if(starterResult.error){
-                        myCards.innerHTML = "";
-                        cardLog.innerText = "Starter kart verilə bilmədi: " + starterResult.error.message;
-                        return;
-                    }
-
-                    const retry = await client
-                        .from("user_cards")
-                        .select(`
-                            id,
-                            owner_id,
-                            level,
-                            card_templates (
-                                id,
-                                name,
-                                rarity,
-                                image_url,
-                                click_boost
-                            )
-                        `)
-                        .eq("owner_id", currentUser.id)
-                        .order("id", { ascending:false });
-
-                    if(retry.error || !retry.data || retry.data.length === 0){
-                        myCards.innerHTML = "";
-                        cardLog.innerText = "Starter kart yaradıldı, amma kartlar hələ görünmür. SQL policy yoxla.";
-                        return;
-                    }
-
-                    myCardsCache = retry.data;
-                }
-
-                renderMyCards(myCardsCache);
+                const data = await api("load_my_cards");
+                renderMyCards(data.myCards || []);
                 cardLog.innerText = "Canlı kartlar yükləndi.";
             }catch(error){
                 myCards.innerHTML = "";
@@ -1124,10 +1031,22 @@
         }
 
         function renderMyCards(cards){
+            myCardsCache = cards || [];
             myCards.innerHTML = "";
 
-            cards.forEach((item, index) => {
-                const t = item.card_templates || {};
+            if(myCardsCache.length === 0){
+                myCards.innerHTML = `
+                    <div class="listing-card">
+                        <div class="card-art">🎴</div>
+                        <h3>Kart yoxdur</h3>
+                        <p>Starter kart serverdən veriləcək. Səhifəni yenilə.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            myCardsCache.forEach((item, index) => {
+                const t = item.tg_card_templates || {};
                 const div = document.createElement("div");
                 div.className = "card-item" + (selectedCard && selectedCard.user_card_id === item.id ? " active" : "");
 
@@ -1156,7 +1075,7 @@
                     };
 
                     selectedBoost = Number(t.click_boost) || 1;
-                    renderMyCards(cards);
+                    renderMyCards(myCardsCache);
                     updateUI();
                     cardLog.innerText = "Seçildi: " + (t.name || "Cyber Card") + " / Boost: " + selectedBoost + "x";
                 });
@@ -1187,25 +1106,15 @@
                 return;
             }
 
-            if(String(userCardId).startsWith("demo_")){
-                cardLog.innerText = "Demo kart satışa qoyulmur. Real kart üçün Supabase lazımdır.";
-                return;
-            }
-
             try{
-                const result = await client.rpc("list_card_for_sale", {
-                    p_user_card_id: Number(userCardId),
-                    p_price: price
+                const data = await api("list_card_for_sale", {
+                    user_card_id: Number(userCardId),
+                    price: price
                 });
 
-                if(result.error){
-                    cardLog.innerText = "Satış RPC xətası: " + result.error.message;
-                    return;
-                }
-
+                renderMyCards(data.myCards || []);
+                renderMarketplace(data.marketplace || []);
                 cardLog.innerText = "Kart satışa qoyuldu.";
-                await loadMyCards();
-                await loadMarketplace();
             }catch(error){
                 cardLog.innerText = "Satış xətası: " + error.message;
             }
@@ -1213,37 +1122,8 @@
 
         async function loadMarketplace(){
             try{
-                const result = await client
-                    .from("card_listings")
-                    .select(`
-                        id,
-                        seller_id,
-                        price,
-                        status,
-                        user_card_id,
-                        user_cards (
-                            id,
-                            owner_id,
-                            level,
-                            card_templates (
-                                id,
-                                name,
-                                rarity,
-                                image_url,
-                                click_boost
-                            )
-                        )
-                    `)
-                    .eq("status", "active")
-                    .order("id", { ascending:false });
-
-                if(result.error){
-                    marketLog.innerText = "Birja cədvəli/RLS hazır deyil: " + result.error.message;
-                    marketplace.innerHTML = "";
-                    return;
-                }
-
-                renderMarketplace(result.data || []);
+                const data = await api("load_marketplace");
+                renderMarketplace(data.marketplace || []);
                 marketLog.innerText = "Birja yükləndi.";
             }catch(error){
                 marketLog.innerText = "Birja xətası: " + error.message;
@@ -1253,7 +1133,7 @@
         function renderMarketplace(listings){
             marketplace.innerHTML = "";
 
-            if(listings.length === 0){
+            if(!listings || listings.length === 0){
                 marketplace.innerHTML = `
                     <div class="listing-card">
                         <div class="card-art">🛒</div>
@@ -1265,15 +1145,15 @@
             }
 
             listings.forEach(listing => {
-                const card = listing.user_cards || {};
-                const t = card.card_templates || {};
+                const card = listing.tg_user_cards || {};
+                const t = card.tg_card_templates || {};
                 const div = document.createElement("div");
                 div.className = "listing-card";
 
                 const rarity = String(t.rarity || "rare").toLowerCase();
                 const img = t.image_url ? `<img src="${escapeHtml(t.image_url)}" alt="${escapeHtml(t.name || "Card")}">` : "🎴";
 
-                const isMine = listing.seller_id === currentUser.id;
+                const isMine = telegramUser && Number(listing.seller_telegram_id) === Number(telegramUser.id);
 
                 div.innerHTML = `
                     <div class="card-art">${img}</div>
@@ -1292,29 +1172,33 @@
 
         async function buyCard(listingId){
             try{
-                const result = await client.rpc("buy_card_listing", {
-                    p_listing_id: listingId
+                const data = await api("buy_card_listing", {
+                    listing_id: listingId
                 });
 
-                if(result.error){
-                    marketLog.innerText = "Alış RPC xətası: " + result.error.message;
-                    return;
-                }
-
+                applyProfile(data.profile);
+                renderMyCards(data.myCards || []);
+                renderMarketplace(data.marketplace || []);
                 marketLog.innerText = "Kart alındı.";
-                await loadProfile();
-                await loadMyCards();
-                await loadMarketplace();
             }catch(error){
                 marketLog.innerText = "Alış xətası: " + error.message;
             }
         }
 
         async function refreshAll(){
-            await loadProfile();
-            await loadMyCards();
-            await loadMarketplace();
-            updateBoxTimers();
+            try{
+                const data = await api("init");
+
+                telegramUser = data.user;
+                applyProfile(data.profile);
+                renderMyCards(data.myCards || []);
+                renderMarketplace(data.marketplace || []);
+                updateBoxTimers();
+
+                clickLog.innerText = "Yeniləndi.";
+            }catch(error){
+                clickLog.innerText = "Yeniləmə xətası: " + error.message;
+            }
         }
 
         function escapeHtml(text){
@@ -1331,4 +1215,5 @@
 
 </body>
 </html>
+
 
