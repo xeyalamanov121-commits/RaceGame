@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bearbee Arena | Main</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            background:#000;
+            color:#fff;
+            font-family:'Segoe UI',sans-serif;
+            padding-bottom:90px;
+        }
+
+        /* HERO */
+
+        .hero{
+            height:55vh;
+            background:
+            linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.35)),
+            url('https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723586119.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM1ODYxMTkucG5nIiwiaWF0IjoxNzc5NzI0MTIwLCJleHAiOjE4MTEyNjAxMjB9.UM6clPwQwpV7TQUIxum23duOycwUOvpHVhvPtGJACZM');
+            background-size:cover;
+            background-position:center;
+            display:flex;
+            flex-direction:column;
+            justify-content:flex-end;
+            padding:30px;
+            border-bottom:3px solid #ffd700;
+        }
+
+        .hero h1{
+            font-size:38px;
+            color:#ffd700;
+            margin-bottom:10px;
+            font-weight:900;
+            letter-spacing:2px;
+        }
+
+        .hero p{
+            color:#ddd;
+            font-size:16px;
+            max-width:400px;
+            line-height:1.5;
+        }
+
+        /* GRID */
+
+        .grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:18px;
+            padding:20px;
+        }
+
+        .card{
+            background:#111;
+            border-radius:18px;
+            overflow:hidden;
+            border:1px solid #222;
+            transition:0.3s;
+            box-shadow:0 0 20px rgba(255,215,0,0.08);
+        }
+
+        .card:hover{
+            transform:translateY(-5px);
+            border-color:#ffd700;
+        }
+
+        .card img{
+            width:100%;
+            height:180px;
+            object-fit:cover;
+        }
+
+        .card-content{
+            padding:15px;
+            text-align:center;
+        }
+
+        .card h3{
+            font-size:18px;
+            margin-bottom:10px;
+            color:#ffd700;
+        }
+
+        .card p{
+            color:#aaa;
+            font-size:13px;
+            line-height:1.5;
+        }
+
+        .btn{
+            display:block;
+            margin-top:15px;
+            padding:12px;
+            background:#ffd700;
+            color:#000;
+            text-decoration:none;
+            border-radius:10px;
+            font-weight:700;
+            transition:0.3s;
+            border:none;
+            cursor:pointer;
+            width:100%;
+        }
+
+        .btn:hover{
+            background:#fff;
+        }
+
+        /* MINING */
+
+        .mining-card{
+            position:relative;
+            overflow:hidden;
+        }
+
+        .mining-top{
+            position:absolute;
+            top:10px;
+            left:10px;
+            right:10px;
+            display:flex;
+            justify-content:space-between;
+            z-index:5;
+        }
+
+        .coin-box,
+        .energy-box{
+            background:rgba(0,0,0,0.7);
+            padding:8px 12px;
+            border-radius:10px;
+            font-weight:bold;
+            font-size:14px;
+            border:1px solid #ffd700;
+        }
+
+        .coin-box{
+            color:#ffd700;
+        }
+
+        .energy-box{
+            color:#00ffcc;
+        }
+
+        .mining-img{
+            width:100%;
+            height:260px;
+            object-fit:cover;
+            cursor:pointer;
+            transition:0.1s;
+        }
+
+        .mining-img:active{
+            transform:scale(0.97);
+        }
+
+        /* TAP EFFECT */
+
+        .tap-effect{
+            position:absolute;
+            color:#ffd700;
+            font-size:28px;
+            font-weight:bold;
+            animation:floatUp 1s forwards;
+            pointer-events:none;
+            z-index:1000;
+        }
+
+        @keyframes floatUp{
+
+            0%{
+                opacity:1;
+                transform:translateY(0);
+            }
+
+            100%{
+                opacity:0;
+                transform:translateY(-80px);
+            }
+        }
+
+        /* NAVBAR */
+
+        .nav{
+            position:fixed;
+            bottom:0;
+            left:0;
+            width:100%;
+            background:#0d0d0d;
+            border-top:1px solid #222;
+            display:flex;
+            justify-content:space-around;
+            align-items:center;
+            padding:15px 0;
+            z-index:999;
+        }
+
+        .nav span{
+            color:#ffd700;
+            font-size:14px;
+            font-weight:bold;
+        }
+
+        @media(max-width:700px){
+
+            .grid{
+                grid-template-columns:1fr;
+            }
+
+            .hero h1{
+                font-size:30px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- HERO -->
+
+    <div class="hero">
+
+        <h1>BEARBEE ARENA</h1>
+
+        <p>
+            Deposit et, yarış otaqlarına qoşul, mining et və böyük bonuslar qazan.
+        </p>
+
+    </div>
+
+    <!-- GRID -->
+
+    <div class="grid">
+
+        <!-- MINING -->
+
+        <div class="card mining-card">
+
+            <div class="mining-top">
+
+                <div class="coin-box">
+                    🪙 <span id="coin">0</span>
+                </div>
+
+                <div class="energy-box">
+                    ⚡ <span id="energy">100</span>/100
+                </div>
+
+            </div>
+
+            <img
+            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/Screenshot_20260525_183531.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlL1NjcmVlbnNob3RfMjAyNjA1MjVfMTgzNTMxLmpwZyIsImlhdCI6MTc3OTcyNDE4NiwiZXhwIjoxODExMjYwMTg2fQ.lkyjWpIULxDPxO0KyIngHHwY6gw8i3d0R2sHaNWv-Ho"
+            alt="Mining"
+            class="mining-img"
+            id="tapBear">
+
+            <div class="card-content">
+
+                <h3>MINING</h3>
+
+                <p>
+                    Ayıya klik et və hər klikdə +2 coin qazan.
+                </p>
+
+                <button class="btn" onclick="watchAd()">
+                    🎥 Reklama Bax +100 Enerji
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- RACE ROOM -->
+
+        <div class="card">
+
+            <img 
+            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723754017.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM3NTQwMTcucG5nIiwiaWF0IjoxNzc5NzI0MTgyLCJleHAiOjE4MTEyNjAxODJ9.PaD8Zr_1u1N1eTBaINp4yAAmoE_IXiZSz1hr-9_PFss">
+
+            <div class="card-content">
+
+                <h3>RACE ROOM</h3>
+
+                <p>
+                    3 nəfərlik yarış otaqlarına qoşul və qalib ol.
+                </p>
+
+                <a href="race.html" class="btn">
+                    OTAĞA GİR
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- ADS -->
+
+        <div class="card">
+
+            <img 
+            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723620752.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM2MjA3NTIucG5nIiwiaWF0IjoxNzc5NzI0MTc1LCJleHAiOjE4MTEyNjAxNzV9.QSPFYOQiLBI1835eW9WHxUy1v8-W-VOobAmGzeAkMxM">
+
+            <div class="card-content">
+
+                <h3>ADS</h3>
+
+                <p>
+                    Reklam yerləşdir və istifadəçilərə daha tez çat.
+                </p>
+
+                <a href="ads.html" class="btn">
+                    DOLDUR
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- BONUS -->
+
+        <div class="card">
+
+            <img 
+            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723592367.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM1OTIzNjcucG5nIiwiaWF0IjoxNzc5NzI0MTQ5LCJleHAiOjE4MTEyNjAxNDl9.JpcCuYBfo5v_Zhr4JVqiTl2e2bvWwAxoieZdMZ5ynmU">
+
+            <div class="card-content">
+
+                <h3>BONUS</h3>
+
+                <p>
+                    Gündəlik bonuslar və xüsusi mükafatlar əldə et.
+                </p>
+
+                <a href="#" class="btn">
+                    KEÇİD
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- NAV -->
+
+    <div class="nav">
+
+        <span>ARENA</span>
+        <span>PROFILE</span>
+        <span>RANK</span>
+
+    </div>
+
+    <script>
+
+        let coins = 0;
+        let energy = 100;
+
+        const coinText = document.getElementById("coin");
+        const energyText = document.getElementById("energy");
+        const bear = document.getElementById("tapBear");
+
+        window.onload = function(){
+
+            const savedCoins = localStorage.getItem("coins");
+            const savedEnergy = localStorage.getItem("energy");
+
+            if(savedCoins){
+                coins = parseInt(savedCoins);
+                coinText.innerText = coins;
+            }
+
+            if(savedEnergy){
+                energy = parseInt(savedEnergy);
+                energyText.innerText = energy;
+            }
+        }
+
+        bear.addEventListener("click", function(e){
+
+            if(energy <= 0){
+                alert("Enerji bitdi! Reklama bax.");
+                return;
+            }
+
+            coins += 2;
+            energy -= 1;
+
+            coinText.innerText = coins;
+            energyText.innerText = energy;
+
+            localStorage.setItem("coins", coins);
+            localStorage.setItem("energy", energy);
+
+            const plus = document.createElement("div");
+
+            plus.classList.add("tap-effect");
+            plus.innerText = "+2";
+
+            plus.style.left = e.pageX + "px";
+            plus.style.top = e.pageY + "px";
+
+            document.body.appendChild(plus);
+
+            setTimeout(()=>{
+                plus.remove();
+            },1000);
+
+        });
+
+        function watchAd(){
+
+            alert("Reklam izlənildi! +100 enerji");
+
+            energy = 100;
+
+            energyText.innerText = energy;
+
+            localStorage.setItem("energy", energy);
+        }
+
+    </script>
+
+</body>
+</html>
