@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bearbee Arena | Main</title>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            background:#000;
+            color:#fff;
+            font-family:'Segoe UI',sans-serif;
+            padding-bottom:90px;
+        }
+
+        .hero{
+            height:55vh;
+            background:
+            linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.35)),
+            url('https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723586119.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM1ODYxMTkucG5nIiwiaWF0IjoxNzc5NzI0MTIwLCJleHAiOjE4MTEyNjAxMjB9.UM6clPwQwpV7TQUIxum23duOycwUOvpHVhvPtGJACZM');
+            background-size:cover;
+            background-position:center;
+            display:flex;
+            flex-direction:column;
+            justify-content:flex-end;
+            padding:30px;
+            border-bottom:3px solid #ffd700;
+        }
+
+        .hero h1{
+            font-size:38px;
+            color:#ffd700;
+            margin-bottom:10px;
+            font-weight:900;
+            letter-spacing:2px;
+        }
+
+        .hero p{
+            color:#ddd;
+            font-size:16px;
+            max-width:440px;
+            line-height:1.5;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:18px;
+            padding:20px;
+        }
+
+        .card{
+            background:#111;
+            border-radius:18px;
+            overflow:hidden;
+            border:1px solid #222;
+            transition:0.3s;
+            box-shadow:0 0 20px rgba(255,215,0,0.08);
+        }
+
+        .card:hover{
+            transform:translateY(-5px);
+            border-color:#ffd700;
+        }
+
+        .card img{
+            width:100%;
+            height:210px;
+            object-fit:cover;
+        }
+
+        .card-content{
+            padding:15px;
+            text-align:center;
+        }
+
+        .card h3{
+            font-size:18px;
+            margin-bottom:10px;
+            color:#ffd700;
+        }
+
+        .card p{
+            color:#aaa;
+            font-size:13px;
+            line-height:1.5;
+        }
+
+        .btn{
+            display:block;
+            margin-top:15px;
+            padding:12px;
+            background:#ffd700;
+            color:#000;
+            text-decoration:none;
+            border-radius:10px;
+            font-weight:800;
+            transition:0.3s;
+            border:none;
+            cursor:pointer;
+            width:100%;
+            text-align:center;
+        }
+
+        .btn:hover{
+            background:#fff;
+        }
+
+        .nav{
+            position:fixed;
+            bottom:0;
+            left:0;
+            width:100%;
+            background:#0d0d0d;
+            border-top:1px solid #222;
+            display:flex;
+            justify-content:space-around;
+            align-items:center;
+            padding:15px 0;
+            z-index:999;
+        }
+
+        .nav a{
+            color:#ffd700;
+            font-size:14px;
+            font-weight:bold;
+            text-decoration:none;
+        }
+
+        @media(max-width:700px){
+            .grid{
+                grid-template-columns:1fr;
+            }
+
+            .hero h1{
+                font-size:30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero">
+        <h1>BEARBEE ARENA</h1>
+        <p>
+            Click otağına gir, real oyunçularla yarış və reklam izləyərək əlavə coin/xal qazan.
+        </p>
+    </div>
+
+    <div class="grid">
+
+        <!-- CLICK ROOM -->
+
+        <div class="card">
+            <img
+            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/Screenshot_20260525_183531.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlL1NjcmVlbnNob3RfMjAyNjA1MjVfMTgzNTMxLmpwZyIsImlhdCI6MTc3OTcyNDE4NiwiZXhwIjoxODExMjYwMTg2fQ.lkyjWpIULxDPxO0KyIngHHwY6gw8i3d0R2sHaNWv-Ho"
+            alt="Click Room">
+
+            <div class="card-content">
+                <h3>CLICK ROOM</h3>
+                <p>
+                    Ayıya klik et, 100 enerji ilə coin qazan və reklamlı qutuları aç.
+                </p>
+                <a href="./click-room.html" class="btn">
+                    🐻 CLICK OTAĞINA GİR
+                </a>
+            </div>
+        </div>
+
+        <!-- REAL RACE ROOM -->
+
+        <div class="card">
+            <img
+            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723754017.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM3NTQwMTcucG5nIiwiaWF0IjoxNzc5NzI0MTgyLCJleHAiOjE4MTEyNjAxODJ9.PaD8Zr_1u1N1eTBaINp4yAAmoE_IXiZSz1hr-9_PFss"
+            alt="Real Race Room">
+
+            <div class="card-content">
+                <h3>REAL RACE ROOM</h3>
+                <p>
+                    Real oyunçularla 2-3 nəfərlik maşın yarış otağına qoşul.
+                </p>
+                <a href="./race.html" class="btn">
+                    🏁 YARIŞ OTAĞINA GİR
+                </a>
+            </div>
+        </div>
+
+        <!-- ADS REWARD -->
+
+        <div class="card">
+            <img
+            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723620752.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM2MjA3NTIucG5nIiwiaWF0IjoxNzc5NzI0MTc1LCJleHAiOjE4MTEyNjAxNzV9.QSPFYOQiLBI1835eW9WHxUy1v8-W-VOobAmGzeAkMxM"
+            alt="Ads Reward">
+
+            <div class="card-content">
+                <h3>ADS REWARD</h3>
+                <p>
+                    Reklam izlə, izləmə tamamlanandan sonra coin/xal qazan.
+                </p>
+                <a href="./ads.html" class="btn">
+                    🎥 REKLAM OTAĞINA GİR
+                </a>
+            </div>
+        </div>
+
+        <!-- BONUS -->
+
+        <div class="card">
+            <img
+            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723592367.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM1OTIzNjcucG5nIiwiaWF0IjoxNzc5NzI0MTQ5LCJleHAiOjE4MTEyNjAxNDl9.JpcCuYBfo5v_Zhr4JVqiTl2e2bvWwAxoieZdMZ5ynmU"
+            alt="Bonus">
+
+            <div class="card-content">
+                <h3>BONUS</h3>
+                <p>
+                    Gündəlik bonuslar və xüsusi mükafatlar əldə et.
+                </p>
+                <a href="./bonus.html" class="btn">
+                    KEÇİD
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="nav">
+        <a href="./index.html">ARENA</a>
+        <a href="./click-room.html">CLICK</a>
+        <a href="./race.html">RACE</a>
+        <a href="./ads.html">ADS</a>
+    </div>
+
+</body>
+</html>
+
