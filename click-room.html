@@ -675,6 +675,115 @@
             font-weight:1000;
         }
 
+
+        /* PREMIUM ROLLERCOIN STYLE MARKET + MINING LAYOUT */
+        .page{ max-width:1180px; }
+        .layout{
+            grid-template-columns:minmax(0, 1.05fr) minmax(0, 1fr);
+            align-items:start;
+        }
+        .panel{ padding:18px; }
+        .mining-box{
+            background:
+                radial-gradient(circle at 20% 10%, rgba(255,215,0,0.14), transparent 38%),
+                radial-gradient(circle at 80% 20%, rgba(21,151,255,0.18), transparent 34%),
+                linear-gradient(180deg, #101d30, #050b13);
+            border:1px solid rgba(255,215,0,0.34);
+            box-shadow:inset 0 0 26px rgba(255,215,0,0.08), 0 0 26px rgba(21,151,255,0.14);
+        }
+        .mining-rig{
+            min-height:150px;
+            border-radius:20px;
+            margin-bottom:14px;
+            display:grid;
+            grid-template-columns:110px 1fr;
+            gap:14px;
+            align-items:center;
+            padding:14px;
+            background:
+                linear-gradient(135deg, rgba(0,0,0,0.55), rgba(21,151,255,0.10)),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 18px);
+            border:1px solid rgba(88,185,255,0.25);
+        }
+        .rig-icon{
+            width:100px;
+            height:100px;
+            border-radius:22px;
+            display:grid;
+            place-items:center;
+            font-size:54px;
+            background:
+                radial-gradient(circle, rgba(255,215,0,0.25), transparent 60%),
+                linear-gradient(180deg, #10233b, #060b12);
+            border:1px solid rgba(255,215,0,0.35);
+            box-shadow:0 0 26px rgba(255,215,0,0.14);
+        }
+        .rig-info h3{ color:#ffd700; font-size:22px; margin-bottom:8px; }
+        .rig-info p{ color:#a8b4c4; font-size:14px; line-height:1.5; }
+        .mining-stats{ grid-template-columns:repeat(3, 1fr); }
+        .market-toolbar{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px;
+            margin-bottom:12px;
+        }
+        .market-scroll{
+            max-height:560px;
+            overflow-y:auto;
+            padding-right:4px;
+        }
+        .market-scroll::-webkit-scrollbar{ width:7px; }
+        .market-scroll::-webkit-scrollbar-thumb{ background:#31577d; border-radius:999px; }
+        .market-scroll::-webkit-scrollbar-track{ background:#030a13; border-radius:999px; }
+        #marketplace.cards-grid, #myCards.cards-grid{
+            grid-template-columns:repeat(auto-fill, minmax(190px, 1fr));
+        }
+        .listing-card, .card-item{
+            background:
+                radial-gradient(circle at 50% 0%, rgba(255,215,0,0.08), transparent 42%),
+                linear-gradient(180deg, #111d2d, #050b12);
+            border:1px solid rgba(88,185,255,0.28);
+            transition:0.16s ease;
+        }
+        .listing-card:hover, .card-item:hover{
+            transform:translateY(-3px);
+            border-color:#ffd700;
+            box-shadow:0 0 24px rgba(255,215,0,0.13);
+        }
+        .card-art{
+            height:96px;
+            background:
+                radial-gradient(circle at 50% 35%, rgba(255,215,0,0.20), transparent 45%),
+                linear-gradient(135deg, #183a61, #1b1540 55%, #2a103d);
+        }
+        .price-ton{ color:#ffd700; font-weight:1000; }
+        .price-coin{ color:#98a8ba; font-size:12px; }
+        .power-text{ color:#00ffcc; font-weight:1000; }
+        .card-room-title{
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+        .pill{
+            display:inline-block;
+            padding:5px 9px;
+            border-radius:999px;
+            background:#030a13;
+            border:1px solid #31577d;
+            color:#00ffcc;
+            font-size:11px;
+            font-weight:1000;
+        }
+        @media(max-width:850px){
+            .layout{ grid-template-columns:1fr; }
+            .mining-rig{ grid-template-columns:1fr; text-align:center; }
+            .rig-icon{ margin:0 auto; }
+            .mining-stats{ grid-template-columns:1fr; }
+            .market-scroll{ max-height:none; overflow:visible; }
+        }
+
     </style>
 </head>
 
@@ -829,6 +938,17 @@
                     </p>
 
                     <div class="mining-box">
+                        <div class="mining-rig">
+                            <div class="rig-icon">⛏️</div>
+                            <div class="rig-info">
+                                <h3>Bearbee Mining Rig</h3>
+                                <p>
+                                    Kartların Mining Power yaradır. Power artdıqca passiv coin gəlirin artır,
+                                    amma claim sistemi balansı qoruyur.
+                                </p>
+                            </div>
+                        </div>
+
                         <div class="mining-stats">
                             <div class="mining-stat">
                                 <h3>Total Power</h3>
@@ -838,6 +958,11 @@
                             <div class="mining-stat">
                                 <h3>Income</h3>
                                 <strong id="lastIncomeText">0</strong>
+                            </div>
+
+                            <div class="mining-stat">
+                                <h3>Rate</h3>
+                                <strong>100K=1 TON</strong>
                             </div>
                         </div>
 
@@ -860,7 +985,7 @@
             <div>
 
                 <section class="panel">
-                    <h2 class="panel-title">Mənim Cyber Kartlarım</h2>
+                    <h2 class="panel-title card-room-title">Mənim Cyber Kartlarım <span class="pill">Power + Boost</span></h2>
                     <p class="panel-sub">
                         Kart seçəndə click boost dəyişir. Kartı satışa qoymaq üçün qiymət yaz.
                     </p>
@@ -873,17 +998,19 @@
                 </section>
 
                 <section class="panel">
-                    <h2 class="panel-title">Kart Birjası</h2>
+                    <h2 class="panel-title card-room-title">Kart Birjası <span class="pill">Premium Market</span></h2>
                     <p class="panel-sub">
                         Oyun coini ilə kart al-sat. Alış/satış Telegram ID ilə serverdə edilir.
                     </p>
 
-                    <div class="market-top">
+                    <div class="market-toolbar">
                         <button class="btn btn-blue" onclick="loadMarketplace()">Birjanı yenilə</button>
                         <button class="btn btn-dark" onclick="loadMyCards()">Kartlarımı yenilə</button>
                     </div>
 
-                    <div class="cards-grid" id="marketplace"></div>
+                    <div class="market-scroll">
+                        <div class="cards-grid" id="marketplace"></div>
+                    </div>
 
                     <div class="log" id="marketLog">
                         Birja yüklənir...
@@ -1730,7 +1857,7 @@
                     <span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span>
                     <p>Boost: ${Number(t.click_boost) || 1}x</p>
                     <p class="power-text">Power: ${Number(t.mining_power) || 0}</p>
-                    <p>Qiymət: ${Number(listing.price)} 🪙</p>
+                    <p><span class="price-ton">≈ ${coinToTon(listing.price)} TON</span></p><p class="price-coin">${Number(listing.price)} coin</p>
                     <button class="btn ${isMine ? "btn-dark" : "btn-green"}" ${isMine ? "disabled" : ""} onclick="buyCard(${listing.id})">
                         ${isMine ? "Sənin satışındır" : "Al"}
                     </button>
@@ -1773,6 +1900,11 @@
             }
         }
 
+
+        function coinToTon(price){
+            return (Number(price || 0) / 100000).toFixed(2);
+        }
+
         function escapeHtml(text){
             return String(text)
                 .replaceAll("&", "&amp;")
@@ -1793,5 +1925,4 @@
 
 </body>
 </html>
-
 
