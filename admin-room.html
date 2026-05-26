@@ -326,7 +326,8 @@
       const { error } = await supabaseClient.auth.signInWithOtp({
         email,
         options:{
-          shouldCreateUser:true
+          shouldCreateUser:true,
+          emailRedirectTo:"https://xeyalamanov121-commits.github.io/RaceGame/admin-room.html"
         }
       });
 
@@ -614,3 +615,4 @@
 
 </body>
 </html>
+
