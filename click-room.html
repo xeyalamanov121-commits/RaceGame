@@ -589,6 +589,50 @@
                 font-size:28px;
             }
         }
+
+        /* MOBILE CARD SELL INPUT FIX */
+        .card-item .input-row{
+            display:grid;
+            grid-template-columns:1fr;
+            gap:8px;
+            margin-top:10px;
+            width:100%;
+        }
+
+        .card-item .input-row input{
+            width:100%;
+            min-width:0;
+            height:44px;
+            display:block;
+        }
+
+        .card-item .input-row .btn{
+            width:100%;
+            min-width:0;
+            padding:12px 10px;
+            font-size:14px;
+            white-space:nowrap;
+        }
+
+        .card-item{
+            min-height:auto;
+            overflow:hidden;
+        }
+
+        .cards-grid{
+            grid-template-columns:repeat(auto-fill, minmax(210px, 1fr));
+        }
+
+        @media(max-width:520px){
+            .cards-grid{
+                grid-template-columns:1fr;
+            }
+
+            .card-item{
+                width:100%;
+            }
+        }
+
     </style>
 </head>
 
@@ -974,7 +1018,7 @@
             `;
 
             if(clickLog){
-                clickLog.innerHTML = html;
+                clickLog.innerHTML = html + "<br><br>İndi klik effekti işləyəcək, amma yadda saxlamaq üçün PLAY ilə açmaq lazımdır.";
             }
 
             if(cardLog){
@@ -1181,7 +1225,8 @@
         tapBear.addEventListener("click", function(e){
             if(!hasTelegramInitData()){
                 showMiniAppOpenScreen();
-                return;
+                // Mini App kimi açılmayıbsa belə, klik effekti işləsin.
+                // Amma serverə yadda saxlama yalnız PLAY/Mini App ilə açanda mümkün olacaq.
             }
 
             if(energy <= 0){
