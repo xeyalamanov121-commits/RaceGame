@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bearbee Arena | Main</title>
 
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
         *{
             margin:0;
@@ -17,12 +19,67 @@
             color:#fff;
             font-family:'Segoe UI',sans-serif;
             padding-bottom:90px;
+            overflow-x:hidden;
+        }
+
+        .topbar{
+            position:fixed;
+            top:12px;
+            left:12px;
+            right:12px;
+            z-index:50;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            pointer-events:none;
+        }
+
+        .brand-mini{
+            pointer-events:auto;
+            background:rgba(0,0,0,0.55);
+            border:1px solid rgba(255,215,0,0.35);
+            color:#ffd700;
+            border-radius:999px;
+            padding:9px 12px;
+            font-weight:900;
+            letter-spacing:1px;
+            backdrop-filter:blur(10px);
+            box-shadow:0 0 18px rgba(255,215,0,0.12);
+        }
+
+        .lang-box{
+            pointer-events:auto;
+            display:flex;
+            gap:6px;
+            flex-wrap:wrap;
+            justify-content:flex-end;
+        }
+
+        .lang-btn{
+            background:rgba(0,0,0,0.62);
+            color:#fff;
+            border:1px solid rgba(255,215,0,0.38);
+            border-radius:999px;
+            padding:8px 10px;
+            font-weight:900;
+            font-size:12px;
+            cursor:pointer;
+            backdrop-filter:blur(10px);
+        }
+
+        .lang-btn.active{
+            background:#ffd700;
+            color:#000;
+            border-color:#fff1a6;
+            box-shadow:0 0 16px rgba(255,215,0,0.35);
         }
 
         .hero{
             height:55vh;
             background:
             linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.35)),
+            url('./assets/hero-cyber.png'),
             url('https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723586119.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM1ODYxMTkucG5nIiwiaWF0IjoxNzc5NzI0MTIwLCJleHAiOjE4MTEyNjAxMjB9.UM6clPwQwpV7TQUIxum23duOycwUOvpHVhvPtGJACZM');
             background-size:cover;
             background-position:center;
@@ -31,6 +88,20 @@
             justify-content:flex-end;
             padding:30px;
             border-bottom:3px solid #ffd700;
+            position:relative;
+            overflow:hidden;
+        }
+
+        .hero::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            background:
+                radial-gradient(circle at 18% 15%, rgba(21,151,255,0.22), transparent 34%),
+                radial-gradient(circle at 82% 22%, rgba(155,61,255,0.22), transparent 32%),
+                linear-gradient(90deg, transparent 0 96%, rgba(255,255,255,0.04) 97% 100%);
+            background-size:100% 100%, 100% 100%, 34px 34px;
+            pointer-events:none;
         }
 
         .hero h1{
@@ -39,6 +110,9 @@
             margin-bottom:10px;
             font-weight:900;
             letter-spacing:2px;
+            position:relative;
+            z-index:2;
+            text-shadow:0 0 18px rgba(255,215,0,0.25);
         }
 
         .hero p{
@@ -46,6 +120,9 @@
             font-size:16px;
             max-width:440px;
             line-height:1.5;
+            position:relative;
+            z-index:2;
+            font-weight:600;
         }
 
         .grid{
@@ -69,10 +146,64 @@
             border-color:#ffd700;
         }
 
-        .card img{
+        .img-wrap{
+            width:100%;
+            height:210px;
+            position:relative;
+            overflow:hidden;
+            background:
+                radial-gradient(circle at center, rgba(255,215,0,0.22), transparent 45%),
+                linear-gradient(135deg, #051423, #160421 55%, #02040a);
+            border-bottom:1px solid rgba(255,215,0,0.18);
+        }
+
+        .img-wrap::after{
+            content:"";
+            position:absolute;
+            inset:0;
+            background:linear-gradient(to top, rgba(0,0,0,0.58), rgba(0,0,0,0.04));
+            pointer-events:none;
+            z-index:2;
+        }
+
+        .img-wrap img{
             width:100%;
             height:210px;
             object-fit:cover;
+            display:block;
+            position:relative;
+            z-index:1;
+        }
+
+        .img-fallback{
+            position:absolute;
+            inset:0;
+            display:none;
+            place-items:center;
+            text-align:center;
+            padding:18px;
+            z-index:1;
+        }
+
+        .img-fallback .icon{
+            font-size:54px;
+            margin-bottom:8px;
+            filter:drop-shadow(0 0 18px rgba(255,215,0,0.35));
+        }
+
+        .img-fallback .txt{
+            color:#ffd700;
+            font-size:18px;
+            font-weight:900;
+            letter-spacing:1px;
+        }
+
+        .img-wrap.failed .img-fallback{
+            display:grid;
+        }
+
+        .img-wrap.failed img{
+            display:none;
         }
 
         .card-content{
@@ -90,6 +221,7 @@
             color:#aaa;
             font-size:13px;
             line-height:1.5;
+            min-height:40px;
         }
 
         .btn{
@@ -141,15 +273,43 @@
             .hero h1{
                 font-size:30px;
             }
+
+            .hero{
+                padding:24px 18px;
+            }
+
+            .topbar{
+                align-items:flex-start;
+            }
+
+            .brand-mini{
+                font-size:12px;
+            }
+
+            .lang-btn{
+                padding:7px 8px;
+                font-size:11px;
+            }
         }
     </style>
 </head>
 
 <body>
 
+    <div class="topbar">
+        <div class="brand-mini">BEARBEE</div>
+
+        <div class="lang-box">
+            <button class="lang-btn" id="lang_az" onclick="setLang('az')">AZ</button>
+            <button class="lang-btn" id="lang_en" onclick="setLang('en')">EN</button>
+            <button class="lang-btn" id="lang_tr" onclick="setLang('tr')">TR</button>
+            <button class="lang-btn" id="lang_ru" onclick="setLang('ru')">RU</button>
+        </div>
+    </div>
+
     <div class="hero">
-        <h1>BEARBEE ARENA</h1>
-        <p>
+        <h1 data-i18n="heroTitle">BEARBEE ARENA</h1>
+        <p data-i18n="heroText">
             Click otağına gir, real oyunçularla yarış və reklam izləyərək əlavə coin/xal qazan.
         </p>
     </div>
@@ -159,16 +319,27 @@
         <!-- CLICK ROOM -->
 
         <div class="card">
-            <img
-            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/Screenshot_20260525_183531.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlL1NjcmVlbnNob3RfMjAyNjA1MjVfMTgzNTMxLmpwZyIsImlhdCI6MTc3OTcyNDE4NiwiZXhwIjoxODExMjYwMTg2fQ.lkyjWpIULxDPxO0KyIngHHwY6gw8i3d0R2sHaNWv-Ho"
-            alt="Click Room">
+            <div class="img-wrap">
+                <img
+                src="./assets/click-cyber.png"
+                data-fallback="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/Screenshot_20260525_183531.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlL1NjcmVlbnNob3RfMjAyNjA1MjVfMTgzNTMxLmpwZyIsImlhdCI6MTc3OTcyNDE4NiwiZXhwIjoxODExMjYwMTg2fQ.lkyjWpIULxDPxO0KyIngHHwY6gw8i3d0R2sHaNWv-Ho"
+                alt="Click Room"
+                onerror="imageFallback(this, '🐻', 'CLICK ROOM')">
+
+                <div class="img-fallback">
+                    <div>
+                        <div class="icon">🐻</div>
+                        <div class="txt">CLICK ROOM</div>
+                    </div>
+                </div>
+            </div>
 
             <div class="card-content">
-                <h3>CLICK ROOM</h3>
-                <p>
+                <h3 data-i18n="clickTitle">CLICK ROOM</h3>
+                <p data-i18n="clickText">
                     Ayıya klik et, 100 enerji ilə coin qazan və reklamlı qutuları aç.
                 </p>
-                <a href="./click-room.html" class="btn">
+                <a href="./click-room.html" class="btn" data-i18n="clickBtn">
                     🐻 CLICK OTAĞINA GİR
                 </a>
             </div>
@@ -177,16 +348,27 @@
         <!-- REAL RACE ROOM -->
 
         <div class="card">
-            <img
-            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723754017.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM3NTQwMTcucG5nIiwiaWF0IjoxNzc5NzI0MTgyLCJleHAiOjE4MTEyNjAxODJ9.PaD8Zr_1u1N1eTBaINp4yAAmoE_IXiZSz1hr-9_PFss"
-            alt="Real Race Room">
+            <div class="img-wrap">
+                <img
+                src="./assets/race-cyber.png"
+                data-fallback="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723754017.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM3NTQwMTcucG5nIiwiaWF0IjoxNzc5NzI0MTgyLCJleHAiOjE4MTEyNjAxODJ9.PaD8Zr_1u1N1eTBaINp4yAAmoE_IXiZSz1hr-9_PFss"
+                alt="Real Race Room"
+                onerror="imageFallback(this, '🏁', 'RACE ROOM')">
+
+                <div class="img-fallback">
+                    <div>
+                        <div class="icon">🏁</div>
+                        <div class="txt">RACE ROOM</div>
+                    </div>
+                </div>
+            </div>
 
             <div class="card-content">
-                <h3>REAL RACE ROOM</h3>
-                <p>
+                <h3 data-i18n="raceTitle">REAL RACE ROOM</h3>
+                <p data-i18n="raceText">
                     Real oyunçularla 2-3 nəfərlik maşın yarış otağına qoşul.
                 </p>
-                <a href="./race.html" class="btn">
+                <a href="./race.html" class="btn" data-i18n="raceBtn">
                     🏁 YARIŞ OTAĞINA GİR
                 </a>
             </div>
@@ -195,16 +377,27 @@
         <!-- ADS REWARD -->
 
         <div class="card">
-            <img
-            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723620752.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM2MjA3NTIucG5nIiwiaWF0IjoxNzc5NzI0MTc1LCJleHAiOjE4MTEyNjAxNzV9.QSPFYOQiLBI1835eW9WHxUy1v8-W-VOobAmGzeAkMxM"
-            alt="Ads Reward">
+            <div class="img-wrap">
+                <img
+                src="./assets/ads-cyber.png"
+                data-fallback="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723620752.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM2MjA3NTIucG5nIiwiaWF0IjoxNzc5NzI0MTc1LCJleHAiOjE4MTEyNjAxNzV9.QSPFYOQiLBI1835eW9WHxUy1v8-W-VOobAmGzeAkMxM"
+                alt="Ads Reward"
+                onerror="imageFallback(this, '🎥', 'ADS REWARD')">
+
+                <div class="img-fallback">
+                    <div>
+                        <div class="icon">🎥</div>
+                        <div class="txt">ADS REWARD</div>
+                    </div>
+                </div>
+            </div>
 
             <div class="card-content">
-                <h3>ADS REWARD</h3>
-                <p>
+                <h3 data-i18n="adsTitle">ADS REWARD</h3>
+                <p data-i18n="adsText">
                     Reklam izlə, izləmə tamamlanandan sonra coin/xal qazan.
                 </p>
-                <a href="./ads.html" class="btn">
+                <a href="./ads.html" class="btn" data-i18n="adsBtn">
                     🎥 REKLAM OTAĞINA GİR
                 </a>
             </div>
@@ -213,16 +406,27 @@
         <!-- BONUS -->
 
         <div class="card">
-            <img
-            src="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723592367.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM1OTIzNjcucG5nIiwiaWF0IjoxNzc5NzI0MTQ5LCJleHAiOjE4MTEyNjAxNDl9.JpcCuYBfo5v_Zhr4JVqiTl2e2bvWwAxoieZdMZ5ynmU"
-            alt="Bonus">
+            <div class="img-wrap">
+                <img
+                src="./assets/bonus-cyber.png"
+                data-fallback="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723592367.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM1OTIzNjcucG5nIiwiaWF0IjoxNzc5NzI0MTQ5LCJleHAiOjE4MTEyNjAxNDl9.JpcCuYBfo5v_Zhr4JVqiTl2e2bvWwAxoieZdMZ5ynmU"
+                alt="Bonus"
+                onerror="imageFallback(this, '🎁', 'BONUS')">
+
+                <div class="img-fallback">
+                    <div>
+                        <div class="icon">🎁</div>
+                        <div class="txt">BONUS</div>
+                    </div>
+                </div>
+            </div>
 
             <div class="card-content">
-                <h3>BONUS</h3>
-                <p>
+                <h3 data-i18n="bonusTitle">BONUS</h3>
+                <p data-i18n="bonusText">
                     Gündəlik bonuslar və xüsusi mükafatlar əldə et.
                 </p>
-                <a href="./bonus.html" class="btn">
+                <a href="./bonus.html" class="btn" data-i18n="bonusBtn">
                     KEÇİD
                 </a>
             </div>
@@ -231,11 +435,219 @@
     </div>
 
     <div class="nav">
-        <a href="./index.html">ARENA</a>
-        <a href="./click-room.html">CLICK</a>
-        <a href="./race.html">RACE</a>
-        <a href="./ads.html">ADS</a>
+        <a href="./index.html" data-i18n="navArena">ARENA</a>
+        <a href="./click-room.html" data-i18n="navClick">CLICK</a>
+        <a href="./race.html" data-i18n="navRace">RACE</a>
+        <a href="./ads.html" data-i18n="navAds">ADS</a>
     </div>
+
+    <script>
+        const translations = {
+            az:{
+                heroTitle:"BEARBEE ARENA",
+                heroText:"Click otağına gir, real oyunçularla yarış və reklam izləyərək əlavə coin/xal qazan.",
+
+                clickTitle:"CLICK ROOM",
+                clickText:"Ayıya klik et, 100 enerji ilə coin qazan və reklamlı qutuları aç.",
+                clickBtn:"🐻 CLICK OTAĞINA GİR",
+
+                raceTitle:"REAL RACE ROOM",
+                raceText:"Real oyunçularla 2-3 nəfərlik maşın yarış otağına qoşul.",
+                raceBtn:"🏁 YARIŞ OTAĞINA GİR",
+
+                adsTitle:"ADS REWARD",
+                adsText:"Reklam izlə, izləmə tamamlanandan sonra coin/xal qazan.",
+                adsBtn:"🎥 REKLAM OTAĞINA GİR",
+
+                bonusTitle:"BONUS",
+                bonusText:"Gündəlik bonuslar və xüsusi mükafatlar əldə et.",
+                bonusBtn:"KEÇİD",
+
+                navArena:"ARENA",
+                navClick:"CLICK",
+                navRace:"RACE",
+                navAds:"ADS"
+            },
+
+            en:{
+                heroTitle:"BEARBEE ARENA",
+                heroText:"Enter the click room, race with real players, watch ads and earn extra coins/points.",
+
+                clickTitle:"CLICK ROOM",
+                clickText:"Click the bear, use 100 energy, earn coins and open reward boxes.",
+                clickBtn:"🐻 ENTER CLICK ROOM",
+
+                raceTitle:"REAL RACE ROOM",
+                raceText:"Join 2-3 player car race rooms with real players.",
+                raceBtn:"🏁 ENTER RACE ROOM",
+
+                adsTitle:"ADS REWARD",
+                adsText:"Watch ads and earn coins/points after the ad is completed.",
+                adsBtn:"🎥 ENTER ADS ROOM",
+
+                bonusTitle:"BONUS",
+                bonusText:"Get daily bonuses and special rewards.",
+                bonusBtn:"OPEN",
+
+                navArena:"ARENA",
+                navClick:"CLICK",
+                navRace:"RACE",
+                navAds:"ADS"
+            },
+
+            tr:{
+                heroTitle:"BEARBEE ARENA",
+                heroText:"Click odasına gir, gerçek oyuncularla yarış ve reklam izleyerek ekstra coin/puan kazan.",
+
+                clickTitle:"CLICK ROOM",
+                clickText:"Ayıya tıkla, 100 enerjiyle coin kazan ve reklamlı kutuları aç.",
+                clickBtn:"🐻 CLICK ODASINA GİR",
+
+                raceTitle:"REAL RACE ROOM",
+                raceText:"Gerçek oyuncularla 2-3 kişilik araba yarış odasına katıl.",
+                raceBtn:"🏁 YARIŞ ODASINA GİR",
+
+                adsTitle:"ADS REWARD",
+                adsText:"Reklam izle, izleme tamamlanınca coin/puan kazan.",
+                adsBtn:"🎥 REKLAM ODASINA GİR",
+
+                bonusTitle:"BONUS",
+                bonusText:"Günlük bonuslar ve özel ödüller elde et.",
+                bonusBtn:"AÇ",
+
+                navArena:"ARENA",
+                navClick:"CLICK",
+                navRace:"RACE",
+                navAds:"ADS"
+            },
+
+            ru:{
+                heroTitle:"BEARBEE ARENA",
+                heroText:"Заходи в click room, соревнуйся с реальными игроками, смотри рекламу и получай coins/points.",
+
+                clickTitle:"CLICK ROOM",
+                clickText:"Кликай по медведю, используй 100 энергии, зарабатывай coins и открывай reward boxes.",
+                clickBtn:"🐻 ВОЙТИ В CLICK",
+
+                raceTitle:"REAL RACE ROOM",
+                raceText:"Заходи в гоночную комнату на 2-3 игроков и соревнуйся с реальными игроками.",
+                raceBtn:"🏁 ВОЙТИ В RACE",
+
+                adsTitle:"ADS REWARD",
+                adsText:"Смотри рекламу и получай coins/points после завершения просмотра.",
+                adsBtn:"🎥 ВОЙТИ В ADS",
+
+                bonusTitle:"BONUS",
+                bonusText:"Получай ежедневные бонусы и специальные награды.",
+                bonusBtn:"ОТКРЫТЬ",
+
+                navArena:"ARENA",
+                navClick:"CLICK",
+                navRace:"RACE",
+                navAds:"ADS"
+            }
+        };
+
+        function initTelegramMiniApp(){
+            if(window.Telegram && window.Telegram.WebApp){
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+            }
+        }
+
+        function imageFallback(img, icon, text){
+            const fallback = img.getAttribute("data-fallback");
+
+            if(fallback && img.src !== fallback){
+                img.removeAttribute("data-fallback");
+                img.src = fallback;
+                return;
+            }
+
+            const wrap = img.closest(".img-wrap");
+
+            if(wrap){
+                wrap.classList.add("failed");
+                const iconEl = wrap.querySelector(".img-fallback .icon");
+                const txtEl = wrap.querySelector(".img-fallback .txt");
+
+                if(iconEl){
+                    iconEl.innerText = icon;
+                }
+
+                if(txtEl){
+                    txtEl.innerText = text;
+                }
+            }
+        }
+
+        function normalizeLang(lang){
+            const code = String(lang || "").toLowerCase();
+
+            if(code.startsWith("az")){
+                return "az";
+            }
+
+            if(code.startsWith("tr")){
+                return "tr";
+            }
+
+            if(code.startsWith("ru")){
+                return "ru";
+            }
+
+            if(code.startsWith("en")){
+                return "en";
+            }
+
+            return "az";
+        }
+
+        function getInitialLang(){
+            const saved = localStorage.getItem("bearbee_lang");
+
+            if(saved && translations[saved]){
+                return saved;
+            }
+
+            const tgLang = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
+
+            if(tgLang){
+                return normalizeLang(tgLang);
+            }
+
+            return normalizeLang(navigator.language);
+        }
+
+        function setLang(lang){
+            const selected = translations[lang] ? lang : "az";
+
+            localStorage.setItem("bearbee_lang", selected);
+            document.documentElement.lang = selected;
+
+            document.querySelectorAll("[data-i18n]").forEach(el => {
+                const key = el.getAttribute("data-i18n");
+
+                if(translations[selected][key]){
+                    el.innerText = translations[selected][key];
+                }
+            });
+
+            document.querySelectorAll(".lang-btn").forEach(btn => {
+                btn.classList.remove("active");
+            });
+
+            const active = document.getElementById("lang_" + selected);
+
+            if(active){
+                active.classList.add("active");
+            }
+        }
+
+        initTelegramMiniApp();
+        setLang(getInitialLang());
+    </script>
 
 </body>
 </html>
