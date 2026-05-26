@@ -784,118 +784,6 @@
             .market-scroll{ max-height:none; overflow:visible; }
         }
 
-
-        /* SEPARATE PREMIUM SECTIONS */
-        .section-tabs{
-            position:sticky;
-            top:0;
-            z-index:50;
-            display:grid;
-            grid-template-columns:repeat(3, 1fr);
-            gap:8px;
-            margin:10px 0 16px;
-            padding:8px;
-            background:rgba(3,8,18,0.86);
-            border:1px solid rgba(88,185,255,0.25);
-            border-radius:18px;
-            backdrop-filter:blur(10px);
-        }
-
-        .section-tabs a{
-            text-decoration:none;
-            text-align:center;
-            color:#98a8ba;
-            background:linear-gradient(180deg, #101d30, #050b13);
-            border:1px solid #31577d;
-            border-radius:14px;
-            padding:12px 8px;
-            font-weight:1000;
-            letter-spacing:0.6px;
-        }
-
-        .section-tabs a.active-tab,
-        .section-tabs a:active{
-            color:#111;
-            background:linear-gradient(180deg, #ffd700, #a56b00);
-            border-color:#ffef92;
-        }
-
-        .premium-section{
-            margin-bottom:18px;
-            scroll-margin-top:95px;
-        }
-
-        .section-hero{
-            background:
-                radial-gradient(circle at 10% 20%, rgba(255,215,0,0.12), transparent 32%),
-                radial-gradient(circle at 90% 0%, rgba(21,151,255,0.14), transparent 34%),
-                linear-gradient(180deg, rgba(12,22,36,0.98), rgba(4,9,16,0.98));
-            border:1px solid rgba(71,101,136,0.62);
-            border-radius:24px;
-            padding:18px;
-            box-shadow:0 0 30px rgba(21,151,255,0.08);
-        }
-
-        .section-head{
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:12px;
-            margin-bottom:14px;
-            flex-wrap:wrap;
-        }
-
-        .section-head h2{
-            color:#ffd700;
-            font-size:26px;
-            font-weight:1000;
-            letter-spacing:1px;
-        }
-
-        .section-head p{
-            color:#a8b4c4;
-            font-size:14px;
-            line-height:1.45;
-            max-width:620px;
-        }
-
-        .click-area-grid{
-            display:grid;
-            grid-template-columns:minmax(0, 1fr) minmax(280px, 390px);
-            gap:16px;
-            align-items:start;
-        }
-
-        .cards-zone{
-            display:grid;
-            grid-template-columns:1fr;
-            gap:14px;
-        }
-
-        .market-zone{
-            min-height:520px;
-        }
-
-        .mining-zone .mining-box{
-            max-width:920px;
-            margin:0 auto;
-        }
-
-        @media(max-width:850px){
-            .section-tabs{
-                grid-template-columns:1fr;
-                position:relative;
-            }
-
-            .click-area-grid{
-                grid-template-columns:1fr;
-            }
-
-            .section-head h2{
-                font-size:22px;
-            }
-        }
-
     </style>
 </head>
 
@@ -931,22 +819,118 @@
             </div>
         </section>
 
-        
-        <nav class="section-tabs">
-            <a href="#mining-section" class="active-tab">⛏ MINING</a>
-            <a href="#cards-section">🎴 KARTLAR</a>
-            <a href="#market-section">🛒 BİRJA</a>
-        </nav>
+        <section class="layout">
 
-        <section id="mining-section" class="premium-section mining-zone">
-            <div class="section-hero">
-                <div class="section-head">
-                    <div>
-                        <h2>⛏ Mining Center</h2>
-                        <p>RollerCoin tərzində ayrıca mining sahəsi. Kartlar Power verir, Power passiv coin yaradır.</p>
+            <div>
+
+                <section class="panel click-panel">
+                    <h1 class="panel-title">Cyber Bear Click</h1>
+                    <p class="panel-sub">
+                        Kart seç, cyber ayıya klik et. Kartın boost-u click gücünü artırır.
+                        Coin və kartlar Telegram ID ilə serverdə saxlanır.
+                    </p>
+
+                    <div class="bear-ring" id="tapBear">
+                        <div class="bear-button">
+                            <img src="./assets/cyber-bear.png" alt="Cyber Bear" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="bear-fallback" style="display:none;">🐻</div>
+                        </div>
                     </div>
-                    <span class="pill">100K coin = 1 TON</span>
-                </div>
+
+                    <div class="energy-line">
+                        <div class="energy-fill" id="energyFill"></div>
+                    </div>
+
+                    <button class="btn btn-purple" onclick="watchEnergyAd()">
+                        🎥 Reklama bax və Enerjini 100 et
+                    </button>
+
+                    <button class="btn btn-gold" onclick="claimClickReward()">
+                        🪙 Click xallarını serverə göndər
+                    </button>
+
+                    <div class="log" id="clickLog">
+                        Hazırdır. Cyber ayıya klik et.
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2 class="panel-title">Reklamlı Qutular</h2>
+                    <p class="panel-sub">
+                        Qutu yalnız reklam tamamlanandan sonra mükafat istəyi göndərir.
+                    </p>
+
+                    <div class="grid-3">
+                        <div class="box-card">
+                            <div class="box-icon">🎁</div>
+                            <h3>2 dəq qutu</h3>
+                            <p>Reklamdan sonra server reward istəyi.</p>
+                            <div class="timer" id="timer2">Hazırdır</div>
+                            <button class="btn btn-blue" id="boxBtn2" onclick="openRewardBox(2, 20)">Aç</button>
+                        </div>
+
+                        <div class="box-card">
+                            <div class="box-icon">📦</div>
+                            <h3>5 dəq qutu</h3>
+                            <p>Reklamdan sonra server reward istəyi.</p>
+                            <div class="timer" id="timer5">Hazırdır</div>
+                            <button class="btn btn-blue" id="boxBtn5" onclick="openRewardBox(5, 60)">Aç</button>
+                        </div>
+
+                        <div class="box-card">
+                            <div class="box-icon">💎</div>
+                            <h3>10 dəq qutu</h3>
+                            <p>Reklamdan sonra server reward istəyi.</p>
+                            <div class="timer" id="timer10">Hazırdır</div>
+                            <button class="btn btn-blue" id="boxBtn10" onclick="openRewardBox(10, 150)">Aç</button>
+                        </div>
+                    </div>
+
+                    <div class="log" id="adLog">
+                        AdsGram Block ID əlavə ediləndə real reklam işləyəcək.
+                    </div>
+                </section>
+
+
+                <section class="panel">
+                    <h2 class="panel-title">Referal Sistemi</h2>
+                    <p class="panel-sub">
+                        Dostunu dəvət et. Yeni oyunçu linkinlə qoşulanda sən +100 coin, o isə +25 coin qazanır.
+                    </p>
+
+                    <div class="ref-box">
+                        <h3>Dəvət linkin</h3>
+                        <div class="ref-link" id="refLink">Yüklənir...</div>
+
+                        <div class="grid-3">
+                            <div class="box-card">
+                                <div class="box-icon">👥</div>
+                                <h3>Dəvət</h3>
+                                <p><span id="refCount">0</span> nəfər</p>
+                            </div>
+
+                            <div class="box-card">
+                                <div class="box-icon">🪙</div>
+                                <h3>Qazanc</h3>
+                                <p><span id="refEarned">0</span> coin</p>
+                            </div>
+
+                            <div class="box-card">
+                                <div class="box-icon">🎁</div>
+                                <h3>Bonus</h3>
+                                <p>+100 / +25</p>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-green" onclick="copyReferralLink()">Linki kopyala</button>
+                    </div>
+
+                    <div class="log" id="refLog">
+                        Referal məlumatları yüklənir...
+                    </div>
+                </section>
+
+
                 <section class="panel">
                     <h2 class="panel-title">Mining Power</h2>
                     <p class="panel-sub">
@@ -995,127 +979,12 @@
                         Mining power yüklənir...
                     </div>
                 </section>
+
             </div>
-        </section>
 
-        <section id="cards-section" class="premium-section cards-zone">
-            <div class="section-hero">
-                <div class="section-head">
-                    <div>
-                        <h2>🎴 Kartlarım və Click</h2>
-                        <p>Burada click sahəsi, referal, reklam qutuları və sənin kartların ayrıdır.</p>
-                    </div>
-                    <span class="pill">Power + Boost</span>
-                </div>
+            <div>
 
-                <div class="click-area-grid">
-                    <div>
-                        <section class="panel click-panel">
-                    <h1 class="panel-title">Cyber Bear Click</h1>
-                    <p class="panel-sub">
-                        Kart seç, cyber ayıya klik et. Kartın boost-u click gücünü artırır.
-                        Coin və kartlar Telegram ID ilə serverdə saxlanır.
-                    </p>
-
-                    <div class="bear-ring" id="tapBear">
-                        <div class="bear-button">
-                            <img src="./assets/cyber-bear.png" alt="Cyber Bear" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <div class="bear-fallback" style="display:none;">🐻</div>
-                        </div>
-                    </div>
-
-                    <div class="energy-line">
-                        <div class="energy-fill" id="energyFill"></div>
-                    </div>
-
-                    <button class="btn btn-purple" onclick="watchEnergyAd()">
-                        🎥 Reklama bax və Enerjini 100 et
-                    </button>
-
-                    <button class="btn btn-gold" onclick="claimClickReward()">
-                        🪙 Click xallarını serverə göndər
-                    </button>
-
-                    <div class="log" id="clickLog">
-                        Hazırdır. Cyber ayıya klik et.
-                    </div>
-                </section>
-                        <section class="panel">
-                    <h2 class="panel-title">Reklamlı Qutular</h2>
-                    <p class="panel-sub">
-                        Qutu yalnız reklam tamamlanandan sonra mükafat istəyi göndərir.
-                    </p>
-
-                    <div class="grid-3">
-                        <div class="box-card">
-                            <div class="box-icon">🎁</div>
-                            <h3>2 dəq qutu</h3>
-                            <p>Reklamdan sonra server reward istəyi.</p>
-                            <div class="timer" id="timer2">Hazırdır</div>
-                            <button class="btn btn-blue" id="boxBtn2" onclick="openRewardBox(2, 20)">Aç</button>
-                        </div>
-
-                        <div class="box-card">
-                            <div class="box-icon">📦</div>
-                            <h3>5 dəq qutu</h3>
-                            <p>Reklamdan sonra server reward istəyi.</p>
-                            <div class="timer" id="timer5">Hazırdır</div>
-                            <button class="btn btn-blue" id="boxBtn5" onclick="openRewardBox(5, 60)">Aç</button>
-                        </div>
-
-                        <div class="box-card">
-                            <div class="box-icon">💎</div>
-                            <h3>10 dəq qutu</h3>
-                            <p>Reklamdan sonra server reward istəyi.</p>
-                            <div class="timer" id="timer10">Hazırdır</div>
-                            <button class="btn btn-blue" id="boxBtn10" onclick="openRewardBox(10, 150)">Aç</button>
-                        </div>
-                    </div>
-
-                    <div class="log" id="adLog">
-                        AdsGram Block ID əlavə ediləndə real reklam işləyəcək.
-                    </div>
-                </section>
-                        <section class="panel">
-                    <h2 class="panel-title">Referal Sistemi</h2>
-                    <p class="panel-sub">
-                        Dostunu dəvət et. Yeni oyunçu linkinlə qoşulanda sən +100 coin, o isə +25 coin qazanır.
-                    </p>
-
-                    <div class="ref-box">
-                        <h3>Dəvət linkin</h3>
-                        <div class="ref-link" id="refLink">Yüklənir...</div>
-
-                        <div class="grid-3">
-                            <div class="box-card">
-                                <div class="box-icon">👥</div>
-                                <h3>Dəvət</h3>
-                                <p><span id="refCount">0</span> nəfər</p>
-                            </div>
-
-                            <div class="box-card">
-                                <div class="box-icon">🪙</div>
-                                <h3>Qazanc</h3>
-                                <p><span id="refEarned">0</span> coin</p>
-                            </div>
-
-                            <div class="box-card">
-                                <div class="box-icon">🎁</div>
-                                <h3>Bonus</h3>
-                                <p>+100 / +25</p>
-                            </div>
-                        </div>
-
-                        <button class="btn btn-green" onclick="copyReferralLink()">Linki kopyala</button>
-                    </div>
-
-                    <div class="log" id="refLog">
-                        Referal məlumatları yüklənir...
-                    </div>
-                </section>
-                    </div>
-                    <div>
-                        <section class="panel">
+                <section class="panel">
                     <h2 class="panel-title card-room-title">Mənim Cyber Kartlarım <span class="pill">Power + Boost</span></h2>
                     <p class="panel-sub">
                         Kart seçəndə click boost dəyişir. Kartı satışa qoymaq üçün qiymət yaz.
@@ -1127,42 +996,16 @@
                         Kartlar yüklənir...
                     </div>
                 </section>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <section id="market-section" class="premium-section market-zone">
-            <div class="section-hero">
-                <div class="section-head">
-                    <div>
-                        <h2>🛒 Premium Kart Birjası</h2>
-                        <p>Bot shop və oyunçu satışları burada ayrıca görünür. Qiymətlər coin və TON dəyəri ilə göstərilir.</p>
-                    </div>
-                    <span class="pill">Premium Market</span>
-                </div>
                 <section class="panel">
-                    <h2 class="panel-title card-room-title">Kart Birjası <span class="pill">Premium Market</span></h2>
-                    <p class="panel-sub">
-                        Oyun coini ilə kart al-sat. Alış/satış Telegram ID ilə serverdə edilir.
-                    </p>
-
-                    <div class="market-toolbar">
-                        <button class="btn btn-blue" onclick="loadMarketplace()">Birjanı yenilə</button>
-                        <button class="btn btn-dark" onclick="loadMyCards()">Kartlarımı yenilə</button>
-                    </div>
-
-                    <div class="market-scroll">
-                        <div class="cards-grid" id="marketplace"></div>
-                    </div>
-
-                    <div class="log" id="marketLog">
-                        Birja yüklənir...
-                    </div>
+                    <h2 class="panel-title card-room-title">Kart Birjası <span class="pill">Ayrı otaq</span></h2>
+                    <p class="panel-sub">Birja artıq ayrıca MARKET otağındadır. Kart al-sat üçün ora keç.</p>
+                    <a href="./market-room.html" class="btn btn-gold">🛒 MARKET OTAĞINA KEÇ</a>
                 </section>
-            </div>
-        </section>
 
+            </div>
+
+        </section>
 
     </main>
 
@@ -1170,7 +1013,7 @@
         <a href="./index.html"><span class="icon">🏠</span>ARENA</a>
         <a href="./click-room.html" class="active"><span class="icon">🐻</span>CLICK</a>
         <a href="./race.html"><span class="icon">🏁</span>RACE</a>
-        <a href="./ads.html"><span class="icon">🎥</span>ADS</a>
+        <a href="./market-room.html"><span class="icon">🛒</span>MARKET</a>
     </nav>
 
     <script>
@@ -2062,14 +1905,6 @@
                 claimClickReward(true);
             }
         }, 5000);
-
-
-        document.querySelectorAll(".section-tabs a").forEach(link => {
-            link.addEventListener("click", () => {
-                document.querySelectorAll(".section-tabs a").forEach(x => x.classList.remove("active-tab"));
-                link.classList.add("active-tab");
-            });
-        });
 
         init();
     </script>
