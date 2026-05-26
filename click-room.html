@@ -478,6 +478,21 @@
             line-height:1.45;
         }
 
+
+        .miniapp-open{
+            margin-top:12px;
+            background:linear-gradient(180deg, #20c235, #087816);
+            border:1px solid #66ff7e;
+            color:#fff;
+            border-radius:13px;
+            padding:13px 14px;
+            font-size:15px;
+            font-weight:1000;
+            cursor:pointer;
+            width:100%;
+            text-transform:uppercase;
+        }
+
         .nav{
             position:fixed;
             left:0;
@@ -705,6 +720,7 @@
 
     <script>
         const TG_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-api";
+        const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCzywfKRvjp0stL9ptl1ox3mUpfZ8VG27o",
@@ -867,9 +883,45 @@
             }
         }
 
+        function hasTelegramInitData(){
+            return Boolean(
+                window.Telegram &&
+                window.Telegram.WebApp &&
+                window.Telegram.WebApp.initData &&
+                window.Telegram.WebApp.initData.length > 10
+            );
+        }
+
+        function openTelegramMiniApp(){
+            window.location.href = MINI_APP_URL;
+        }
+
+        function showMiniAppOpenScreen(){
+            const html = `
+                <div>
+                    Bu səhifə adi link kimi açılıb. Coin/kart yadda qalması üçün oyunu Telegram Mini App kimi açmaq lazımdır.
+                    <button class="miniapp-open" onclick="openTelegramMiniApp()">🎮 PLAY ilə aç</button>
+                </div>
+            `;
+
+            if(clickLog){
+                clickLog.innerHTML = html;
+            }
+
+            if(cardLog){
+                cardLog.innerText = "Telegram initData yoxdur. PLAY düyməsi ilə aç.";
+            }
+
+            if(marketLog){
+                marketLog.innerText = "Telegram initData yoxdur. PLAY düyməsi ilə aç.";
+            }
+        }
+
+
         function getTelegramInitData(){
-            if(!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initData){
-                throw new Error("Oyunu Telegram botun PLAY düyməsindən aç.");
+            if(!hasTelegramInitData()){
+                showMiniAppOpenScreen();
+                throw new Error("Mini App kimi açılmayıb. PLAY ilə aç.");
             }
 
             return window.Telegram.WebApp.initData;
@@ -900,6 +952,12 @@
         async function init(){
             try{
                 initTelegramMiniApp();
+
+                if(!hasTelegramInitData()){
+                    showMiniAppOpenScreen();
+                    return;
+                }
+
                 initFirebaseStats();
 
                 const data = await api("init");
@@ -956,6 +1014,11 @@
         }
 
         tapBear.addEventListener("click", function(e){
+            if(!hasTelegramInitData()){
+                showMiniAppOpenScreen();
+                return;
+            }
+
             if(energy <= 0){
                 alert("Enerji bitdi! Reklama bax.");
                 return;
@@ -986,6 +1049,11 @@
         });
 
         async function claimClickReward(silent = false){
+            if(!hasTelegramInitData()){
+                showMiniAppOpenScreen();
+                return;
+            }
+
             if(isClaiming){
                 return;
             }
@@ -1350,7 +1418,7 @@
         }
 
         setInterval(() => {
-            if(pendingClicks > 0){
+            if(pendingClicks > 0 && hasTelegramInitData()){
                 claimClickReward(true);
             }
         }, 5000);
