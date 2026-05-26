@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bearbee Arena | Card Market</title>
+    <title>Bearbee Arena | Global Card Market</title>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
@@ -827,6 +827,109 @@
         @media(max-width:850px){
             .market-page-layout{ grid-template-columns:1fr; }
         }
+
+        /* GLOBAL MARKETPLACE UPGRADE */
+        .hero-badges{
+            display:flex;
+            justify-content:center;
+            flex-wrap:wrap;
+            gap:8px;
+            margin-top:14px;
+        }
+        .hero-badges span{
+            background:rgba(3,10,19,0.78);
+            border:1px solid rgba(255,215,0,0.38);
+            color:#ffd700;
+            border-radius:999px;
+            padding:7px 10px;
+            font-size:12px;
+            font-weight:1000;
+        }
+        .market-controls{
+            display:grid;
+            grid-template-columns:1.4fr .8fr .8fr;
+            gap:10px;
+            margin-bottom:12px;
+        }
+        .market-controls input,
+        .market-controls select{
+            width:100%;
+            background:#030a13;
+            border:1px solid #31577d;
+            color:#fff;
+            border-radius:13px;
+            padding:12px;
+            font-weight:900;
+            outline:none;
+        }
+        .market-controls select{
+            text-align:center;
+            cursor:pointer;
+        }
+        .listing-card{
+            position:relative;
+            overflow:hidden;
+        }
+        .listing-card::before,
+        .card-item::before{
+            content:"";
+            position:absolute;
+            inset:-1px;
+            background:linear-gradient(120deg, transparent, rgba(255,215,0,0.12), transparent);
+            transform:translateX(-120%);
+            transition:.55s;
+            pointer-events:none;
+        }
+        .listing-card:hover::before,
+        .card-item:hover::before{
+            transform:translateX(120%);
+        }
+        .seller-line{
+            color:#98a8ba;
+            font-size:12px;
+            margin:6px 0;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+        .market-meta{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:7px;
+            margin:9px 0;
+        }
+        .market-meta span{
+            background:#030a13;
+            border:1px solid #263f5d;
+            border-radius:10px;
+            padding:7px 6px;
+            color:#dbe8ff;
+            font-size:12px;
+            font-weight:900;
+        }
+        .listed-badge{
+            position:absolute;
+            top:9px;
+            left:9px;
+            background:#ffd700;
+            color:#111;
+            border-radius:8px;
+            padding:4px 7px;
+            font-size:10px;
+            font-weight:1000;
+            z-index:2;
+        }
+        .market-summary{
+            text-align:center;
+            color:#00ffcc;
+            font-weight:900;
+            margin:0 0 10px;
+            font-size:13px;
+        }
+        @media(max-width:850px){
+            .market-controls{ grid-template-columns:1fr; }
+        }
+
     </style>
 </head>
 
@@ -842,8 +945,13 @@
         </div>
 
         <section class="market-hero">
-            <h1>🛒 Premium Kart Birjası</h1>
-            <p>Kartları al-sat, Power və Boost gücünü artır. Qiymətlər coin və TON dəyəri ilə göstərilir.</p>
+            <h1>🛒 Global Card Marketplace</h1>
+            <p>Dünyadakı bütün oyunçular kartlarını satışa qoya, coin ilə kart ala və kolleksiyasını böyüdə bilər.</p>
+            <div class="hero-badges">
+                <span>🌍 Global Market</span>
+                <span>🪙 Coin Trading</span>
+                <span>⚡ Power Cards</span>
+            </div>
         </section>
 
         <section class="status">
@@ -865,10 +973,30 @@
                 <h2 class="panel-title card-room-title">Kart Birjası <span class="pill">Premium Market</span></h2>
                 <p class="panel-sub">Oyun coini ilə kart al-sat. 100000 coin = 1 TON dəyəri ilə göstərilir.</p>
 
+                <div class="market-controls">
+                    <input id="marketSearch" type="text" placeholder="Kart adı ilə axtar..." oninput="applyMarketFilters()">
+                    <select id="rarityFilter" onchange="applyMarketFilters()">
+                        <option value="all">Bütün rarity</option>
+                        <option value="legendary">Legendary</option>
+                        <option value="epic">Epic</option>
+                        <option value="rare">Rare</option>
+                        <option value="common">Common</option>
+                    </select>
+                    <select id="sortFilter" onchange="applyMarketFilters()">
+                        <option value="newest">Ən yeni</option>
+                        <option value="low">Ucuzdan bahaya</option>
+                        <option value="high">Bahadan ucuza</option>
+                        <option value="power">Power yüksək</option>
+                        <option value="boost">Boost yüksək</option>
+                    </select>
+                </div>
+
                 <div class="market-toolbar">
                     <button class="btn btn-blue" onclick="loadMarketplace()">Birjanı yenilə</button>
                     <button class="btn btn-dark" onclick="loadMyCards()">Kartlarımı yenilə</button>
                 </div>
+
+                <div class="market-summary" id="marketSummary">Market hazırdır.</div>
 
                 <div class="market-scroll">
                     <div class="cards-grid" id="marketplace"></div>
@@ -1040,6 +1168,7 @@
         let selectedCard = null;
         let selectedBoost = 1;
         let myCardsCache = [];
+        let marketplaceCache = [];
 
         const coinText = document.getElementById("coinText");
         const energyText = document.getElementById("energyText");
@@ -1052,6 +1181,10 @@
         const marketLog = document.getElementById("marketLog");
         const myCards = document.getElementById("myCards");
         const marketplace = document.getElementById("marketplace");
+        const marketSummary = document.getElementById("marketSummary");
+        const marketSearch = document.getElementById("marketSearch");
+        const rarityFilter = document.getElementById("rarityFilter");
+        const sortFilter = document.getElementById("sortFilter");
         const tapBear = document.getElementById("tapBear");
         const totalPowerText = document.getElementById("totalPowerText");
         const lastIncomeText = document.getElementById("lastIncomeText");
@@ -1612,8 +1745,10 @@
 
                 const rarity = String(t.rarity || "rare").toLowerCase();
                 const img = t.image_url ? `<img src="${escapeHtml(t.image_url)}" alt="${escapeHtml(t.name || "Card")}">` : "🎴";
+                const listedBadge = item.is_listed ? `<div class="listed-badge">SATIŞDA</div>` : "";
 
                 div.innerHTML = `
+                    ${listedBadge}
                     <div class="card-art">${img}</div>
                     <h3>${escapeHtml(t.name || "Cyber Card")}</h3>
                     <span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span>
@@ -1623,7 +1758,7 @@
 
                     <div class="input-row">
                         <input type="number" min="1" id="price_${String(item.id).replaceAll("_","")}" placeholder="Qiymət">
-                        <button class="btn btn-gold" onclick="event.stopPropagation(); listCardForSale('${item.id}')">Sat</button>
+                        <button class="btn ${item.is_listed ? "btn-dark" : "btn-gold"}" ${item.is_listed ? "disabled" : ""} onclick="event.stopPropagation(); listCardForSale('${item.id}')">${item.is_listed ? "Satışdadır" : "Sat"}</button>
                     </div>
                 `;
 
@@ -1692,21 +1827,68 @@
             }
         }
 
-        function renderMarketplace(listings){
+        function applyMarketFilters(){
+            renderMarketplace(marketplaceCache, true);
+        }
+
+        function getListingTemplate(listing){
+            const card = listing.tg_user_cards || {};
+            return card.tg_card_templates || {};
+        }
+
+        function renderMarketplace(listings, fromFilter = false){
+            if(!fromFilter){
+                marketplaceCache = listings || [];
+            }
+
+            let filtered = [...(marketplaceCache || [])];
+            const q = String(marketSearch?.value || "").trim().toLowerCase();
+            const rarityValue = String(rarityFilter?.value || "all").toLowerCase();
+            const sortValue = String(sortFilter?.value || "newest");
+
+            if(q){
+                filtered = filtered.filter(listing => {
+                    const t = getListingTemplate(listing);
+                    return String(t.name || "Cyber Card").toLowerCase().includes(q);
+                });
+            }
+
+            if(rarityValue !== "all"){
+                filtered = filtered.filter(listing => {
+                    const t = getListingTemplate(listing);
+                    return String(t.rarity || "rare").toLowerCase() === rarityValue;
+                });
+            }
+
+            filtered.sort((a,b) => {
+                const ta = getListingTemplate(a);
+                const tb = getListingTemplate(b);
+
+                if(sortValue === "low") return Number(a.price || 0) - Number(b.price || 0);
+                if(sortValue === "high") return Number(b.price || 0) - Number(a.price || 0);
+                if(sortValue === "power") return Number(tb.mining_power || 0) - Number(ta.mining_power || 0);
+                if(sortValue === "boost") return Number(tb.click_boost || 1) - Number(ta.click_boost || 1);
+                return Number(b.id || 0) - Number(a.id || 0);
+            });
+
             marketplace.innerHTML = "";
 
-            if(!listings || listings.length === 0){
+            if(marketSummary){
+                marketSummary.innerText = "Aktiv satış: " + filtered.length + " / Ümumi listing: " + (marketplaceCache || []).length;
+            }
+
+            if(!filtered || filtered.length === 0){
                 marketplace.innerHTML = `
                     <div class="listing-card">
                         <div class="card-art">🛒</div>
-                        <h3>Aktiv satış yoxdur</h3>
-                        <p>Kartlar satışa qoyulanda burada görünəcək.</p>
+                        <h3>Nəticə yoxdur</h3>
+                        <p>Axtarış və filterləri dəyiş, ya da kartları satışa qoy.</p>
                     </div>
                 `;
                 return;
             }
 
-            listings.forEach(listing => {
+            filtered.forEach(listing => {
                 const card = listing.tg_user_cards || {};
                 const t = card.tg_card_templates || {};
                 const div = document.createElement("div");
@@ -1716,15 +1898,19 @@
                 const img = t.image_url ? `<img src="${escapeHtml(t.image_url)}" alt="${escapeHtml(t.name || "Card")}">` : "🎴";
 
                 const isMine = telegramUser && Number(listing.seller_telegram_id) === Number(telegramUser.id);
+                const sellerShort = String(listing.seller_telegram_id || "global").slice(0, 4) + "•••" + String(listing.seller_telegram_id || "").slice(-3);
 
                 div.innerHTML = `
                     <div class="card-art">${img}</div>
                     <h3>${escapeHtml(t.name || "Cyber Card")}</h3>
                     <span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span>
-                    <p>Boost: ${Number(t.click_boost) || 1}x</p>
-                    <p class="power-text">Power: ${Number(t.mining_power) || 0}</p>
+                    <div class="seller-line">Seller: ${isMine ? "Sən" : escapeHtml(sellerShort)}</div>
+                    <div class="market-meta">
+                        <span>🚀 ${Number(t.click_boost) || 1}x Boost</span>
+                        <span>⛏ ${Number(t.mining_power) || 0} Power</span>
+                    </div>
                     <p><span class="price-ton">≈ ${coinToTon(listing.price)} TON</span></p><p class="price-coin">${Number(listing.price)} coin</p>
-                    <button class="btn ${isMine ? "btn-dark" : "btn-green"}" ${isMine ? "disabled" : ""} onclick="buyCard(${listing.id})">
+                    <button class="btn ${isMine ? "btn-dark" : "btn-green"}" ${isMine ? "disabled" : ""} onclick="buyCard(${listing.id}, '${escapeForJs(t.name || "Cyber Card")}', ${Number(listing.price) || 0})">
                         ${isMine ? "Sənin satışındır" : "Al"}
                     </button>
                 `;
@@ -1733,7 +1919,13 @@
             });
         }
 
-        async function buyCard(listingId){
+        async function buyCard(listingId, cardName = "Cyber Card", price = 0){
+            const ok = confirm(cardName + " kartını " + price + " coin qiymətinə almaq istəyirsən?");
+
+            if(!ok){
+                return;
+            }
+
             try{
                 const data = await api("buy_card_listing", {
                     listing_id: listingId
@@ -1780,6 +1972,15 @@
                 .replaceAll("'", "&#039;");
         }
 
+        function escapeForJs(text){
+            return String(text)
+                .replaceAll("\", "\\")
+                .replaceAll("'", "\'")
+                .replaceAll('"', '\"')
+                .replaceAll("
+", " ");
+        }
+
         setInterval(() => {
             if(pendingClicks > 0 && hasTelegramInitData()){
                 claimClickReward(true);
@@ -1791,4 +1992,5 @@
     </script>
 </body>
 </html>
+
 
