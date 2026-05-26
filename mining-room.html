@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bearbee Arena | Mining Room</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    body{
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top, rgba(0,120,255,0.25), transparent 35%),
+        radial-gradient(circle at bottom, rgba(255,215,0,0.14), transparent 35%),
+        linear-gradient(180deg,#01040a,#030812 60%,#000);
+      color:#fff;
+      font-family:'Segoe UI',Arial,sans-serif;
+      padding-bottom:95px;
+      overflow-x:hidden;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(90deg,transparent 0 95%,rgba(21,151,255,0.07) 96% 100%),
+        linear-gradient(0deg,transparent 0 95%,rgba(255,255,255,0.025) 96% 100%);
+      background-size:34px 34px;
+      opacity:0.38;
+    }
+
+    .page{
+      width:min(1080px,100%);
+      margin:0 auto;
+      padding:16px 14px;
+    }
+
+    .top-bar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:16px;
+    }
+
+    .back{
+      color:#ffd700;
+      text-decoration:none;
+      font-weight:1000;
+      background:rgba(8,18,32,0.88);
+      border:1px solid rgba(60,91,128,0.75);
+      border-radius:14px;
+      padding:12px 14px;
+    }
+
+    .logo{
+      text-align:center;
+      line-height:0.9;
+      filter:drop-shadow(0 0 12px rgba(255,215,0,0.25));
+    }
+
+    .logo .bearbee{
+      font-size:22px;
+      font-weight:1000;
+      font-style:italic;
+      letter-spacing:2px;
+      color:#f4f7ff;
+    }
+
+    .logo .arena{
+      font-size:33px;
+      font-weight:1000;
+      font-style:italic;
+      letter-spacing:3px;
+      color:#ffd700;
+    }
+
+    .btn{
+      width:100%;
+      border:none;
+      cursor:pointer;
+      border-radius:14px;
+      padding:14px;
+      font-size:15px;
+      font-weight:1000;
+      letter-spacing:0.5px;
+      color:#fff;
+      text-decoration:none;
+      text-align:center;
+      text-transform:uppercase;
+      display:block;
+    }
+
+    .btn:active{
+      transform:scale(0.97);
+    }
+
+    .btn-dark{
+      background:linear-gradient(180deg,#152339,#0a1220);
+      border:1px solid #33557d;
+    }
+
+    .btn-green{
+      background:linear-gradient(180deg,#20c235,#087816);
+      border:1px solid #66ff7e;
+      box-shadow:0 0 18px rgba(34,255,102,0.18);
+    }
+
+    .btn-gold{
+      background:linear-gradient(180deg,#ffd700,#a56b00);
+      border:1px solid #ffef92;
+      color:#111;
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at 20% 10%,rgba(255,215,0,0.14),transparent 38%),
+        radial-gradient(circle at 80% 20%,rgba(21,151,255,0.20),transparent 34%),
+        linear-gradient(180deg,rgba(12,22,36,0.98),rgba(4,9,16,0.98));
+      border:1px solid rgba(71,101,136,0.65);
+      border-radius:24px;
+      padding:20px;
+      margin-bottom:16px;
+      text-align:center;
+      box-shadow:0 0 30px rgba(21,151,255,0.10);
+    }
+
+    .hero h1{
+      color:#ffd700;
+      font-size:31px;
+      font-weight:1000;
+      margin-bottom:9px;
+    }
+
+    .hero p{
+      color:#a8b4c4;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    .panel{
+      background:linear-gradient(180deg,rgba(12,22,36,0.96),rgba(4,9,16,0.96));
+      border:1px solid rgba(71,101,136,0.62);
+      border-radius:24px;
+      padding:18px;
+      margin-bottom:16px;
+      box-shadow:
+        inset 0 0 22px rgba(21,151,255,0.08),
+        0 0 26px rgba(21,151,255,0.08);
+    }
+
+    .panel-title{
+      color:#ffd700;
+      text-align:center;
+      font-size:24px;
+      font-weight:1000;
+      margin-bottom:10px;
+    }
+
+    .panel-sub{
+      color:#98a8ba;
+      text-align:center;
+      font-size:14px;
+      line-height:1.5;
+      margin-bottom:14px;
+    }
+
+    .rig-box{
+      background:
+        radial-gradient(circle at 20% 10%,rgba(255,215,0,0.15),transparent 38%),
+        radial-gradient(circle at 80% 20%,rgba(21,151,255,0.22),transparent 34%),
+        linear-gradient(180deg,#101d30,#050b13);
+      border:1px solid rgba(255,215,0,0.36);
+      border-radius:24px;
+      padding:16px;
+      text-align:center;
+      box-shadow:
+        inset 0 0 26px rgba(255,215,0,0.08),
+        0 0 26px rgba(21,151,255,0.14);
+    }
+
+    .rig-head{
+      display:grid;
+      grid-template-columns:115px 1fr;
+      gap:14px;
+      align-items:center;
+      background:
+        linear-gradient(135deg,rgba(0,0,0,0.55),rgba(21,151,255,0.12)),
+        repeating-linear-gradient(90deg,rgba(255,255,255,0.025) 0 1px,transparent 1px 18px);
+      border:1px solid rgba(88,185,255,0.25);
+      border-radius:20px;
+      padding:14px;
+      margin-bottom:14px;
+    }
+
+    .rig-icon{
+      width:105px;
+      height:105px;
+      border-radius:24px;
+      display:grid;
+      place-items:center;
+      font-size:58px;
+      background:
+        radial-gradient(circle,rgba(255,215,0,0.25),transparent 60%),
+        linear-gradient(180deg,#10233b,#060b12);
+      border:1px solid rgba(255,215,0,0.35);
+      box-shadow:0 0 26px rgba(255,215,0,0.14);
+    }
+
+    .rig-info h2{
+      color:#ffd700;
+      font-size:23px;
+      margin-bottom:8px;
+      text-align:left;
+    }
+
+    .rig-info p{
+      color:#a8b4c4;
+      font-size:14px;
+      line-height:1.5;
+      text-align:left;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin:14px 0;
+    }
+
+    .stat{
+      background:#030a13;
+      border:1px solid #263f5d;
+      border-radius:16px;
+      padding:14px;
+      text-align:center;
+    }
+
+    .stat h3{
+      color:#98a8ba;
+      font-size:12px;
+      margin-bottom:7px;
+      text-transform:uppercase;
+    }
+
+    .stat strong{
+      color:#ffd700;
+      font-size:21px;
+      font-weight:1000;
+    }
+
+    .log{
+      margin-top:12px;
+      background:#030a13;
+      border:1px solid #263f5d;
+      border-radius:14px;
+      padding:12px;
+      color:#00ffcc;
+      min-height:45px;
+      font-weight:800;
+      font-size:14px;
+      text-align:center;
+      line-height:1.45;
+    }
+
+    .cards-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+      gap:12px;
+    }
+
+    .mini-card{
+      background:
+        radial-gradient(circle at 50% 0%,rgba(255,215,0,0.08),transparent 42%),
+        linear-gradient(180deg,#111d2d,#050b12);
+      border:1px solid rgba(88,185,255,0.28);
+      border-radius:18px;
+      padding:12px;
+      text-align:center;
+      overflow:hidden;
+    }
+
+    .mini-card img{
+      width:100%;
+      height:190px;
+      object-fit:cover;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:#07101b;
+      margin-bottom:10px;
+    }
+
+    .mini-card h3{
+      color:#ffd700;
+      font-size:15px;
+      margin-bottom:5px;
+    }
+
+    .mini-card p{
+      color:#98a8ba;
+      font-size:13px;
+      margin-bottom:5px;
+    }
+
+    .power{
+      color:#00ffcc !important;
+      font-weight:1000;
+    }
+
+    .nav{
+      position:fixed;
+      left:0;
+      bottom:0;
+      width:100%;
+      height:82px;
+      background:rgba(6,11,18,0.96);
+      border-top:1px solid rgba(70,100,132,0.55);
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      z-index:999;
+      backdrop-filter:blur(12px);
+    }
+
+    .nav a{
+      color:#8793a3;
+      text-decoration:none;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      font-weight:1000;
+      letter-spacing:1px;
+      font-size:12px;
+    }
+
+    .nav a.active{
+      color:#ffd700;
+      text-shadow:0 0 14px rgba(255,215,0,0.45);
+    }
+
+    .nav .icon{
+      font-size:25px;
+    }
+
+    @media(max-width:850px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+
+      .rig-head{
+        grid-template-columns:1fr;
+        text-align:center;
+      }
+
+      .rig-icon{
+        margin:0 auto;
+      }
+
+      .rig-info h2,
+      .rig-info p{
+        text-align:center;
+      }
+
+      .stats{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="page">
+
+    <div class="top-bar">
+      <a href="./click-room.html" class="back">← CLICK</a>
+
+      <div class="logo">
+        <div class="bearbee">BEARBEE</div>
+        <div class="arena">MINING</div>
+      </div>
+
+      <button class="btn btn-dark" onclick="loadMiningPower()">Yenilə</button>
+    </div>
+
+    <section class="hero">
+      <h1>⛏ Real Mining Room</h1>
+      <p>
+        Kartların Mining Power verir. Power artdıqca passiv coin gəlirin artır.
+        Claim edərək yığılmış mining gəlirini hesaba əlavə et.
+      </p>
+    </section>
+
+    <section class="layout">
+
+      <section class="panel">
+        <h2 class="panel-title">Mining Rig</h2>
+        <p class="panel-sub">
+          RollerCoin tərzində: kartlar sənin mining gücündür.
+        </p>
+
+        <div class="rig-box">
+          <div class="rig-head">
+            <div class="rig-icon">⛏️</div>
+
+            <div class="rig-info">
+              <h2>Bearbee Mining Rig</h2>
+              <p>
+                Səndə olan kartların Power dəyəri toplanır və passiv coin gəliri yaradır.
+                Gəliri almaq üçün Claim Mining Income düyməsinə bas.
+              </p>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <h3>Total Power</h3>
+              <strong id="totalPowerText">0</strong>
+            </div>
+
+            <div class="stat">
+              <h3>Son Income</h3>
+              <strong id="lastIncomeText">0</strong>
+            </div>
+
+            <div class="stat">
+              <h3>Rate</h3>
+              <strong>100K=1 TON</strong>
+            </div>
+          </div>
+
+          <button class="btn btn-green" onclick="claimMiningIncome()">
+            ⛏ Claim Mining Income
+          </button>
+
+          <br>
+
+          <button class="btn btn-gold" onclick="location.href='./market-room.html'">
+            🛒 Kart Birjasına Keç
+          </button>
+        </div>
+
+        <div class="log" id="miningLog">
+          Mining power yüklənir...
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">Mining Kartların</h2>
+        <p class="panel-sub">
+          Bu bölmədə səndə olan kartlar və onların Power dəyəri görünür.
+        </p>
+
+        <div class="cards-grid" id="cardsGrid">
+          <div class="mini-card">
+            <h3>Yüklənir...</h3>
+            <p>Kartlar serverdən gəlir.</p>
+          </div>
+        </div>
+
+        <div class="log" id="cardsLog">
+          Kartlar yüklənir...
+        </div>
+      </section>
+
+    </section>
+
+  </main>
+
+  <nav class="nav">
+    <a href="./index.html">
+      <span class="icon">🏠</span>
+      ARENA
+    </a>
+
+    <a href="./click-room.html">
+      <span class="icon">🐻</span>
+      CLICK
+    </a>
+
+    <a href="./mining-room.html" class="active">
+      <span class="icon">⛏</span>
+      MINING
+    </a>
+
+    <a href="./market-room.html">
+      <span class="icon">🛒</span>
+      MARKET
+    </a>
+  </nav>
+
+  <script>
+    const MINING_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-mining";
+    const TG_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-api-ref";
+    const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
+
+    const totalPowerText = document.getElementById("totalPowerText");
+    const lastIncomeText = document.getElementById("lastIncomeText");
+    const miningLog = document.getElementById("miningLog");
+    const cardsGrid = document.getElementById("cardsGrid");
+    const cardsLog = document.getElementById("cardsLog");
+
+    function initTelegram(){
+      if(window.Telegram && window.Telegram.WebApp){
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+      }
+    }
+
+    function hasInitData(){
+      return Boolean(
+        window.Telegram &&
+        window.Telegram.WebApp &&
+        window.Telegram.WebApp.initData &&
+        window.Telegram.WebApp.initData.length > 10
+      );
+    }
+
+    function getInitData(){
+      if(!hasInitData()){
+        miningLog.innerHTML =
+          'Oyunu botda PLAY ilə aç.<br><br>' +
+          '<button class="btn btn-green" onclick="location.href=MINI_APP_URL">🎮 PLAY ilə aç</button>';
+
+        throw new Error("Mini App kimi açılmayıb");
+      }
+
+      return window.Telegram.WebApp.initData;
+    }
+
+    async function miningApi(action, payload = {}){
+      const response = await fetch(MINING_API_URL, {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          initData:getInitData(),
+          action,
+          payload
+        })
+      });
+
+      const data = await response.json();
+
+      if(!response.ok || !data.ok){
+        throw new Error(data.error || "Mining API xətası");
+      }
+
+      return data;
+    }
+
+    async function api(action, payload = {}){
+      const response = await fetch(TG_API_URL, {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          initData:getInitData(),
+          action,
+          payload
+        })
+      });
+
+      const data = await response.json();
+
+      if(!response.ok || !data.ok){
+        throw new Error(data.error || "API xətası");
+      }
+
+      return data;
+    }
+
+    async function loadMiningPower(){
+      try{
+        if(!hasInitData()){
+          miningLog.innerHTML =
+            'Mining üçün oyunu PLAY ilə Mini App kimi aç.<br><br>' +
+            '<button class="btn btn-green" onclick="location.href=MINI_APP_URL">🎮 PLAY ilə aç</button>';
+          return;
+        }
+
+        const data = await miningApi("load_power");
+
+        totalPowerText.innerText = data.total_power || 0;
+        miningLog.innerText = "Mining Power yükləndi.";
+      }catch(error){
+        miningLog.innerText = "Mining xətası: " + error.message;
+      }
+    }
+
+    async function claimMiningIncome(){
+      try{
+        const data = await miningApi("claim_power_income");
+        const claim = data.claim || {};
+
+        totalPowerText.innerText = data.total_power || claim.total_power || 0;
+        lastIncomeText.innerText = claim.income || 0;
+
+        if(Number(claim.income) > 0){
+          miningLog.innerText = "Mining income claim edildi: +" + claim.income + " coin";
+        }else{
+          miningLog.innerText =
+            claim.message ||
+            ("Claim üçün gözlə. Qalan saniyə: " + (claim.seconds_left || 0));
+        }
+      }catch(error){
+        miningLog.innerText = "Mining claim xətası: " + error.message;
+      }
+    }
+
+    async function loadMiningCards(){
+      try{
+        if(!hasInitData()){
+          cardsLog.innerText = "Kartlar üçün oyunu PLAY ilə aç.";
+          return;
+        }
+
+        const data = await api("load_my_cards");
+        const cards = data.myCards || [];
+
+        renderCards(cards);
+        cardsLog.innerText = "Mining kartların yükləndi.";
+      }catch(error){
+        cardsGrid.innerHTML = "";
+        cardsLog.innerText = "Kart yükləmə xətası: " + error.message;
+      }
+    }
+
+    function renderCards(cards){
+      cardsGrid.innerHTML = "";
+
+      if(!cards || cards.length === 0){
+        cardsGrid.innerHTML = `
+          <div class="mini-card">
+            <h3>Kart yoxdur</h3>
+            <p>Marketdən kart alaraq Mining Power artır.</p>
+          </div>
+        `;
+        return;
+      }
+
+      cards.forEach(item => {
+        const t = item.tg_card_templates || {};
+        const name = t.name || "Cyber Card";
+        const image = t.image_url || "";
+        const power = Number(t.mining_power) || 0;
+        const boost = Number(t.click_boost) || 1;
+        const rarity = t.rarity || "rare";
+
+        const div = document.createElement("div");
+        div.className = "mini-card";
+
+        div.innerHTML = `
+          ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(name)}" onerror="this.style.display='none';">` : ""}
+          <h3>${escapeHtml(name)}</h3>
+          <p>${escapeHtml(rarity)}</p>
+          <p>Boost: ${boost}x</p>
+          <p class="power">Power: ${power}</p>
+        `;
+
+        cardsGrid.appendChild(div);
+      });
+    }
+
+    function escapeHtml(text){
+      return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    initTelegram();
+    loadMiningPower();
+    loadMiningCards();
+  </script>
+
+</body>
+      </html>
