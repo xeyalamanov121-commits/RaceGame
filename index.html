@@ -46,6 +46,8 @@
             letter-spacing:1px;
             backdrop-filter:blur(10px);
             box-shadow:0 0 18px rgba(255,215,0,0.12);
+            cursor:pointer;
+            user-select:none;
         }
 
         .lang-box{
@@ -113,6 +115,8 @@
             position:relative;
             z-index:2;
             text-shadow:0 0 18px rgba(255,215,0,0.25);
+            cursor:pointer;
+            user-select:none;
         }
 
         .hero p{
@@ -316,8 +320,6 @@
 
     <div class="grid">
 
-        <!-- CLICK ROOM -->
-
         <div class="card">
             <div class="img-wrap">
                 <img
@@ -344,8 +346,6 @@
                 </a>
             </div>
         </div>
-
-        <!-- REAL RACE ROOM -->
 
         <div class="card">
             <div class="img-wrap">
@@ -374,8 +374,6 @@
             </div>
         </div>
 
-        <!-- ADS REWARD -->
-
         <div class="card">
             <div class="img-wrap">
                 <img
@@ -402,8 +400,6 @@
                 </a>
             </div>
         </div>
-
-        <!-- BONUS -->
 
         <div class="card">
             <div class="img-wrap">
@@ -442,6 +438,8 @@
     </div>
 
     <script>
+        const ADMIN_TELEGRAM_ID = 8591374417;
+
         const translations = {
             az:{
                 heroTitle:"BEARBEE ARENA",
@@ -556,6 +554,48 @@
             }
         }
 
+        function getTelegramUserId(){
+            return window.Telegram?.WebApp?.initDataUnsafe?.user?.id || null;
+        }
+
+        let adminTapCount = 0;
+        let adminTapTimer = null;
+
+        function openSecretAdmin(){
+            const userId = getTelegramUserId();
+
+            if(Number(userId) !== ADMIN_TELEGRAM_ID){
+                adminTapCount = 0;
+                return;
+            }
+
+            adminTapCount++;
+
+            clearTimeout(adminTapTimer);
+
+            adminTapTimer = setTimeout(() => {
+                adminTapCount = 0;
+            }, 2000);
+
+            if(adminTapCount >= 5){
+                adminTapCount = 0;
+                window.location.href = "./admin-room.html";
+            }
+        }
+
+        function initSecretAdmin(){
+            const secretPlaces = [
+                document.querySelector(".brand-mini"),
+                document.querySelector(".hero h1")
+            ];
+
+            secretPlaces.forEach(el => {
+                if(el){
+                    el.addEventListener("click", openSecretAdmin);
+                }
+            });
+        }
+
         function imageFallback(img, icon, text){
             const fallback = img.getAttribute("data-fallback");
 
@@ -647,8 +687,8 @@
 
         initTelegramMiniApp();
         setLang(getInitialLang());
+        initSecretAdmin();
     </script>
 
 </body>
 </html>
-
