@@ -7,6 +7,8 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
     <style>
         :root{
@@ -704,6 +706,120 @@
     <script>
         const TG_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-api";
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzywfKRvjp0stL9ptl1ox3mUpfZ8VG27o",
+            authDomain: "gamer-d11ba.firebaseapp.com",
+            projectId: "gamer-d11ba",
+            storageBucket: "gamer-d11ba.firebasestorage.app",
+            messagingSenderId: "696457199951",
+            appId: "1:696457199951:web:d1ec83b76af07b47a6853a"
+        };
+
+        let firebaseDb = null;
+
+        function initFirebaseStats(){
+            try{
+                if(window.firebase && !firebase.apps.length){
+                    firebase.initializeApp(firebaseConfig);
+                }
+
+                if(window.firebase){
+                    firebaseDb = firebase.firestore();
+                }
+            }catch(error){
+                console.log("Firebase init xətası:", error);
+            }
+        }
+
+        function getPlayerDocId(){
+            return telegramUser ? String(telegramUser.id) : "";
+        }
+
+        async function saveFirebaseLogin(){
+            if(!firebaseDb || !telegramUser){
+                return;
+            }
+
+            const playerId = getPlayerDocId();
+
+            try{
+                await firebaseDb.collection("players").doc(playerId).set({
+                    telegram_id: Number(telegramUser.id),
+                    username: telegramUser.username || "",
+                    first_name: telegramUser.first_name || "",
+                    last_name: telegramUser.last_name || "",
+                    coins: Number(coins) || 0,
+                    energy: Number(energy) || 0,
+                    ad_points: Number(adPoints) || 0,
+                    login_count: firebase.firestore.FieldValue.increment(1),
+                    last_login_at: firebase.firestore.FieldValue.serverTimestamp(),
+                    last_active_at: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge:true });
+
+                await firebaseDb.collection("login_events").add({
+                    telegram_id: Number(telegramUser.id),
+                    username: telegramUser.username || "",
+                    first_name: telegramUser.first_name || "",
+                    page: "click-room",
+                    user_agent: navigator.userAgent,
+                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }catch(error){
+                console.log("Firebase login log xətası:", error);
+            }
+        }
+
+        async function saveFirebaseClickReward(clicks, rewardCoins){
+            if(!firebaseDb || !telegramUser){
+                return;
+            }
+
+            const playerId = getPlayerDocId();
+
+            try{
+                await firebaseDb.collection("players").doc(playerId).set({
+                    telegram_id: Number(telegramUser.id),
+                    username: telegramUser.username || "",
+                    first_name: telegramUser.first_name || "",
+                    coins: Number(coins) || 0,
+                    energy: Number(energy) || 0,
+                    total_clicks: firebase.firestore.FieldValue.increment(Number(clicks) || 0),
+                    total_click_coins: firebase.firestore.FieldValue.increment(Number(rewardCoins) || 0),
+                    last_active_at: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge:true });
+
+                await firebaseDb.collection("click_events").add({
+                    telegram_id: Number(telegramUser.id),
+                    username: telegramUser.username || "",
+                    clicks: Number(clicks) || 0,
+                    reward_coins: Number(rewardCoins) || 0,
+                    boost: Number(selectedBoost) || 1,
+                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }catch(error){
+                console.log("Firebase click log xətası:", error);
+            }
+        }
+
+        async function saveFirebaseMarketEvent(type, data = {}){
+            if(!firebaseDb || !telegramUser){
+                return;
+            }
+
+            try{
+                await firebaseDb.collection("market_events").add({
+                    telegram_id: Number(telegramUser.id),
+                    username: telegramUser.username || "",
+                    type,
+                    data,
+                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }catch(error){
+                console.log("Firebase market log xətası:", error);
+            }
+        }
+
+
         /*
             CANLI REKLAM:
             AdsGram block id tapanda bura yaz:
@@ -724,6 +840,7 @@
 
         let pendingClicks = 0;
         let pendingCoins = 0;
+        let isClaiming = false;
 
         let selectedCard = null;
         let selectedBoost = 1;
@@ -783,6 +900,7 @@
         async function init(){
             try{
                 initTelegramMiniApp();
+                initFirebaseStats();
 
                 const data = await api("init");
 
@@ -795,6 +913,7 @@
                 cardLog.innerText = "Telegram ID ilə giriş edildi: " + telegramUser.id;
                 marketLog.innerText = "Birja yükləndi.";
                 clickLog.innerText = "Hazırdır. Cyber ayıya klik et.";
+                saveFirebaseLogin();
 
                 updateBoxTimers();
                 setInterval(updateBoxTimers, 1000);
@@ -860,17 +979,32 @@
             document.body.appendChild(plus);
 
             setTimeout(() => plus.remove(), 900);
+
+            if(pendingClicks >= 10){
+                claimClickReward(true);
+            }
         });
 
-        async function claimClickReward(){
-            if(pendingClicks <= 0){
-                alert("Göndəriləcək click yoxdur.");
+        async function claimClickReward(silent = false){
+            if(isClaiming){
                 return;
             }
 
+            if(pendingClicks <= 0){
+                if(!silent){
+                    alert("Göndəriləcək click yoxdur.");
+                }
+                return;
+            }
+
+            isClaiming = true;
+
             try{
+                const clicksToSend = pendingClicks;
+                const rewardToLog = pendingCoins;
+
                 const data = await api("claim_click_reward", {
-                    click_count: pendingClicks,
+                    click_count: clicksToSend,
                     selected_card_id: selectedCard ? selectedCard.user_card_id : null
                 });
 
@@ -878,11 +1012,14 @@
                 pendingCoins = 0;
 
                 applyProfile(data.profile);
+                saveFirebaseClickReward(clicksToSend, rewardToLog);
 
-                clickLog.innerText = "Click reward serverdə təsdiqləndi.";
+                clickLog.innerText = silent ? "Click xalları avtomatik yadda saxlandı." : "Click reward serverdə təsdiqləndi.";
             }catch(error){
-                clickLog.innerText = "Reward xətası: " + error.message;
+                clickLog.innerText = "Yadda saxlama xətası: " + error.message;
             }
+
+            isClaiming = false;
         }
 
         function initAdsGram(){
@@ -1114,6 +1251,7 @@
 
                 renderMyCards(data.myCards || []);
                 renderMarketplace(data.marketplace || []);
+                saveFirebaseMarketEvent("list_card_for_sale", { user_card_id: Number(userCardId), price });
                 cardLog.innerText = "Kart satışa qoyuldu.";
             }catch(error){
                 cardLog.innerText = "Satış xətası: " + error.message;
@@ -1179,6 +1317,7 @@
                 applyProfile(data.profile);
                 renderMyCards(data.myCards || []);
                 renderMarketplace(data.marketplace || []);
+                saveFirebaseMarketEvent("buy_card_listing", { listing_id: Number(listingId) });
                 marketLog.innerText = "Kart alındı.";
             }catch(error){
                 marketLog.innerText = "Alış xətası: " + error.message;
@@ -1209,6 +1348,12 @@
                 .replaceAll('"', "&quot;")
                 .replaceAll("'", "&#039;");
         }
+
+        setInterval(() => {
+            if(pendingClicks > 0){
+                claimClickReward(true);
+            }
+        }, 5000);
 
         init();
     </script>
