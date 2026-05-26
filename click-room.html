@@ -633,6 +633,48 @@
             }
         }
 
+
+        /* MINING POWER PANEL */
+        .mining-box{
+            border:1px solid #31577d;
+            background:linear-gradient(180deg, #0d1928, #07101b);
+            border-radius:18px;
+            padding:14px;
+            text-align:center;
+            box-shadow:0 0 18px rgba(21,151,255,0.08);
+        }
+
+        .mining-stats{
+            display:grid;
+            grid-template-columns:repeat(2, 1fr);
+            gap:10px;
+            margin:12px 0;
+        }
+
+        .mining-stat{
+            background:#030a13;
+            border:1px solid #263f5d;
+            border-radius:14px;
+            padding:12px;
+        }
+
+        .mining-stat h3{
+            color:#98a8ba;
+            font-size:12px;
+            margin-bottom:6px;
+            text-transform:uppercase;
+        }
+
+        .mining-stat strong{
+            color:#ffd700;
+            font-size:22px;
+        }
+
+        .power-text{
+            color:#00ffcc;
+            font-weight:1000;
+        }
+
     </style>
 </head>
 
@@ -779,6 +821,40 @@
                     </div>
                 </section>
 
+
+                <section class="panel">
+                    <h2 class="panel-title">Mining Power</h2>
+                    <p class="panel-sub">
+                        RollerCoin stilində: kartlar Power verir, Power passiv coin qazandırır. Claim edərək gəliri topla.
+                    </p>
+
+                    <div class="mining-box">
+                        <div class="mining-stats">
+                            <div class="mining-stat">
+                                <h3>Total Power</h3>
+                                <strong id="totalPowerText">0</strong>
+                            </div>
+
+                            <div class="mining-stat">
+                                <h3>Income</h3>
+                                <strong id="lastIncomeText">0</strong>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-green" onclick="claimMiningIncome()">
+                            ⛏ Claim Mining Income
+                        </button>
+
+                        <button class="btn btn-dark" onclick="loadMiningPower()">
+                            Mining Yenilə
+                        </button>
+                    </div>
+
+                    <div class="log" id="miningLog">
+                        Mining power yüklənir...
+                    </div>
+                </section>
+
             </div>
 
             <div>
@@ -829,6 +905,7 @@
 
     <script>
         const TG_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-api-ref";
+        const MINING_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-mining";
         const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
 
         const firebaseConfig = {
@@ -983,6 +1060,9 @@
         const myCards = document.getElementById("myCards");
         const marketplace = document.getElementById("marketplace");
         const tapBear = document.getElementById("tapBear");
+        const totalPowerText = document.getElementById("totalPowerText");
+        const lastIncomeText = document.getElementById("lastIncomeText");
+        const miningLog = document.getElementById("miningLog");
         const refLink = document.getElementById("refLink");
         const refCount = document.getElementById("refCount");
         const refEarned = document.getElementById("refEarned");
@@ -1128,6 +1208,78 @@
                 refLog.innerText = "Referal link kopyalandı.";
             }catch(error){
                 alert(link);
+            }
+        }
+
+
+        async function miningApi(action, payload = {}){
+            const response = await fetch(MINING_API_URL, {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+                    initData:getTelegramInitData(),
+                    action,
+                    payload
+                })
+            });
+
+            const data = await response.json();
+
+            if(!response.ok || !data.ok){
+                throw new Error(data.error || "Mining API xətası");
+            }
+
+            return data;
+        }
+
+        async function loadMiningPower(){
+            try{
+                if(!hasTelegramInitData()){
+                    if(miningLog){
+                        miningLog.innerText = "Mining üçün oyunu PLAY ilə Mini App kimi aç.";
+                    }
+                    return;
+                }
+
+                const data = await miningApi("load_power");
+
+                if(totalPowerText){
+                    totalPowerText.innerText = data.total_power || 0;
+                }
+
+                if(miningLog){
+                    miningLog.innerText = "Mining Power yükləndi.";
+                }
+            }catch(error){
+                if(miningLog){
+                    miningLog.innerText = "Mining xətası: " + error.message;
+                }
+            }
+        }
+
+        async function claimMiningIncome(){
+            try{
+                const data = await miningApi("claim_power_income");
+                const claim = data.claim || {};
+
+                if(totalPowerText){
+                    totalPowerText.innerText = data.total_power || claim.total_power || 0;
+                }
+
+                if(lastIncomeText){
+                    lastIncomeText.innerText = claim.income || 0;
+                }
+
+                if(claim.income && Number(claim.income) > 0){
+                    await loadProfile();
+                    miningLog.innerText = "Mining income claim edildi: +" + claim.income + " coin";
+                }else{
+                    miningLog.innerText = claim.message || ("Claim üçün gözlə. Qalan saniyə: " + (claim.seconds_left || 0));
+                }
+            }catch(error){
+                miningLog.innerText = "Mining claim xətası: " + error.message;
             }
         }
 
@@ -1473,6 +1625,7 @@
                     <h3>${escapeHtml(t.name || "Cyber Card")}</h3>
                     <span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span>
                     <p>Boost: ${Number(t.click_boost) || 1}x</p>
+                    <p class="power-text">Power: ${Number(t.mining_power) || 0}</p>
                     <p>Level: ${Number(item.level) || 1}</p>
 
                     <div class="input-row">
@@ -1576,6 +1729,7 @@
                     <h3>${escapeHtml(t.name || "Cyber Card")}</h3>
                     <span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span>
                     <p>Boost: ${Number(t.click_boost) || 1}x</p>
+                    <p class="power-text">Power: ${Number(t.mining_power) || 0}</p>
                     <p>Qiymət: ${Number(listing.price)} 🪙</p>
                     <button class="btn ${isMine ? "btn-dark" : "btn-green"}" ${isMine ? "disabled" : ""} onclick="buyCard(${listing.id})">
                         ${isMine ? "Sənin satışındır" : "Al"}
