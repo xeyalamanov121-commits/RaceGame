@@ -493,6 +493,32 @@
             text-transform:uppercase;
         }
 
+
+        .ref-box{
+            background:linear-gradient(180deg, #0d1928, #07101b);
+            border:1px solid #31577d;
+            border-radius:18px;
+            padding:14px;
+            text-align:center;
+            box-shadow:0 0 18px rgba(21,151,255,0.08);
+        }
+
+        .ref-link{
+            width:100%;
+            min-height:46px;
+            background:#030a13;
+            border:1px solid #2a547d;
+            border-radius:12px;
+            color:#00ffcc;
+            outline:none;
+            padding:12px;
+            font-size:13px;
+            font-weight:900;
+            text-align:center;
+            overflow-wrap:anywhere;
+            margin:10px 0;
+        }
+
         .nav{
             position:fixed;
             left:0;
@@ -670,6 +696,45 @@
                     </div>
                 </section>
 
+
+                <section class="panel">
+                    <h2 class="panel-title">Referal Sistemi</h2>
+                    <p class="panel-sub">
+                        Dostunu dəvət et. Yeni oyunçu linkinlə qoşulanda sən +100 coin, o isə +25 coin qazanır.
+                    </p>
+
+                    <div class="ref-box">
+                        <h3>Dəvət linkin</h3>
+                        <div class="ref-link" id="refLink">Yüklənir...</div>
+
+                        <div class="grid-3">
+                            <div class="box-card">
+                                <div class="box-icon">👥</div>
+                                <h3>Dəvət</h3>
+                                <p><span id="refCount">0</span> nəfər</p>
+                            </div>
+
+                            <div class="box-card">
+                                <div class="box-icon">🪙</div>
+                                <h3>Qazanc</h3>
+                                <p><span id="refEarned">0</span> coin</p>
+                            </div>
+
+                            <div class="box-card">
+                                <div class="box-icon">🎁</div>
+                                <h3>Bonus</h3>
+                                <p>+100 / +25</p>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-green" onclick="copyReferralLink()">Linki kopyala</button>
+                    </div>
+
+                    <div class="log" id="refLog">
+                        Referal məlumatları yüklənir...
+                    </div>
+                </section>
+
             </div>
 
             <div>
@@ -719,7 +784,7 @@
     </nav>
 
     <script>
-        const TG_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-api";
+        const TG_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-api-ref";
         const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
 
         const firebaseConfig = {
@@ -874,6 +939,10 @@
         const myCards = document.getElementById("myCards");
         const marketplace = document.getElementById("marketplace");
         const tapBear = document.getElementById("tapBear");
+        const refLink = document.getElementById("refLink");
+        const refCount = document.getElementById("refCount");
+        const refEarned = document.getElementById("refEarned");
+        const refLog = document.getElementById("refLog");
 
         function initTelegramMiniApp(){
             if(window.Telegram && window.Telegram.WebApp){
@@ -927,6 +996,97 @@
             return window.Telegram.WebApp.initData;
         }
 
+
+        function getStartParam(){
+            const tgParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+
+            if(tgParam){
+                return String(tgParam);
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get("startapp") || urlParams.get("ref") || "";
+        }
+
+        function getReferrerIdFromStartParam(){
+            const startParam = getStartParam();
+
+            if(!startParam){
+                return null;
+            }
+
+            const match = String(startParam).match(/ref[_-]?(\d+)/i);
+
+            if(match && match[1]){
+                return Number(match[1]);
+            }
+
+            if(/^\d+$/.test(String(startParam))){
+                return Number(startParam);
+            }
+
+            return null;
+        }
+
+        function getMyReferralLink(){
+            if(!telegramUser){
+                return "";
+            }
+
+            return "https://t.me/Bearbeee_bot/GameR?startapp=ref_" + telegramUser.id;
+        }
+
+        function renderReferralStats(stats){
+            if(!telegramUser){
+                return;
+            }
+
+            const link = getMyReferralLink();
+
+            if(refLink){
+                refLink.innerText = link;
+            }
+
+            if(refCount){
+                refCount.innerText = stats?.referral_count || 0;
+            }
+
+            if(refEarned){
+                refEarned.innerText = stats?.referral_earned_coins || 0;
+            }
+
+            if(refLog){
+                refLog.innerText = "Referal linkin hazırdır. Dostların bu linklə girəndə bonus alacaqsan.";
+            }
+        }
+
+        async function loadReferralStats(){
+            try{
+                const data = await api("referral_stats");
+                renderReferralStats(data.referralStats);
+            }catch(error){
+                if(refLog){
+                    refLog.innerText = "Referal xətası: " + error.message;
+                }
+            }
+        }
+
+        async function copyReferralLink(){
+            const link = getMyReferralLink();
+
+            if(!link){
+                alert("Telegram ID yüklənməyib.");
+                return;
+            }
+
+            try{
+                await navigator.clipboard.writeText(link);
+                refLog.innerText = "Referal link kopyalandı.";
+            }catch(error){
+                alert(link);
+            }
+        }
+
         async function api(action, payload = {}){
             const response = await fetch(TG_API_URL, {
                 method:"POST",
@@ -960,13 +1120,18 @@
 
                 initFirebaseStats();
 
-                const data = await api("init");
+                const data = await api("init", { referrer_id: getReferrerIdFromStartParam() });
 
                 telegramUser = data.user;
                 applyProfile(data.profile);
 
                 renderMyCards(data.myCards || []);
                 renderMarketplace(data.marketplace || []);
+                renderReferralStats(data.referralStats);
+
+                if(data.referralResult && data.referralResult.status === "rewarded"){
+                    refLog.innerText = "Referal bonus aktiv oldu: sən +25 coin qazandın.";
+                }
 
                 cardLog.innerText = "Telegram ID ilə giriş edildi: " + telegramUser.id;
                 marketLog.innerText = "Birja yükləndi.";
@@ -1394,12 +1559,13 @@
 
         async function refreshAll(){
             try{
-                const data = await api("init");
+                const data = await api("init", { referrer_id: getReferrerIdFromStartParam() });
 
                 telegramUser = data.user;
                 applyProfile(data.profile);
                 renderMyCards(data.myCards || []);
                 renderMarketplace(data.marketplace || []);
+                renderReferralStats(data.referralStats);
                 updateBoxTimers();
 
                 clickLog.innerText = "Yeniləndi.";
