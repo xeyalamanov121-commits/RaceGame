@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bearbee Arena | Admin</title>
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -20,18 +20,6 @@
       font-family:'Segoe UI',Arial,sans-serif;
       padding-bottom:95px;
       overflow-x:hidden;
-    }
-
-    body::before{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      background:
-        linear-gradient(90deg,transparent 0 95%,rgba(21,151,255,.07) 96% 100%),
-        linear-gradient(0deg,transparent 0 95%,rgba(255,255,255,.025) 96% 100%);
-      background-size:34px 34px;
-      opacity:.38;
     }
 
     .page{
@@ -82,7 +70,6 @@
     .btn-green{background:linear-gradient(180deg,#20c235,#087816);border:1px solid #66ff7e}
     .btn-red{background:linear-gradient(180deg,#e0182e,#8d0a18);border:1px solid #ff6674}
     .btn-gold{background:linear-gradient(180deg,#ffd700,#a56b00);border:1px solid #ffef92;color:#111}
-    .btn-purple{background:linear-gradient(180deg,#973dff,#5515a0);border:1px solid #c692ff}
 
     .hero,.panel{
       background:linear-gradient(180deg,rgba(12,22,36,.96),rgba(4,9,16,.96));
@@ -120,6 +107,24 @@
       margin-bottom:14px;
     }
 
+    input,textarea{
+      width:100%;
+      background:#030a13;
+      border:1px solid #2a547d;
+      border-radius:14px;
+      color:#fff;
+      outline:none;
+      padding:12px;
+      font-size:14px;
+      font-weight:800;
+      margin-top:9px;
+    }
+
+    textarea{
+      min-height:58px;
+      resize:none;
+    }
+
     .request-list{
       display:grid;
       gap:12px;
@@ -141,21 +146,6 @@
     .request-card .ton{color:#22ff66;font-weight:1000}
     .request-card .coin{color:#ffd700;font-weight:1000}
     .request-card .danger{color:#ff6674;font-weight:1000}
-
-    textarea{
-      width:100%;
-      background:#030a13;
-      border:1px solid #2a547d;
-      border-radius:14px;
-      color:#fff;
-      outline:none;
-      padding:12px;
-      font-size:14px;
-      font-weight:800;
-      margin-top:9px;
-      min-height:58px;
-      resize:none;
-    }
 
     .log{
       margin-top:12px;
@@ -238,10 +228,35 @@
 
   <section class="hero">
     <h1>🛡 Admin Panel</h1>
-    <p>Pending deposit və withdraw request-lərini burada təsdiqlə və ya rədd et.</p>
+    <p>Gmail OTP kodu ilə daxil ol. Pending deposit və withdraw request-lərini idarə et.</p>
   </section>
 
-  <section class="layout">
+  <section class="panel" id="loginPanel">
+    <h2 class="panel-title">Gmail ilə giriş</h2>
+    <p class="panel-sub">Kod yalnız admin Gmailinə göndəriləcək.</p>
+
+    <input id="adminEmail" type="email" value="Pinu40855@gmail.com" placeholder="Admin Gmail">
+
+    <button class="btn btn-gold" onclick="sendOtp()">
+      Gmailə kod göndər
+    </button>
+
+    <input id="adminCode" type="number" placeholder="6 rəqəmli kod">
+
+    <button class="btn btn-green" onclick="verifyOtp()">
+      Kodu təsdiqlə
+    </button>
+
+    <button class="btn btn-dark" onclick="logoutAdmin()">
+      Çıxış
+    </button>
+
+    <div class="log" id="loginLog">
+      Giriş kodu gözlənilir.
+    </div>
+  </section>
+
+  <section class="layout" id="adminPanel" style="display:none">
 
     <section class="panel">
       <h2 class="panel-title">Pending Deposits</h2>
@@ -251,7 +266,9 @@
         <div class="empty">Depositlər yüklənir...</div>
       </div>
 
-      <div class="log" id="depositLog">Deposit statusu burada görünəcək.</div>
+      <div class="log" id="depositLog">
+        Deposit statusu burada görünəcək.
+      </div>
     </section>
 
     <section class="panel">
@@ -262,7 +279,9 @@
         <div class="empty">Withdraw-lar yüklənir...</div>
       </div>
 
-      <div class="log" id="withdrawLog">Withdraw statusu burada görünəcək.</div>
+      <div class="log" id="withdrawLog">
+        Withdraw statusu burada görünəcək.
+      </div>
     </section>
 
   </section>
@@ -278,44 +297,108 @@
 </nav>
 
 <script>
+  const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg";
   const WALLET_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-wallet";
-  const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
+  const ADMIN_EMAIL = "pinu40855@gmail.com";
 
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const loginPanel = document.getElementById("loginPanel");
+  const adminPanel = document.getElementById("adminPanel");
+  const loginLog = document.getElementById("loginLog");
   const depositList = document.getElementById("depositList");
   const withdrawList = document.getElementById("withdrawList");
   const depositLog = document.getElementById("depositLog");
   const withdrawLog = document.getElementById("withdrawLog");
 
-  function initTelegram(){
-    if(window.Telegram && window.Telegram.WebApp){
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
+  async function sendOtp(){
+    try{
+      const email = document.getElementById("adminEmail").value.trim().toLowerCase();
+
+      if(email !== ADMIN_EMAIL){
+        loginLog.innerText = "Bu email admin email deyil.";
+        return;
+      }
+
+      loginLog.innerText = "Kod göndərilir...";
+
+      const { error } = await supabaseClient.auth.signInWithOtp({
+        email,
+        options:{
+          shouldCreateUser:true
+        }
+      });
+
+      if(error){
+        throw error;
+      }
+
+      loginLog.innerText = "Kod Gmailə göndərildi. 6 rəqəmli kodu yaz.";
+    }catch(error){
+      loginLog.innerText = "Kod göndərmə xətası: " + error.message;
     }
   }
 
-  function hasInitData(){
-    return Boolean(
-      window.Telegram &&
-      window.Telegram.WebApp &&
-      window.Telegram.WebApp.initData &&
-      window.Telegram.WebApp.initData.length > 10
-    );
+  async function verifyOtp(){
+    try{
+      const email = document.getElementById("adminEmail").value.trim().toLowerCase();
+      const token = document.getElementById("adminCode").value.trim();
+
+      if(email !== ADMIN_EMAIL){
+        loginLog.innerText = "Bu email admin email deyil.";
+        return;
+      }
+
+      if(!token || token.length < 6){
+        loginLog.innerText = "6 rəqəmli kodu yaz.";
+        return;
+      }
+
+      loginLog.innerText = "Kod yoxlanır...";
+
+      const { data, error } = await supabaseClient.auth.verifyOtp({
+        email,
+        token,
+        type:"email"
+      });
+
+      if(error){
+        throw error;
+      }
+
+      if(!data.session){
+        throw new Error("Session yaranmadı.");
+      }
+
+      loginLog.innerText = "Giriş uğurludur.";
+      showAdmin();
+      await loadPending();
+    }catch(error){
+      loginLog.innerText = "Kod xətası: " + error.message;
+    }
   }
 
-  function getInitData(){
-    if(!hasInitData()){
-      throw new Error("Oyunu Telegram botda PLAY ilə aç.");
+  async function getAccessToken(){
+    const { data } = await supabaseClient.auth.getSession();
+
+    if(!data.session || !data.session.access_token){
+      throw new Error("Admin session yoxdur. Yenidən Gmail kodu ilə daxil ol.");
     }
 
-    return window.Telegram.WebApp.initData;
+    return data.session.access_token;
   }
 
   async function walletApi(action, payload = {}){
+    const accessToken = await getAccessToken();
+
     const res = await fetch(WALLET_API_URL, {
       method:"POST",
-      headers:{ "Content-Type":"application/json" },
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer " + accessToken
+      },
       body:JSON.stringify({
-        initData:getInitData(),
         action,
         payload
       })
@@ -330,27 +413,26 @@
     return data;
   }
 
+  function showAdmin(){
+    loginPanel.style.display = "none";
+    adminPanel.style.display = "grid";
+  }
+
   async function loadPending(){
     try{
-      if(!hasInitData()){
-        depositLog.innerHTML =
-          'Admin panel üçün oyunu PLAY ilə aç.<br><br>' +
-          '<button class="btn btn-green" onclick="location.href=MINI_APP_URL">🎮 PLAY ilə aç</button>';
-        withdrawLog.innerText = "Mini App kimi açılmayıb.";
-        return;
-      }
-
       const data = await walletApi("admin_load_pending");
       const pending = data.pending || {};
 
+      showAdmin();
       renderDeposits(pending.deposits || []);
       renderWithdrawals(pending.withdrawals || []);
 
       depositLog.innerText = "Depositlər yükləndi.";
       withdrawLog.innerText = "Withdraw-lar yükləndi.";
     }catch(error){
-      depositLog.innerText = "Admin xətası: " + error.message;
-      withdrawLog.innerText = "Admin xətası: " + error.message;
+      loginPanel.style.display = "block";
+      adminPanel.style.display = "none";
+      loginLog.innerText = "Giriş lazımdır: " + error.message;
     }
   }
 
@@ -435,8 +517,8 @@
       const note = document.getElementById("dep_note_" + id)?.value || "TON gəldi, coin əlavə edildi";
 
       await walletApi("admin_approve_deposit", {
-        request_id: id,
-        admin_note: note
+        request_id:id,
+        admin_note:note
       });
 
       depositLog.innerText = "Deposit #" + id + " approve edildi.";
@@ -451,8 +533,8 @@
       const note = document.getElementById("dep_note_" + id)?.value || "Ödəniş tapılmadı";
 
       await walletApi("admin_reject_deposit", {
-        request_id: id,
-        admin_note: note
+        request_id:id,
+        admin_note:note
       });
 
       depositLog.innerText = "Deposit #" + id + " reject edildi.";
@@ -467,8 +549,8 @@
       const note = document.getElementById("wd_note_" + id)?.value || "TON göndərildi";
 
       await walletApi("admin_mark_withdraw_paid", {
-        request_id: id,
-        admin_note: note
+        request_id:id,
+        admin_note:note
       });
 
       withdrawLog.innerText = "Withdraw #" + id + " paid edildi.";
@@ -483,8 +565,8 @@
       const note = document.getElementById("wd_note_" + id)?.value || "Withdraw rədd edildi, coin geri qaytarıldı";
 
       await walletApi("admin_reject_withdraw", {
-        request_id: id,
-        admin_note: note
+        request_id:id,
+        admin_note:note
       });
 
       withdrawLog.innerText = "Withdraw #" + id + " reject edildi və coin geri qaytarıldı.";
@@ -492,6 +574,13 @@
     }catch(error){
       withdrawLog.innerText = "Reject xətası: " + error.message;
     }
+  }
+
+  async function logoutAdmin(){
+    await supabaseClient.auth.signOut();
+    loginPanel.style.display = "block";
+    adminPanel.style.display = "none";
+    loginLog.innerText = "Çıxış edildi.";
   }
 
   async function copyText(text){
@@ -520,7 +609,6 @@
       .replaceAll("\n"," ");
   }
 
-  initTelegram();
   loadPending();
 </script>
 
