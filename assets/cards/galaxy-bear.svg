@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620" viewBox="0 0 900 620">
+  <defs>
+    <radialGradient id="g1" cx="50%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#ffd700" stop-opacity="0.65"/>
+      <stop offset="45%" stop-color="#ff8c00" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#1f1400" stop-opacity="1"/>
+    </radialGradient>
+    <linearGradient id="border" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffd700"/>
+      <stop offset="55%" stop-color="#ff8c00"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse">
+      <path d="M 38 0 L 0 0 0 38" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="900" height="620" rx="42" fill="url(#g1)"/>
+  <rect width="900" height="620" rx="42" fill="url(#grid)"/>
+  <rect x="22" y="22" width="856" height="576" rx="34" fill="none" stroke="url(#border)" stroke-width="10"/>
+  <circle cx="450" cy="278" r="155" fill="#05080f" stroke="url(#border)" stroke-width="12" filter="url(#glow)"/>
+  <text x="450" y="310" text-anchor="middle" font-size="128" font-family="Arial, sans-serif">🐻</text>
+  <text x="450" y="78" text-anchor="middle" fill="#ffffff" font-size="48" font-family="Arial, sans-serif" font-weight="900" letter-spacing="3">Galaxy Bear</text>
+  <rect x="285" y="448" width="330" height="70" rx="22" fill="#000000" fill-opacity="0.52" stroke="url(#border)" stroke-width="4"/>
+  <text x="450" y="493" text-anchor="middle" fill="#ffd700" font-size="34" font-family="Arial, sans-serif" font-weight="900">POWER 300</text>
+  <text x="450" y="560" text-anchor="middle" fill="#ffd700" font-size="30" font-family="Arial, sans-serif" font-weight="900">LEGENDARY</text>
+</svg>
