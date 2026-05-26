@@ -232,7 +232,48 @@
                 font-size:24px;
             }
         }
-    </style>
+    
+
+/* FINAL 5-LINK BEARBEE NAV */
+.nav{
+    position:fixed;
+    left:0;
+    bottom:0;
+    width:100%;
+    height:82px;
+    background:rgba(6,11,18,0.96) !important;
+    border-top:1px solid rgba(70,100,132,0.55) !important;
+    display:grid !important;
+    grid-template-columns:repeat(5,1fr) !important;
+    align-items:stretch !important;
+    justify-content:initial !important;
+    padding:0 !important;
+    z-index:9999 !important;
+    backdrop-filter:blur(12px);
+}
+.nav a{
+    color:#8793a3 !important;
+    text-decoration:none !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:5px !important;
+    font-weight:1000 !important;
+    letter-spacing:0.5px !important;
+    font-size:10.5px !important;
+    line-height:1.05 !important;
+}
+.nav a.active{
+    color:#ffd700 !important;
+    text-shadow:0 0 14px rgba(255,215,0,0.45) !important;
+}
+.nav .icon{
+    font-size:22px !important;
+    line-height:1 !important;
+}
+
+</style>
 </head>
 
 <body>
@@ -324,12 +365,13 @@
 
     </div>
 
-    <div class="nav">
-        <a href="./index.html">ARENA</a>
-        <a href="./click-room.html">CLICK</a>
-        <a href="./race.html">RACE</a>
-        <a href="./ads.html">ADS</a>
-    </div>
+    <nav class="nav">
+    <a href="./index.html" class="active"><span class="icon">🏠</span>ARENA</a>
+    <a href="./click-room.html"><span class="icon">🐻</span>CLICK</a>
+    <a href="./mining-room.html"><span class="icon">⛏</span>MINING</a>
+    <a href="./market-room.html"><span class="icon">🛒</span>MARKET</a>
+    <a href="./wallet-room.html"><span class="icon">💎</span>WALLET</a>
+</nav>
 
     <script>
         let coins = parseInt(localStorage.getItem("coins")) || 0;
