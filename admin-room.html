@@ -3,73 +3,147 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BEARBEE ADMIN</title>
+<title>Bearbee Admin Panel</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
-    body { font-family: Arial, sans-serif; background: #0b0c1a; color: #fff; margin: 0; padding: 0; }
-    .container { padding: 20px; max-width: 500px; margin: auto; }
-    .card { background: #1a1b2d; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-    h2 { color: #ffd700; }
-    .status { color: #00ffff; margin-top: 10px; }
-    button { background: #ffd700; color: #000; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
+body{margin:0;padding:0;font-family:sans-serif;background:#111;color:#fff;}
+.page{max-width:800px;margin:0 auto;padding:20px;}
+.panel{background:#222;border-radius:12px;padding:15px;margin-bottom:15px;}
+.panel h2{color:#ffd700;font-size:20px;margin-bottom:10px;}
+.empty{color:#888;text-align:center;padding:10px;}
+.request-card{background:#333;padding:10px;margin-bottom:10px;border-radius:8px;}
+textarea{width:100%;padding:8px;border-radius:6px;background:#222;color:#fff;border:none;margin-top:6px;}
+.btn{display:inline-block;padding:8px 12px;border-radius:6px;color:#fff;text-decoration:none;margin-top:6px;cursor:pointer;}
+.btn-green{background:#28a745;}
+.btn-red{background:#dc3545;}
+.btn-gold{background:#ffc107;color:#111;}
+.log{background:#111;padding:8px;border-radius:6px;color:#0f0;margin-top:6px;}
 </style>
 </head>
 <body>
-<div class="container">
-    <h1>BEARBEE ADMIN</h1>
+<main class="page">
 
-    <div class="card">
-        <h2>Pending Deposits</h2>
-        <div id="deposits">Deposits yüklənir...</div>
-        <div id="depositStatus" class="status"></div>
-    </div>
-
-    <div class="card">
-        <h2>Pending Withdrawals</h2>
-        <div id="withdrawals">Withdrawals yüklənir...</div>
-        <div id="withdrawStatus" class="status"></div>
-    </div>
-
-    <div class="card">
-        <h2>Pending TON Card Orders</h2>
-        <div id="tonOrders">TON Card Orders yüklənir...</div>
-        <div id="tonStatus" class="status"></div>
-    </div>
-
-    <button onclick="reloadPanel()">Yenilə</button>
+<div id="loginPanel" class="panel">
+<h2>Telegram ID yoxlanır</h2>
+<div class="log" id="loginLog">Telegram Mini App məlumatı yoxlanılır...</div>
 </div>
 
+<div id="adminPanel" style="display:none">
+  <div class="panel">
+    <h2>Pending Deposits</h2>
+    <div id="depositList" class="request-list"><div class="empty">Yüklənir...</div></div>
+    <div class="log" id="depositLog"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Pending Withdrawals</h2>
+    <div id="withdrawList" class="request-list"><div class="empty">Yüklənir...</div></div>
+    <div class="log" id="withdrawLog"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Pending TON Card Orders</h2>
+    <div id="tonOrderList" class="request-list"><div class="empty">Yüklənir...</div></div>
+    <div class="log" id="tonOrderLog"></div>
+  </div>
+</div>
+
+<button class="btn btn-gold" onclick="loadPending()">Yenilə</button>
+
+</main>
+
 <script>
-function fetchData(url, displayId, statusId) {
-    try {
-        // Simulyasiya: serverdən data alma
-        let data = null; // əgər real API varsa buraya fetch() istifadə olunacaq
+const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const ADMIN_TELEGRAM_ID = 8591374417;
 
-        // Null check
-        if (!data || data.length === 0) {
-            document.getElementById(displayId).innerText = "Yüklənə bilmir.";
-            document.getElementById(statusId).innerText = "";
-        } else {
-            document.getElementById(displayId).innerText = JSON.stringify(data);
-            document.getElementById(statusId).innerText = "Yükləndi";
-        }
-    } catch(e) {
-        document.getElementById(displayId).innerText = "Xəta baş verdi";
-        document.getElementById(statusId).innerText = e.message;
-    }
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const loginPanel = document.getElementById("loginPanel");
+const adminPanel = document.getElementById("adminPanel");
+const loginLog = document.getElementById("loginLog");
+const depositList = document.getElementById("depositList");
+const withdrawList = document.getElementById("withdrawList");
+const tonOrderList = document.getElementById("tonOrderList");
+const depositLog = document.getElementById("depositLog");
+const withdrawLog = document.getElementById("withdrawLog");
+const tonOrderLog = document.getElementById("tonOrderLog");
+
+const tg = window.Telegram?.WebApp;
+tg?.ready();
+tg?.expand();
+const telegramUser = tg?.initDataUnsafe?.user || null;
+
+function denyAccess(msg){
+  loginPanel.style.display="block";
+  adminPanel.style.display="none";
+  loginLog.innerText="⛔ Giriş qadağandır. " + msg;
 }
 
-function loadAdminPanel() {
-    fetchData("/api/deposits", "deposits", "depositStatus");
-    fetchData("/api/withdrawals", "withdrawals", "withdrawStatus");
-    fetchData("/api/ton-orders", "tonOrders", "tonStatus");
+function isAdminTelegram(){
+  return telegramUser && Number(telegramUser.id) === ADMIN_TELEGRAM_ID;
 }
 
-function reloadPanel() {
-    loadAdminPanel();
+function showAdmin(){ loginPanel.style.display="none"; adminPanel.style.display="block"; }
+
+async function startAdmin(){
+  if(!telegramUser){ denyAccess("Bot içindən aç."); return; }
+  if(!isAdminTelegram()){ denyAccess("Sənin ID admin deyil: " + telegramUser.id); return; }
+  loginLog.innerText="✅ Admin tanındı. Telegram ID: " + telegramUser.id;
+  showAdmin();
+  await loadPending();
 }
 
-// Avtomatik yüklə
-window.onload = loadAdminPanel;
+async function loadPending(){
+  try{
+    showAdmin();
+    // Dummy data test üçün
+    renderDeposits([{id:1, telegram_id:123, ton_amount:10, coin_amount:100, tx_hash:"abc", status:"Pending"}]);
+    renderWithdrawals([{id:1, telegram_id:123, wallet_address:"EQ123", coin_amount:100, fee_coin_amount:1, receive_coin_amount:99, ton_amount:10, status:"Pending"}]);
+    renderTonCardOrders([{id:1, buyer_telegram_id:123, card_name:"Gold Card", amount_ton:5, pay_to_wallet:"EQ456", status:"Pending"}]);
+    depositLog.innerText="Depositlər yükləndi.";
+    withdrawLog.innerText="Withdraw-lar yükləndi.";
+    tonOrderLog.innerText="TON kart order-ləri yükləndi.";
+  }catch(e){
+    depositLog.innerText="Yükləmə xətası: " + e.message;
+    withdrawLog.innerText="Yükləmə xətası: " + e.message;
+    tonOrderLog.innerText="Yükləmə xətası: " + e.message;
+  }
+}
+
+function renderDeposits(list){
+  depositList.innerHTML="";
+  if(!list.length){ depositList.innerHTML='<div class="empty">Pending deposit yoxdur.</div>'; return; }
+  list.forEach(item=>{
+    const div = document.createElement("div"); div.className="request-card";
+    div.innerHTML=`<b>Deposit #${item.id}</b><br>User ID: ${item.telegram_id}<br>TON: ${item.ton_amount}<br>Coin: ${item.coin_amount}<br>TX: ${item.tx_hash}<br>Status: ${item.status}<br><textarea placeholder="Admin qeyd"></textarea><button class="btn btn-green">Approve</button><button class="btn btn-red">Reject</button>`;
+    depositList.appendChild(div);
+  });
+}
+
+function renderWithdrawals(list){
+  withdrawList.innerHTML="";
+  if(!list.length){ withdrawList.innerHTML='<div class="empty">Pending withdraw yoxdur.</div>'; return; }
+  list.forEach(item=>{
+    const div = document.createElement("div"); div.className="request-card";
+    div.innerHTML=`<b>Withdraw #${item.id}</b><br>User ID: ${item.telegram_id}<br>Wallet: ${item.wallet_address}<br>Coin: ${item.coin_amount}<br>Fee: ${item.fee_coin_amount}<br>Receive Coin: ${item.receive_coin_amount}<br>TON: ${item.ton_amount}<br>Status: ${item.status}<br><textarea placeholder="Admin qeyd"></textarea><button class="btn btn-green">Mark Paid</button><button class="btn btn-red">Reject</button>`;
+    withdrawList.appendChild(div);
+  });
+}
+
+function renderTonCardOrders(list){
+  tonOrderList.innerHTML="";
+  if(!list.length){ tonOrderList.innerHTML='<div class="empty">Pending TON kart order yoxdur.</div>'; return; }
+  list.forEach(item=>{
+    const div = document.createElement("div"); div.className="request-card";
+    div.innerHTML=`<b>TON Card Order #${item.id}</b><br>Buyer ID: ${item.buyer_telegram_id}<br>Card: ${item.card_name}<br>Amount: ${item.amount_ton} TON<br>Wallet: ${item.pay_to_wallet}<br>Status: ${item.status}<br><textarea placeholder="Admin qeyd"></textarea><button class="btn btn-green">Approve</button><button class="btn btn-red">Reject</button>`;
+    tonOrderList.appendChild(div);
+  });
+}
+
+startAdmin();
 </script>
 </body>
 </html>
