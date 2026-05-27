@@ -1,218 +1,75 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bearbee Arena | Admin</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{min-height:100vh;background:#01040a;color:#fff;font-family:'Segoe UI',Arial,sans-serif;padding-bottom:95px;overflow-x:hidden}
-    .page{width:min(1100px,100%);margin:0 auto;padding:16px 14px}
-    .top-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
-    .back{color:#ffd700;text-decoration:none;font-weight:1000;background:rgba(8,18,32,.88);border:1px solid rgba(60,91,128,.75);border-radius:14px;padding:12px 14px}
-    .logo{text-align:center;line-height:.9}
-    .logo .bearbee{font-size:22px;font-weight:1000;font-style:italic;letter-spacing:2px;color:#fff}
-    .logo .arena{font-size:33px;font-weight:1000;font-style:italic;letter-spacing:3px;color:#ffd700}
-    .btn{width:100%;border:none;cursor:pointer;border-radius:14px;padding:13px;font-size:14px;font-weight:1000;color:#fff;text-decoration:none;text-align:center;text-transform:uppercase;display:block;margin-top:8px}
-    .btn-dark{background:linear-gradient(180deg,#152339,#0a1220);border:1px solid #33557d}
-    .btn-green{background:linear-gradient(180deg,#20c235,#087816);border:1px solid #66ff7e}
-    .btn-red{background:linear-gradient(180deg,#e0182e,#8d0a18);border:1px solid #ff6674}
-    .btn-gold{background:linear-gradient(180deg,#ffd700,#a56b00);border:1px solid #ffef92;color:#111}
-    .hero,.panel{background:linear-gradient(180deg,rgba(12,22,36,.96),rgba(4,9,16,.96));border:1px solid rgba(71,101,136,.62);border-radius:24px;padding:18px;margin-bottom:16px;box-shadow:inset 0 0 22px rgba(21,151,255,.08),0 0 26px rgba(21,151,255,.08)}
-    .hero{text-align:center}
-    .hero h1{color:#ffd700;font-size:31px;font-weight:1000;margin-bottom:9px}
-    .hero p{color:#a8b4c4;font-size:14px;line-height:1.5}
-    .layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-    .panel-title{color:#ffd700;text-align:center;font-size:24px;font-weight:1000;margin-bottom:10px}
-    .panel-sub{color:#98a8ba;text-align:center;font-size:14px;line-height:1.5;margin-bottom:14px}
-    input,textarea{width:100%;background:#030a13;border:1px solid #2a547d;border-radius:14px;color:#fff;outline:none;padding:12px;font-size:14px;font-weight:800;margin-top:9px}
-    textarea{min-height:58px;resize:none}
-    .request-list{display:grid;gap:12px}
-    .request-card{background:#030a13;border:1px solid #263f5d;border-radius:16px;padding:14px;color:#a8b4c4;font-size:13px;line-height:1.55;word-break:break-word}
-    .request-card b{color:#ffd700}
-    .request-card .status{color:#ffd700;font-weight:1000}
-    .request-card .ton{color:#22ff66;font-weight:1000}
-    .request-card .coin{color:#ffd700;font-weight:1000}
-    .request-card .danger{color:#ff6674;font-weight:1000}
-    .log{margin-top:12px;background:#030a13;border:1px solid #263f5d;border-radius:14px;padding:12px;color:#00ffcc;min-height:45px;font-weight:800;font-size:14px;text-align:center;line-height:1.45}
-    .empty{background:#030a13;border:1px solid #263f5d;border-radius:14px;padding:15px;text-align:center;color:#98a8ba;font-weight:800}
-    .nav{position:fixed;left:0;bottom:0;width:100%;height:82px;background:rgba(6,11,18,.96);border-top:1px solid rgba(70,100,132,.55);display:grid;grid-template-columns:repeat(5,1fr);z-index:999;backdrop-filter:blur(12px)}
-    .nav a{color:#8793a3;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-weight:1000;letter-spacing:1px;font-size:11px}
-    .nav a.active{color:#ffd700;text-shadow:0 0 14px rgba(255,215,0,.45)}
-    .nav .icon{font-size:23px}
-    @media(max-width:850px){.layout{grid-template-columns:1fr}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BEARBEE ADMIN</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #0b0c1a; color: #fff; margin: 0; padding: 0; }
+    .container { padding: 20px; max-width: 500px; margin: auto; }
+    .card { background: #1a1b2d; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+    h2 { color: #ffd700; }
+    .status { color: #00ffff; margin-top: 10px; }
+    button { background: #ffd700; color: #000; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
+</style>
 </head>
 <body>
+<div class="container">
+    <h1>BEARBEE ADMIN</h1>
 
-<main class="page">
-
-  <div class="top-bar">
-    <a href="./wallet-room.html" class="back">← WALLET</a>
-    <div class="logo">
-      <div class="bearbee">BEARBEE</div>
-      <div class="arena">ADMIN</div>
+    <div class="card">
+        <h2>Pending Deposits</h2>
+        <div id="deposits">Deposits yüklənir...</div>
+        <div id="depositStatus" class="status"></div>
     </div>
-    <button class="btn btn-dark" onclick="loadPending()">Yenilə</button>
-  </div>
 
-  <section class="hero">
-    <h1>🛡 Admin Panel</h1>
-    <p>Telegram ID ilə avtomatik admin giriş. Pending deposit və withdraw request-lərini idarə et.</p>
-  </section>
-
-  <section class="panel" id="loginPanel">
-    <h2 class="panel-title">Telegram ID yoxlanır</h2>
-    <p class="panel-sub">Bu admin panel yalnız sahib Telegram hesabı üçün açılır.</p>
-    <div class="log" id="loginLog">
-      Telegram Mini App məlumatı yoxlanılır...
+    <div class="card">
+        <h2>Pending Withdrawals</h2>
+        <div id="withdrawals">Withdrawals yüklənir...</div>
+        <div id="withdrawStatus" class="status"></div>
     </div>
-  </section>
 
-  <section class="layout" id="adminPanel" style="display:none">
-    <!-- Pending Deposits Panel -->
-    <section class="panel">
-      <h2 class="panel-title">Pending Deposits</h2>
-      <p class="panel-sub">TON gəlibsə approve et. Tapılmayıbsa reject et.</p>
-      <div class="request-list" id="depositList"><div class="empty">Depositlər yüklənir...</div></div>
-      <div class="log" id="depositLog">Deposit statusu burada görünəcək.</div>
-    </section>
+    <div class="card">
+        <h2>Pending TON Card Orders</h2>
+        <div id="tonOrders">TON Card Orders yüklənir...</div>
+        <div id="tonStatus" class="status"></div>
+    </div>
 
-    <!-- Pending Withdrawals Panel -->
-    <section class="panel">
-      <h2 class="panel-title">Pending Withdrawals</h2>
-      <p class="panel-sub">TON-u manual göndər, sonra Paid bas. Problem varsa Reject et.</p>
-      <div class="request-list" id="withdrawList"><div class="empty">Withdraw-lar yüklənir...</div></div>
-      <div class="log" id="withdrawLog">Withdraw statusu burada görünəcək.</div>
-    </section>
-
-    <!-- Pending TON Card Orders Panel -->
-    <section class="panel">
-      <h2 class="panel-title">Pending TON Card Orders</h2>
-      <p class="panel-sub">Kart üçün TON ödənişini wallet-də yoxla, sonra approve et.</p>
-      <div class="request-list" id="tonOrderList"><div class="empty">TON kart order-ləri yüklənir...</div></div>
-      <div class="log" id="tonOrderLog">TON kart order statusu burada görünəcək.</div>
-    </section>
-  </section>
-
-</main>
-
-<nav class="nav">
-  <a href="./index.html"><span class="icon">🏠</span>ARENA</a>
-  <a href="./click-room.html"><span class="icon">🐻</span>CLICK</a>
-  <a href="./mining-room.html"><span class="icon">⛏</span>MINING</a>
-  <a href="./wallet-room.html"><span class="icon">💎</span>WALLET</a>
-  <a href="./admin-room.html" class="active"><span class="icon">🛡</span>ADMIN</a>
-</nav>
+    <button onclick="reloadPanel()">Yenilə</button>
+</div>
 
 <script>
-  const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
-  const WALLET_API_URL = SUPABASE_URL + "/functions/v1/tg-wallet";
-  const TON_CARD_API_URL = SUPABASE_URL + "/functions/v1/tg-card-orders";
-  const ADMIN_TELEGRAM_ID = 8591374417;
+function fetchData(url, displayId, statusId) {
+    try {
+        // Simulyasiya: serverdən data alma
+        let data = null; // əgər real API varsa buraya fetch() istifadə olunacaq
 
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const loginPanel = document.getElementById("loginPanel");
-  const adminPanel = document.getElementById("adminPanel");
-  const loginLog = document.getElementById("loginLog");
-  const depositList = document.getElementById("depositList");
-  const withdrawList = document.getElementById("withdrawList");
-  const depositLog = document.getElementById("depositLog");
-  const withdrawLog = document.getElementById("withdrawLog");
-  const tonOrderList = document.getElementById("tonOrderList");
-  const tonOrderLog = document.getElementById("tonOrderLog");
-
-  const tg = window.Telegram?.WebApp;
-  tg?.ready();
-  tg?.expand();
-
-  const telegramUser = tg?.initDataUnsafe?.user || null;
-  const telegramInitData = tg?.initData || "";
-
-  function denyAccess(message){
-    loginPanel.style.display = "block";
-    adminPanel.style.display = "none";
-    loginLog.innerHTML = "⛔ Giriş qadağandır.<br>" + message;
-  }
-
-  function isAdminTelegram(){
-    return telegramUser && Number(telegramUser.id) === ADMIN_TELEGRAM_ID;
-  }
-
-  async function startAdmin(){
-    if(!window.Telegram?.WebApp){
-      denyAccess("Bu səhifə Telegram Mini App içində açılmalıdır.");
-      return;
+        // Null check
+        if (!data || data.length === 0) {
+            document.getElementById(displayId).innerText = "Yüklənə bilmir.";
+            document.getElementById(statusId).innerText = "";
+        } else {
+            document.getElementById(displayId).innerText = JSON.stringify(data);
+            document.getElementById(statusId).innerText = "Yükləndi";
+        }
+    } catch(e) {
+        document.getElementById(displayId).innerText = "Xəta baş verdi";
+        document.getElementById(statusId).innerText = e.message;
     }
-    if(!telegramUser){
-      denyAccess("Telegram istifadəçi məlumatı gəlmədi. Bot içindən aç.");
-      return;
-    }
-    if(!isAdminTelegram()){
-      denyAccess("Sənin Telegram ID: " + telegramUser.id + ". Bu ID admin deyil.");
-      return;
-    }
-    loginLog.innerText = "✅ Admin tanındı. Telegram ID: " + telegramUser.id;
-    showAdmin();
-    await loadPending();
-  }
+}
 
-  function showAdmin(){ loginPanel.style.display="none"; adminPanel.style.display="grid"; }
+function loadAdminPanel() {
+    fetchData("/api/deposits", "deposits", "depositStatus");
+    fetchData("/api/withdrawals", "withdrawals", "withdrawStatus");
+    fetchData("/api/ton-orders", "tonOrders", "tonStatus");
+}
 
-  async function walletApi(action,payload={}){
-    if(!isAdminTelegram()) throw new Error("Admin Telegram ID uyğun deyil.");
-    const res = await fetch(WALLET_API_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+SUPABASE_ANON_KEY,"X-Telegram-Admin-Id": String(telegramUser.id),"X-Telegram-Init-Data": telegramInitData},
-      body:JSON.stringify({action,payload:{...payload,admin_telegram_id:telegramUser.id,telegram_init_data:telegramInitData}})
-    });
-    const data = await res.json();
-    if(!res.ok || !data.ok) throw new Error(data.error || "Admin API xətası");
-    return data;
-  }
+function reloadPanel() {
+    loadAdminPanel();
+}
 
-  async function loadPending(){
-    try{
-      if(!isAdminTelegram()){ denyAccess("Admin ID uyğun deyil."); return; }
-      const data = await walletApi("admin_load_pending");
-      const pending = data.pending || {};
-      renderDeposits(pending.deposits || []);
-      renderWithdrawals(pending.withdrawals || []);
-      depositLog.innerText = "Depositlər yükləndi.";
-      withdrawLog.innerText = "Withdraw-lar yükləndi.";
-    }catch(error){
-      depositLog.innerText = "Yükləmə xətası: " + error.message;
-      withdrawLog.innerText = "Yükləmə xətası: " + error.message;
-    }
-  }
-
-  function renderDeposits(list){
-    depositList.innerHTML="";
-    if(!list?.length){ depositList.innerHTML='<div class="empty">Pending deposit yoxdur.</div>'; return; }
-    list.forEach(item=>{
-      const div=document.createElement("div"); div.className="request-card";
-      div.innerHTML=`<b>Deposit #${item.id}</b><br>User ID: ${item.telegram_id}<br>TON: <span class="ton">${item.ton_amount}</span><br>Coin: <span class="coin">${item.coin_amount}</span><br>Status: <span class="status">${item.status}</span>`;
-      depositList.appendChild(div);
-    });
-  }
-
-  function renderWithdrawals(list){
-    withdrawList.innerHTML="";
-    if(!list?.length){ withdrawList.innerHTML='<div class="empty">Pending withdraw yoxdur.</div>'; return; }
-    list.forEach(item=>{
-      const div=document.createElement("div"); div.className="request-card";
-      div.innerHTML=`<b>Withdraw #${item.id}</b><br>User ID: ${item.telegram_id}<br>Coin: <span class="coin">${item.coin_amount}</span><br>Status: <span class="status">${item.status}</span>`;
-      withdrawList.appendChild(div);
-    });
-  }
-
-  startAdmin();
+// Avtomatik yüklə
+window.onload = loadAdminPanel;
 </script>
-
 </body>
 </html>
