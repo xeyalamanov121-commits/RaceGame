@@ -3,28 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bearbee Admin Panel</title>
+<title>Bearbee Admin Panel Full</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#0a0f1a;color:#fff;}
-.container{max-width:1200px;margin:0 auto;padding:16px;}
-.panel{background:#121a2a;border-radius:20px;padding:20px;margin-bottom:16px;}
+.container{max-width:1300px;margin:0 auto;padding:16px;}
+h1{color:#ffd700;text-align:center;margin-bottom:20px;}
+.panel{background:#121a2a;border-radius:20px;padding:20px;margin-bottom:20px;box-shadow:0 0 15px rgba(255,215,0,0.1);}
 .panel-title{color:#ffd700;font-size:22px;margin-bottom:12px;text-align:center;}
-.btn{padding:8px 14px;border-radius:8px;color:#fff;cursor:pointer;border:none;margin-right:6px;}
+.history-item{background:#1c2536;padding:12px;border-radius:12px;margin-bottom:10px;}
+.btn{padding:8px 14px;border-radius:8px;color:#fff;cursor:pointer;border:none;margin-right:6px;margin-top:6px;}
 .btn-green{background-color:#28a745;}
 .btn-red{background-color:#dc3545;}
 .btn-gold{background-color:#ffc107;color:#111;}
-.history-item{background:#1c2536;padding:12px;border-radius:12px;margin-bottom:10px;}
 table{width:100%;border-collapse:collapse;margin-top:12px;}
 th,td{padding:10px;border:1px solid #263f5d;text-align:center;}
 th{background-color:#1c2536;color:#ffd700;}
 td{background-color:#131b2b;color:#00d4ff;}
+.stats-block{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;}
+.stat-card{background:#1c2536;border-radius:14px;padding:12px;flex:1 1 200px;}
+.stat-card h4{color:#ffd700;margin-bottom:6px;}
+.stat-card p{color:#98a8ba;margin:2px 0;font-size:13px;}
 </style>
 </head>
 <body>
 <div class="container">
-<h1 style="text-align:center;color:#ffd700;">💎 Bearbee Wallet Admin Panel</h1>
+<h1>💎 Bearbee Admin Panel</h1>
 
 <section class="panel">
 <h2 class="panel-title">Pending Deposits</h2>
@@ -38,7 +43,7 @@ td{background-color:#131b2b;color:#00d4ff;}
 
 <section class="panel">
 <h2 class="panel-title">User Statistics</h2>
-<div id="userStats">Yüklənir...</div>
+<div id="userStats" class="stats-block">Yüklənir...</div>
 </section>
 </div>
 
@@ -86,26 +91,31 @@ function renderUserStats(list){
   const container=document.getElementById("userStats");
   container.innerHTML="";
   if(!list.length){ container.innerHTML="İstifadəçi yoxdur."; return; }
-  let table=`<table>
-    <tr><th>Telegram ID</th><th>TON Balance</th><th>Coin Balance</th><th>Total Deposit</th><th>Total Withdraw</th></tr>`;
   list.forEach(u=>{
-    table+=`<tr><td>${u.telegram_id}</td><td>${u.ton_balance}</td><td>${u.coin_balance}</td><td>${u.total_deposit}</td><td>${u.total_withdraw}</td></tr>`;
+    const div = document.createElement("div");
+    div.className="stat-card";
+    div.innerHTML=`<h4>Telegram ID: ${u.telegram_id}</h4>
+      <p>TON Balance: ${u.ton_balance}</p>
+      <p>Coin Balance: ${u.coin_balance}</p>
+      <p>Total Deposit: ${u.total_deposit}</p>
+      <p>Total Withdraw: ${u.total_withdraw}</p>`;
+    container.appendChild(div);
   });
-  table+="</table>";
-  container.innerHTML=table;
 }
 
 async function loadPending(){
   if(!isAdmin()){ alert("Admin deyilsiniz!"); return; }
 
-  const { data: deposits } = await supabase.from('deposits').select('*').eq('status','Pending');
-  const { data: withdrawals } = await supabase.from('withdrawals').select('*').eq('status','Pending');
-  const { data: users } = await supabase.from('wallets').select('*');
+  const [depositsRes, withdrawalsRes, usersRes] = await Promise.all([
+    supabase.from('deposits').select('*').eq('status','Pending'),
+    supabase.from('withdrawals').select('*').eq('status','Pending'),
+    supabase.from('wallets').select('*')
+  ]);
 
-  renderDeposits(deposits||[]);
-  renderWithdrawals(withdrawals||[]);
+  renderDeposits(depositsRes.data || []);
+  renderWithdrawals(withdrawalsRes.data || []);
 
-  const statsList = users.map(u=>({
+  const statsList = (usersRes.data || []).map(u=>({
     telegram_id:u.telegram_id,
     ton_balance:u.ton_balance,
     coin_balance:u.coin_balance,
@@ -115,6 +125,7 @@ async function loadPending(){
   renderUserStats(statsList);
 }
 
+// RPC manual actions
 async function approveDeposit(id){ await supabase.rpc('admin_approve_deposit',{request_id:id}); loadPending(); }
 async function rejectDeposit(id){ await supabase.rpc('admin_reject_deposit',{request_id:id}); loadPending(); }
 async function markWithdrawPaid(id){ await supabase.rpc('admin_mark_withdrawal_paid',{request_id:id}); loadPending(); }
