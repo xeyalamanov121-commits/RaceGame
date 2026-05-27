@@ -909,6 +909,41 @@
             }
         }
 
+
+        /* MANUAL TON CARD ORDER */
+        .btn-ton{
+            background:linear-gradient(180deg,#12d7ff,#0a62b8);
+            border:1px solid #82efff;
+            color:#001018;
+            margin-top:8px;
+            box-shadow:0 0 18px rgba(18,215,255,0.18);
+        }
+
+        .ton-order-box{
+            margin-top:12px;
+            background:#030a13;
+            border:1px solid rgba(18,215,255,0.55);
+            border-radius:14px;
+            padding:12px;
+            color:#c9f8ff;
+            text-align:left;
+            line-height:1.45;
+            overflow-wrap:anywhere;
+        }
+
+        .ton-order-box b{ color:#ffd700; }
+
+        .ton-order-box .copy-mini{
+            display:inline-block;
+            margin-top:7px;
+            padding:7px 9px;
+            border-radius:9px;
+            background:#ffd700;
+            color:#111;
+            font-weight:1000;
+            cursor:pointer;
+        }
+
     </style>
 </head>
 
@@ -1002,6 +1037,7 @@
     <script>
 
         const TG_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-api-ref";
+        const TON_CARD_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-card-orders";
         const MINING_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-mining";
         const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
 
@@ -1058,15 +1094,23 @@
                 const tg = window.Telegram.WebApp;
                 tg.ready();
                 tg.expand();
+
+                if(tg.initData && tg.initData.length > 10){
+                    sessionStorage.setItem("bearbee_initData", tg.initData);
+                    localStorage.setItem("bearbee_initData_backup", tg.initData);
+                }
             }
         }
 
         function hasTelegramInitData(){
+            const liveInitData = window.Telegram?.WebApp?.initData;
+            const savedInitData = sessionStorage.getItem("bearbee_initData");
+            const backupInitData = localStorage.getItem("bearbee_initData_backup");
+
             return Boolean(
-                window.Telegram &&
-                window.Telegram.WebApp &&
-                window.Telegram.WebApp.initData &&
-                window.Telegram.WebApp.initData.length > 10
+                (liveInitData && liveInitData.length > 10) ||
+                (savedInitData && savedInitData.length > 10) ||
+                (backupInitData && backupInitData.length > 10)
             );
         }
 
@@ -1097,12 +1141,26 @@
 
 
         function getTelegramInitData(){
-            if(!hasTelegramInitData()){
-                showMiniAppOpenScreen();
-                throw new Error("Mini App kimi açılmayıb. PLAY ilə aç.");
+            const liveInitData = window.Telegram?.WebApp?.initData;
+
+            if(liveInitData && liveInitData.length > 10){
+                sessionStorage.setItem("bearbee_initData", liveInitData);
+                localStorage.setItem("bearbee_initData_backup", liveInitData);
+                return liveInitData;
             }
 
-            return window.Telegram.WebApp.initData;
+            const savedInitData = sessionStorage.getItem("bearbee_initData");
+            if(savedInitData && savedInitData.length > 10){
+                return savedInitData;
+            }
+
+            const backupInitData = localStorage.getItem("bearbee_initData_backup");
+            if(backupInitData && backupInitData.length > 10){
+                return backupInitData;
+            }
+
+            showMiniAppOpenScreen();
+            throw new Error("Telegram initData tapılmadı. Oyunu botdakı PLAY düyməsi ilə aç.");
         }
 
 
@@ -1771,20 +1829,27 @@
 
                 const isMine = telegramUser && Number(listing.seller_telegram_id) === Number(telegramUser.id);
                 const sellerShort = String(listing.seller_telegram_id || "-");
+                const cardName = String(t.name || "Cyber Card");
+                const userCardId = card.id || listing.user_card_id || listing.card_id || "";
+                const tonPrice = coinToTon(listing.price);
 
                 div.innerHTML = `
                     <div class="card-art">${img}</div>
-                    <h3>${escapeHtml(t.name || "Cyber Card")}</h3>
+                    <h3>${escapeHtml(cardName)}</h3>
                     <span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span>
                     <div class="market-badge">GLOBAL LISTING</div>
                     <p>Boost: ${Number(t.click_boost) || 1}x</p>
                     <p class="power-text">Power: ${Number(t.mining_power) || 0}</p>
-                    <p><span class="price-ton">≈ ${coinToTon(listing.price)} TON</span></p>
+                    <p><span class="price-ton">≈ ${tonPrice} TON</span></p>
                     <p class="price-coin">${Number(listing.price)} coin</p>
                     <p class="seller-line">Seller ID: ${escapeHtml(sellerShort)}</p>
 
                     <button class="btn ${isMine ? "btn-dark" : "btn-green"}" ${isMine ? "disabled" : ""} onclick="buyCard(${listing.id})">
-                        ${isMine ? "Sənin satışındır" : "Al"}
+                        ${isMine ? "Sənin satışındır" : "🪙 Coin ilə al"}
+                    </button>
+
+                    <button class="btn btn-ton" ${isMine ? "disabled" : ""} onclick="buyCardWithTon(${Number(listing.id)}, '${escapeForJs(cardName)}', ${Number(tonPrice)}, '${escapeForJs(sellerShort)}', '${escapeForJs(String(userCardId))}')">
+                        ${isMine ? "Sənin satışındır" : "💎 TON ilə al"}
                     </button>
                 `;
 
@@ -1792,7 +1857,79 @@
             });
         }
 
-        async function buyCard(listingId){
+        async function cardOrderApi(action, payload = {}){
+            const response = await fetch(TON_CARD_API_URL, {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+                    initData:getTelegramInitData(),
+                    action,
+                    payload
+                })
+            });
+
+            const data = await response.json();
+
+            if(!response.ok || !data.ok){
+                throw new Error(data.error || "TON card order API xətası");
+            }
+
+            return data;
+        }
+
+        async function buyCardWithTon(listingId, cardName, tonPrice, sellerTelegramId, userCardId){
+            const ok = confirm(cardName + " kartı üçün " + tonPrice + " TON manual order yaradılsın?");
+
+            if(!ok){
+                return;
+            }
+
+            try{
+                const data = await cardOrderApi("create_ton_card_order", {
+                    listing_id: Number(listingId),
+                    user_card_id: userCardId ? Number(userCardId) : null,
+                    seller_telegram_id: sellerTelegramId,
+                    card_name: cardName,
+                    amount_ton: Number(tonPrice)
+                });
+
+                const order = data.order || {};
+
+                marketLog.innerHTML = `
+                    <div class="ton-order-box">
+                        <b>TON order yaradıldı.</b><br>
+                        Wallet:<br>${escapeHtml(order.pay_to_wallet || "-")}<br>
+                        <span class="copy-mini" onclick="copyText('${escapeForJs(order.pay_to_wallet || "")}')">Wallet kopyala</span><br><br>
+                        Tag / Comment:<br>${escapeHtml(order.payment_tag || "-")}<br>
+                        <span class="copy-mini" onclick="copyText('${escapeForJs(order.payment_tag || "")}')">Tag kopyala</span><br><br>
+                        Ödənişi göndərdikdən sonra admin təsdiq edəcək.
+                    </div>
+                `;
+
+                alert(
+                    "TON ödəniş məlumatı:\n\n" +
+                    "Wallet:\n" + (order.pay_to_wallet || "-") + "\n\n" +
+                    "Tag / Comment:\n" + (order.payment_tag || "-") + "\n\n" +
+                    "Ödənişdən sonra admin təsdiq edəcək."
+                );
+            }catch(error){
+                marketLog.innerText = "TON order xətası: " + error.message;
+            }
+        }
+
+        async function copyText(text){
+            try{
+                await navigator.clipboard.writeText(text);
+                marketLog.innerText = "Kopyalandı.";
+            }catch(error){
+                alert(text);
+            }
+        }
+
+        
+async function buyCard(listingId){
             const ok = confirm("Bu kartı almaq istəyirsən?");
 
             if(!ok){
@@ -1842,6 +1979,16 @@
                 .replaceAll(">", "&gt;")
                 .replaceAll('"', "&quot;")
                 .replaceAll("'", "&#039;");
+        }
+
+
+        function escapeForJs(text){
+            return String(text)
+                .replaceAll("\", "\\")
+                .replaceAll("'", "\'")
+                .replaceAll('"', '\"')
+                .replaceAll("
+", " ");
         }
 
         setInterval(() => {
