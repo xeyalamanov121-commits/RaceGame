@@ -5,38 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bearbee Wallet Admin Panel</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0e0e25;color:#fff;}
-.container{max-width:900px;margin:0 auto;padding:20px;}
-h1{color:#ffd700;text-align:center;margin-bottom:24px;}
-.card{background:#1b1b3a;border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 4px 12px rgba(0,0,0,0.4);}
-.card h2{font-size:20px;margin-bottom:12px;color:#00bcd4;}
-.card button{margin-right:8px;padding:8px 14px;border:none;border-radius:8px;color:#fff;cursor:pointer;}
-.btn-approve{background:#28a745;}
-.btn-reject{background:#dc3545;}
-.stats-table{width:100%;border-collapse:collapse;margin-top:10px;}
-.stats-table th, .stats-table td{padding:8px;text-align:center;border:1px solid #444;}
-.stats-table th{background:#333;color:#ffd700;}
-.stats-table td{background:#1b1b3a;}
+body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#0b0d17;color:#fff;}
+.page{max-width:1200px;margin:0 auto;padding:20px;}
+.header{text-align:center;margin-bottom:30px;}
+.header h1{font-size:28px;color:#ffd700;}
+.panel{margin-bottom:20px;}
+.panel-title{font-size:22px;margin-bottom:12px;color:#00c8ff;}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.card{background:#1a1a2e;border-radius:16px;padding:14px;transition:all 0.3s;position:relative;}
+.card:hover{transform:translateY(-5px);box-shadow:0 6px 20px rgba(0,0,0,0.5);}
+.card b{color:#ffd700;}
+.card p{margin:4px 0;color:#a8b4c4;font-size:13px;}
+.btn{padding:6px 10px;border-radius:8px;color:#fff;text-decoration:none;margin-top:6px;cursor:pointer;font-size:13px;}
+.btn-green{background:#28a745;}
+.btn-red{background:#dc3545;}
+.user-stats{overflow-x:auto;margin-top:10px;border-radius:12px;background:#1c1c2f;padding:12px;}
+.user-stats table{width:100%;border-collapse:collapse;color:#fff;}
+.user-stats th, .user-stats td{padding:10px;border:1px solid #2a2a3e;text-align:center;font-size:13px;}
+.user-stats th{background:#27334d;color:#ffd700;}
 </style>
 </head>
 <body>
-<div class="container">
+<main class="page">
+<div class="header">
 <h1>💎 Bearbee Wallet Admin Panel</h1>
-
-<div id="deposits" class="card">
-<h2>Pending Deposits</h2>
-<div id="depositList">Yüklənir...</div>
 </div>
 
-<div id="withdrawals" class="card">
-<h2>Pending Withdrawals</h2>
-<div id="withdrawList">Yüklənir...</div>
-</div>
+<section class="panel">
+<h2 class="panel-title">Pending Deposits</h2>
+<div id="depositCards" class="cards"></div>
+</section>
 
-<div id="userStats" class="card">
-<h2>User Statistics</h2>
-<table class="stats-table" id="statsTable">
+<section class="panel">
+<h2 class="panel-title">Pending Withdrawals</h2>
+<div id="withdrawCards" class="cards"></div>
+</section>
+
+<section class="panel">
+<h2 class="panel-title">User Statistics</h2>
+<div class="user-stats">
+<table id="userStatsTable">
 <thead>
 <tr>
 <th>Telegram ID</th>
@@ -44,91 +54,128 @@ h1{color:#ffd700;text-align:center;margin-bottom:24px;}
 <th>Coin Balance</th>
 <th>Total Deposit</th>
 <th>Total Withdraw</th>
+<th>Last Activity</th>
 </tr>
 </thead>
 <tbody></tbody>
 </table>
 </div>
-</div>
+</section>
 
 <script>
 const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // Sizin açar
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const ADMIN_TELEGRAM_ID = 8591374417;
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Pending Deposits
-async function loadDeposits(){
-    const { data, error } = await supabase.from('deposits').select('*').eq('status','Pending');
-    const container = document.getElementById('depositList');
-    container.innerHTML = '';
-    if(error){container.innerHTML='Xəta: '+error.message; return;}
-    if(!data.length){container.innerHTML='Pending deposit yoxdur.'; return;}
-    data.forEach(d=>{
-        const div = document.createElement('div');
-        div.style.marginBottom='12px';
-        div.innerHTML = `
-            <strong>#${d.id}</strong> — ${d.ton_amount} TON / ${d.coin_amount} Coin<br>
-            TX: ${d.tx_hash || "-"}<br>Status: ${d.status}<br>
-            <button class="btn-approve" onclick="approveDeposit(${d.id})">Approve</button>
-            <button class="btn-reject" onclick="rejectDeposit(${d.id})">Reject</button>
-        `;
-        container.appendChild(div);
+const tg = window.Telegram?.WebApp;
+tg?.ready();
+tg?.expand();
+const telegramUser = tg?.initDataUnsafe?.user || null;
+
+function isAdmin(){ return telegramUser && Number(telegramUser.id) === ADMIN_TELEGRAM_ID; }
+
+function renderDeposits(list){
+    const depositCards = document.getElementById("depositCards");
+    depositCards.innerHTML="";
+    if(!list.length){ depositCards.innerHTML="<p>Pending deposit yoxdur.</p>"; return; }
+    list.forEach(d=>{
+        const div=document.createElement("div");
+        div.className="card";
+        div.innerHTML=`<b>Deposit #${d.id}</b>
+<p>User ID: ${d.telegram_id}</p>
+<p>TON: ${d.ton_amount}</p>
+<p>Coin: ${d.coin_amount}</p>
+<p>TX: ${d.tx_hash||"-"}</p>
+<p>Status: ${d.status}</p>
+<input type="text" placeholder="Admin qeyd" id="note_${d.id}">
+<br>
+<button class="btn btn-green" onclick="approveDeposit(${d.id})">Approve</button>
+<button class="btn btn-red" onclick="rejectDeposit(${d.id})">Reject</button>`;
+        depositCards.appendChild(div);
     });
 }
 
-// Pending Withdrawals
-async function loadWithdrawals(){
-    const { data, error } = await supabase.from('withdrawals').select('*').eq('status','Pending');
-    const container = document.getElementById('withdrawList');
-    container.innerHTML = '';
-    if(error){container.innerHTML='Xəta: '+error.message; return;}
-    if(!data.length){container.innerHTML='Pending withdraw yoxdur.'; return;}
-    data.forEach(w=>{
-        const div = document.createElement('div');
-        div.style.marginBottom='12px';
-        div.innerHTML = `
-            <strong>#${w.id}</strong> — ${w.coin_amount} Coin / ${w.ton_amount} TON<br>
-            Wallet: ${w.wallet_address}<br>Status: ${w.status}<br>
-            <button class="btn-approve" onclick="markPaid(${w.id})">Mark Paid</button>
-            <button class="btn-reject" onclick="rejectWithdraw(${w.id})">Reject</button>
-        `;
-        container.appendChild(div);
+function renderWithdrawals(list){
+    const withdrawCards=document.getElementById("withdrawCards");
+    withdrawCards.innerHTML="";
+    if(!list.length){ withdrawCards.innerHTML="<p>Pending withdraw yoxdur.</p>"; return; }
+    list.forEach(w=>{
+        const div=document.createElement("div");
+        div.className="card";
+        div.innerHTML=`<b>Withdraw #${w.id}</b>
+<p>User ID: ${w.telegram_id}</p>
+<p>Wallet: ${w.wallet_address}</p>
+<p>Coin: ${w.coin_amount}</p>
+<p>Fee: ${w.fee}</p>
+<p>Receive Coin: ${w.coin_amount - w.fee}</p>
+<p>TON: ${w.ton_amount}</p>
+<p>Status: ${w.status}</p>
+<input type="text" placeholder="Admin qeyd" id="noteW_${w.id}">
+<br>
+<button class="btn btn-green" onclick="markWithdrawPaid(${w.id})">Mark Paid</button>
+<button class="btn btn-red" onclick="rejectWithdraw(${w.id})">Reject</button>`;
+        withdrawCards.appendChild(div);
     });
 }
 
-// User Statistics
-async function loadUserStats(){
-    const { data, error } = await supabase.from('wallets').select(`
-        telegram_id, ton_balance, coin_balance,
-        deposits:deposits(amount_ton),
-        withdrawals:withdrawals(amount_ton)
-    `);
-    const tbody = document.querySelector('#statsTable tbody');
-    tbody.innerHTML='';
-    if(error){tbody.innerHTML='<tr><td colspan="5">Xəta: '+error.message+'</td></tr>'; return;}
-    data.forEach(u=>{
-        const totalDep = (u.deposits||[]).reduce((a,b)=>a+b.amount_ton,0);
-        const totalWit = (u.withdrawals||[]).reduce((a,b)=>a+b.amount_ton,0);
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${u.telegram_id}</td>
-                        <td>${u.ton_balance}</td>
-                        <td>${u.coin_balance}</td>
-                        <td>${totalDep}</td>
-                        <td>${totalWit}</td>`;
+function renderUserStats(users){
+    const tbody=document.querySelector("#userStatsTable tbody");
+    tbody.innerHTML="";
+    users.forEach(u=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`<td>${u.telegram_id}</td>
+<td>${u.ton_balance}</td>
+<td>${u.coin_balance}</td>
+<td>${u.total_deposit}</td>
+<td>${u.total_withdraw}</td>
+<td>${u.last_activity||"-"}</td>`;
         tbody.appendChild(tr);
     });
 }
 
-// Admin actions
-async function approveDeposit(id){await supabase.rpc('admin_approve_deposit',{request_id:id}); loadDeposits(); loadUserStats();}
-async function rejectDeposit(id){await supabase.rpc('admin_reject_deposit',{request_id:id}); loadDeposits(); loadUserStats();}
-async function markPaid(id){await supabase.rpc('admin_mark_withdrawal_paid',{request_id:id}); loadWithdrawals(); loadUserStats();}
-async function rejectWithdraw(id){await supabase.rpc('admin_reject_withdrawal',{request_id:id}); loadWithdrawals(); loadUserStats();}
+async function loadAdminPanel(){
+    if(!isAdmin()){ alert("Admin deyilsiniz!"); return; }
+    const {data: deposits} = await supabase.from("deposits").select("*").eq("status","Pending");
+    const {data: withdrawals} = await supabase.from("withdrawals").select("*").eq("status","Pending");
+    const {data: users} = await supabase.from("wallets").select("telegram_id, ton_balance, coin_balance, deposits:deposits(amount_ton), withdrawals:withdrawals(amount_ton, updated_at)");
+    renderDeposits(deposits||[]);
+    renderWithdrawals(withdrawals||[]);
+    const statsList = users.map(u=>({
+        telegram_id:u.telegram_id,
+        ton_balance:u.ton_balance,
+        coin_balance:u.coin_balance,
+        total_deposit:(u.deposits||[]).reduce((a,b)=>a+b.amount_ton,0),
+        total_withdraw:(u.withdrawals||[]).reduce((a,b)=>a+b.amount_ton,0),
+        last_activity:u.withdrawals?.length?u.withdrawals[u.withdrawals.length-1].updated_at:null
+    }));
+    renderUserStats(statsList);
+}
 
-// Load everything
-loadDeposits();
-loadWithdrawals();
-loadUserStats();
+// Admin Actions
+async function approveDeposit(id){
+    const note=document.getElementById(`note_${id}`).value;
+    await supabase.rpc("admin_approve_deposit",{request_id:id,p_admin_note:note});
+    loadAdminPanel();
+}
+async function rejectDeposit(id){
+    const note=document.getElementById(`note_${id}`).value;
+    await supabase.rpc("admin_reject_deposit",{request_id:id,p_admin_note:note});
+    loadAdminPanel();
+}
+async function markWithdrawPaid(id){
+    const note=document.getElementById(`noteW_${id}`).value;
+    await supabase.rpc("admin_mark_withdrawal_paid",{request_id:id,p_admin_note:note});
+    loadAdminPanel();
+}
+async function rejectWithdraw(id){
+    const note=document.getElementById(`noteW_${id}`).value;
+    await supabase.rpc("admin_reject_withdrawal",{request_id:id,p_admin_note:note});
+    loadAdminPanel();
+}
+
+loadAdminPanel();
 </script>
+</main>
 </body>
 </html>
