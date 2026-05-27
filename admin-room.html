@@ -3,43 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bearbee Admin Panel</title>
+<title>Bearbee Creative Admin Panel</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#111;color:#fff;}
-.page{max-width:1200px;margin:0 auto;padding:16px;}
-h2{color:#ffd700;text-align:center;margin-bottom:12px;}
-.panel{background:#222;border-radius:24px;padding:18px;margin-bottom:16px;box-shadow:0 0 20px rgba(255,215,0,0.1);}
-.card{background:#030a13;border:1px solid #263f5d;border-radius:16px;padding:14px;margin-bottom:12px;transition:0.3s;}
-.card:hover{transform:translateY(-3px);box-shadow:0 0 18px rgba(255,215,0,0.3);}
-.card h4{color:#ffd700;margin-bottom:6px;}
-.card p{color:#98a8ba;margin:2px 0;font-size:14px;}
-.btn{padding:8px 12px;border-radius:8px;color:#fff;text-decoration:none;margin-top:6px;cursor:pointer;font-weight:800;transition:0.2s;}
-.btn-green{background:#28a745;}
-.btn-green:hover{background:#1f7a33;}
-.btn-red{background:#dc3545;}
-.btn-red:hover{background:#a71d28;}
-.btn-gold{background:#ffc107;color:#111;}
-.btn-gold:hover{background:#d4a400;}
-.stats{background:#1a1a1a;border:1px solid #263f5d;border-radius:16px;padding:14px;margin-bottom:12px;}
+body { margin:0; padding:0; font-family:'Segoe UI',sans-serif; background:#0b0b0f; color:#fff; }
+.page { max-width:1200px; margin:0 auto; padding:20px; }
+.panel { background:#1a1a2e; border-radius:24px; padding:20px; margin-bottom:20px; box-shadow:0 0 25px rgba(255,215,0,0.1); }
+.panel-title { color:#ffd700; font-size:26px; margin-bottom:15px; text-align:center; }
+.accordion { cursor:pointer; background:#222; border-radius:12px; padding:12px; margin-bottom:10px; transition:0.3s; }
+.accordion:hover { background:#333; }
+.accordion.active { background:#444; }
+.panel-content { max-height:0; overflow:hidden; transition:max-height 0.3s ease; padding:0 12px; }
+.card { background:#030a13; border:1px solid #263f5d; border-radius:14px; padding:12px; margin:10px 0; }
+.card h4 { color:#ffd700; margin-bottom:6px; }
+.card p { color:#98a8ba; margin:2px 0; font-size:14px; }
+.btn { padding:8px 12px; border-radius:8px; color:#fff; text-decoration:none; margin-top:6px; cursor:pointer; font-weight:800; transition:0.2s; }
+.btn-green { background:#28a745; } .btn-green:hover { background:#1f7a33; }
+.btn-red { background:#dc3545; } .btn-red:hover { background:#a71d28; }
+.stats { background:#1a1a1a; border:1px solid #263f5d; border-radius:16px; padding:14px; margin-bottom:12px; }
 </style>
 </head>
 <body>
 <main class="page">
 
-<h2>💎 Pending Deposits</h2>
+<section class="panel">
+<h2 class="panel-title">💎 Pending Deposits</h2>
 <div id="depositHistory"></div>
+</section>
 
-<h2>💰 Pending Withdrawals</h2>
+<section class="panel">
+<h2 class="panel-title">💰 Pending Withdrawals</h2>
 <div id="withdrawHistory"></div>
+</section>
 
-<h2>📊 İstifadəçi Statistikası</h2>
+<section class="panel">
+<h2 class="panel-title">📊 İstifadəçi Statistikası</h2>
 <div id="userStats"></div>
+</section>
 
 <script>
 const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // buraya real key
 const ADMIN_TELEGRAM_ID = 8591374417;
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -50,62 +55,83 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
 
 function isAdmin() { return telegramUser && Number(telegramUser.id) === ADMIN_TELEGRAM_ID; }
 
-function renderDeposits(list) {
-  const el = document.getElementById("depositHistory");
-  el.innerHTML = "";
-  if(!list.length){ el.innerHTML='<div class="card">Pending deposit yoxdur.</div>'; return; }
+function createAccordion(title, contentDiv) {
+  const acc = document.createElement('div');
+  acc.className = 'accordion';
+  acc.innerText = title;
+  acc.addEventListener('click', () => {
+    acc.classList.toggle('active');
+    if (contentDiv.style.maxHeight) {
+      contentDiv.style.maxHeight = null;
+    } else {
+      contentDiv.style.maxHeight = contentDiv.scrollHeight + "px";
+    }
+  });
+  return acc;
+}
+
+function renderDeposits(list){
+  const container = document.getElementById("depositHistory");
+  container.innerHTML = "";
+  if(!list.length){ container.innerHTML='<div class="card">Pending deposit yoxdur.</div>'; return; }
   list.forEach(d=>{
-    const div = document.createElement("div");
-    div.className="card";
-    div.innerHTML = `<h4>#${d.id} — ${d.ton_amount} TON → ${d.coin_amount} coin</h4>
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'panel-content';
+    contentDiv.innerHTML=`<div class="card">
+      <h4>#${d.id} — ${d.ton_amount} TON → ${d.coin_amount} coin</h4>
       <p>Status: ${d.status}</p>
       <p>TX: ${d.tx_hash||"-"}</p>
       <button class="btn btn-green" onclick="approveDeposit(${d.id})">Approve</button>
-      <button class="btn btn-red" onclick="rejectDeposit(${d.id})">Reject</button>`;
-    el.appendChild(div);
+      <button class="btn btn-red" onclick="rejectDeposit(${d.id})">Reject</button>
+    </div>`;
+    container.appendChild(createAccordion(`Deposit #${d.id}`, contentDiv));
+    container.appendChild(contentDiv);
   });
 }
 
-function renderWithdrawals(list) {
-  const el = document.getElementById("withdrawHistory");
-  el.innerHTML = "";
-  if(!list.length){ el.innerHTML='<div class="card">Pending withdraw yoxdur.</div>'; return; }
+function renderWithdrawals(list){
+  const container = document.getElementById("withdrawHistory");
+  container.innerHTML = "";
+  if(!list.length){ container.innerHTML='<div class="card">Pending withdraw yoxdur.</div>'; return; }
   list.forEach(w=>{
-    const div = document.createElement("div");
-    div.className="card";
-    div.innerHTML = `<h4>#${w.id} — ${w.coin_amount} coin → ${w.ton_amount} TON</h4>
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'panel-content';
+    contentDiv.innerHTML=`<div class="card">
+      <h4>#${w.id} — ${w.coin_amount} coin → ${w.ton_amount} TON</h4>
       <p>Status: ${w.status}</p>
       <p>Wallet: ${w.wallet_address||"-"}</p>
       <button class="btn btn-green" onclick="markWithdrawPaid(${w.id})">Mark Paid</button>
-      <button class="btn btn-red" onclick="rejectWithdraw(${w.id})">Reject</button>`;
-    el.appendChild(div);
+      <button class="btn btn-red" onclick="rejectWithdraw(${w.id})">Reject</button>
+    </div>`;
+    container.appendChild(createAccordion(`Withdraw #${w.id}`, contentDiv));
+    container.appendChild(contentDiv);
   });
 }
 
-function renderUserStats(list) {
-  const el = document.getElementById("userStats");
-  el.innerHTML = "";
-  if(!list.length){ el.innerHTML='<div class="stats">İstifadəçi yoxdur.</div>'; return; }
+function renderUserStats(list){
+  const container=document.getElementById("userStats");
+  container.innerHTML="";
+  if(!list.length){ container.innerHTML='<div class="stats">İstifadəçi yoxdur.</div>'; return; }
   list.forEach(u=>{
-    const div = document.createElement("div");
+    const div=document.createElement("div");
     div.className="stats";
-    div.innerHTML = `<h4>Telegram ID: ${u.telegram_id}</h4>
+    div.innerHTML=`<h4>Telegram ID: ${u.telegram_id}</h4>
       <p>Total Deposit: ${u.total_deposit} TON</p>
       <p>Total Withdraw: ${u.total_withdraw} TON</p>
       <p>Coin Balans: ${u.coin_balance}</p>
       <p>TON Balans: ${u.ton_balance}</p>`;
-    el.appendChild(div);
+    container.appendChild(div);
   });
 }
 
-async function loadPending() {
+async function loadPending(){
   if(!isAdmin()){ alert("Admin deyilsiniz!"); return; }
   const { data: deposits } = await supabase.from('deposits').select('*').eq('status','Pending');
   const { data: withdrawals } = await supabase.from('withdrawals').select('*').eq('status','Pending');
   const { data: users } = await supabase.from('wallets').select('telegram_id, ton_balance, coin_balance, deposits:deposits(amount_ton), withdrawals:withdrawals(amount_ton)');
   renderDeposits(deposits||[]);
   renderWithdrawals(withdrawals||[]);
-  const statsList = users.map(u=>({
+  const statsList=users.map(u=>({
     telegram_id:u.telegram_id,
     ton_balance:u.ton_balance,
     coin_balance:u.coin_balance,
@@ -115,7 +141,6 @@ async function loadPending() {
   renderUserStats(statsList);
 }
 
-// Manual approve/reject
 async function approveDeposit(id){ const note=prompt("Admin qeyd yaz:"); await supabase.rpc('admin_approve_deposit',{request_id:id,p_admin_note:note}); loadPending();}
 async function rejectDeposit(id){ const note=prompt("Reject səbəbini yaz:"); await supabase.rpc('admin_reject_deposit',{request_id:id,p_admin_note:note}); loadPending();}
 async function markWithdrawPaid(id){ const note=prompt("TON göndərildi"); await supabase.rpc('admin_mark_withdrawal_paid',{request_id:id,p_admin_note:note}); loadPending();}
@@ -123,5 +148,6 @@ async function rejectWithdraw(id){ const note=prompt("Withdraw rədd edildi"); a
 
 loadPending();
 </script>
+</main>
 </body>
 </html>
