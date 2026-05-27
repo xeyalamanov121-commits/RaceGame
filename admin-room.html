@@ -3,41 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bearbee Admin Wallet + Stats</title>
+<title>Bearbee Admin Panel</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#111;color:#fff;}
 .page{max-width:1200px;margin:0 auto;padding:16px;}
-.panel{background:#222;border-radius:24px;padding:18px;margin-bottom:16px;}
-.panel-title{color:#ffd700;font-size:24px;margin-bottom:10px;text-align:center;}
-.history{display:grid;gap:10px;margin-top:12px;}
-.history-item{background:#030a13;border:1px solid #263f5d;border-radius:14px;padding:12px;color:#a8b4c4;}
-.history-item b{color:#ffd700;}
-.stats{background:#1a1a1a;border:1px solid #263f5d;border-radius:16px;padding:14px;margin-bottom:12px;}
-.stats h4{color:#ffd700;margin-bottom:6px;}
-.stats p{color:#98a8ba;margin:2px 0;font-size:13px;}
-.btn{padding:8px 12px;border-radius:8px;color:#fff;text-decoration:none;margin-top:6px;cursor:pointer;}
+h2{color:#ffd700;text-align:center;margin-bottom:12px;}
+.panel{background:#222;border-radius:24px;padding:18px;margin-bottom:16px;box-shadow:0 0 20px rgba(255,215,0,0.1);}
+.card{background:#030a13;border:1px solid #263f5d;border-radius:16px;padding:14px;margin-bottom:12px;transition:0.3s;}
+.card:hover{transform:translateY(-3px);box-shadow:0 0 18px rgba(255,215,0,0.3);}
+.card h4{color:#ffd700;margin-bottom:6px;}
+.card p{color:#98a8ba;margin:2px 0;font-size:14px;}
+.btn{padding:8px 12px;border-radius:8px;color:#fff;text-decoration:none;margin-top:6px;cursor:pointer;font-weight:800;transition:0.2s;}
 .btn-green{background:#28a745;}
+.btn-green:hover{background:#1f7a33;}
 .btn-red{background:#dc3545;}
+.btn-red:hover{background:#a71d28;}
+.btn-gold{background:#ffc107;color:#111;}
+.btn-gold:hover{background:#d4a400;}
+.stats{background:#1a1a1a;border:1px solid #263f5d;border-radius:16px;padding:14px;margin-bottom:12px;}
 </style>
 </head>
 <body>
 <main class="page">
-<section class="panel">
-<h2 class="panel-title">💎 Pending Deposits</h2>
-<div id="depositHistory" class="history"></div>
-</section>
 
-<section class="panel">
-<h2 class="panel-title">💰 Pending Withdrawals</h2>
-<div id="withdrawHistory" class="history"></div>
-</section>
+<h2>💎 Pending Deposits</h2>
+<div id="depositHistory"></div>
 
-<section class="panel">
-<h2 class="panel-title">📊 İstifadəçi Statistikası</h2>
+<h2>💰 Pending Withdrawals</h2>
+<div id="withdrawHistory"></div>
+
+<h2>📊 İstifadəçi Statistikası</h2>
 <div id="userStats"></div>
-</section>
 
 <script>
 const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
@@ -53,46 +51,50 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
 function isAdmin() { return telegramUser && Number(telegramUser.id) === ADMIN_TELEGRAM_ID; }
 
 function renderDeposits(list) {
-  const depositHistory = document.getElementById("depositHistory");
-  depositHistory.innerHTML = "";
-  if(!list.length){ depositHistory.innerHTML='<div class="history-item">Pending deposit yoxdur.</div>'; return; }
+  const el = document.getElementById("depositHistory");
+  el.innerHTML = "";
+  if(!list.length){ el.innerHTML='<div class="card">Pending deposit yoxdur.</div>'; return; }
   list.forEach(d=>{
     const div = document.createElement("div");
-    div.className = "history-item";
-    div.innerHTML = `<b>#${d.id}</b> — ${d.ton_amount} TON → ${d.coin_amount} coin<br>Status: <span>${d.status}</span><br>TX: ${d.tx_hash||"-"}<br>
+    div.className="card";
+    div.innerHTML = `<h4>#${d.id} — ${d.ton_amount} TON → ${d.coin_amount} coin</h4>
+      <p>Status: ${d.status}</p>
+      <p>TX: ${d.tx_hash||"-"}</p>
       <button class="btn btn-green" onclick="approveDeposit(${d.id})">Approve</button>
       <button class="btn btn-red" onclick="rejectDeposit(${d.id})">Reject</button>`;
-    depositHistory.appendChild(div);
+    el.appendChild(div);
   });
 }
 
 function renderWithdrawals(list) {
-  const withdrawHistory = document.getElementById("withdrawHistory");
-  withdrawHistory.innerHTML = "";
-  if(!list.length){ withdrawHistory.innerHTML='<div class="history-item">Pending withdraw yoxdur.</div>'; return; }
+  const el = document.getElementById("withdrawHistory");
+  el.innerHTML = "";
+  if(!list.length){ el.innerHTML='<div class="card">Pending withdraw yoxdur.</div>'; return; }
   list.forEach(w=>{
     const div = document.createElement("div");
-    div.className = "history-item";
-    div.innerHTML = `<b>#${w.id}</b> — ${w.coin_amount} coin<br>Alacaq: ${w.ton_amount} TON<br>Status: <span>${w.status}</span><br>Wallet: ${w.wallet_address||"-"}<br>
+    div.className="card";
+    div.innerHTML = `<h4>#${w.id} — ${w.coin_amount} coin → ${w.ton_amount} TON</h4>
+      <p>Status: ${w.status}</p>
+      <p>Wallet: ${w.wallet_address||"-"}</p>
       <button class="btn btn-green" onclick="markWithdrawPaid(${w.id})">Mark Paid</button>
       <button class="btn btn-red" onclick="rejectWithdraw(${w.id})">Reject</button>`;
-    withdrawHistory.appendChild(div);
+    el.appendChild(div);
   });
 }
 
 function renderUserStats(list) {
-  const userStats = document.getElementById("userStats");
-  userStats.innerHTML = "";
-  if(!list.length){ userStats.innerHTML='<div class="stats">İstifadəçi yoxdur.</div>'; return; }
+  const el = document.getElementById("userStats");
+  el.innerHTML = "";
+  if(!list.length){ el.innerHTML='<div class="stats">İstifadəçi yoxdur.</div>'; return; }
   list.forEach(u=>{
     const div = document.createElement("div");
-    div.className = "stats";
+    div.className="stats";
     div.innerHTML = `<h4>Telegram ID: ${u.telegram_id}</h4>
       <p>Total Deposit: ${u.total_deposit} TON</p>
       <p>Total Withdraw: ${u.total_withdraw} TON</p>
       <p>Coin Balans: ${u.coin_balance}</p>
       <p>TON Balans: ${u.ton_balance}</p>`;
-    userStats.appendChild(div);
+    el.appendChild(div);
   });
 }
 
@@ -121,6 +123,5 @@ async function rejectWithdraw(id){ const note=prompt("Withdraw rədd edildi"); a
 
 loadPending();
 </script>
-</main>
 </body>
 </html>
