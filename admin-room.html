@@ -13,11 +13,26 @@
     .approve { background: #0a0; color: #fff; }
     .reject { background: #a00; color: #fff; }
     .paid { background: #06c; color: #fff; }
+    input { margin: 6px; padding: 6px; }
   </style>
 </head>
 <body>
-  <h1>Admin Panel - Pending Transactions</h1>
-  <button onclick="fetchPending()">Yenilə</button>
+  <h1>Admin Panel - Transactions</h1>
+
+  <!-- Filtr -->
+  <label>Status filter:</label>
+  <select id="statusFilter" onchange="fetchTransactions()">
+    <option value="pending">Pending</option>
+    <option value="approve">Approve</option>
+    <option value="reject">Reject</option>
+    <option value="paid">Paid</option>
+    <option value="all">All</option>
+  </select>
+
+  <label>User ID:</label>
+  <input type="text" id="userSearch" placeholder="user123">
+  <button onclick="fetchTransactions()">Search</button>
+
   <table id="transactions">
     <thead>
       <tr>
@@ -26,6 +41,7 @@
         <th>Type</th>
         <th>Amount</th>
         <th>Status</th>
+        <th>Tx Hash</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -38,11 +54,15 @@
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg"
     );
 
-    async function fetchPending() {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("status", "pending");
+    async function fetchTransactions() {
+      let query = supabase.from("transactions").select("*");
+      const status = document.getElementById("statusFilter").value;
+      const userId = document.getElementById("userSearch").value;
+
+      if (status !== "all") query = query.eq("status", status);
+      if (userId) query = query.eq("user_id", userId);
+
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) {
         alert("Fetch error: " + error.message);
@@ -59,10 +79,11 @@
           <td>${tx.type}</td>
           <td>${tx.amount}</td>
           <td>${tx.status}</td>
+          <td>${tx.tx_hash || ""}</td>
           <td>
             <button class="approve" onclick="updateStatus('${tx.id}','approve')">Approve</button>
             <button class="reject" onclick="updateStatus('${tx.id}','reject')">Reject</button>
-            <button class="paid" onclick="updateStatus('${tx.id}','paid')">Paid</button>
+            <button class="paid" onclick="markPaid('${tx.id}')">Paid</button>
           </td>
         `;
         tbody.appendChild(row);
@@ -79,12 +100,27 @@
         alert("Update error: " + error.message);
       } else {
         alert("Status updated to " + newStatus);
-        fetchPending();
+        fetchTransactions();
+      }
+    }
+
+    async function markPaid(id) {
+      const txHash = prompt("Enter blockchain tx_hash:");
+      const { error } = await supabase
+        .from("transactions")
+        .update({ status: "paid", tx_hash: txHash })
+        .eq("id", id);
+
+      if (error) {
+        alert("Paid update error: " + error.message);
+      } else {
+        alert("Transaction marked as paid!");
+        fetchTransactions();
       }
     }
 
     // İlk açılışda pending əməliyyatları göstər
-    fetchPending();
+    fetchTransactions();
   </script>
 </body>
 </html>
