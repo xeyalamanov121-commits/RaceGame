@@ -1,553 +1,126 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bearbee Admin Panel</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-    }
-
-    body{
-      background:#111;
-      color:#fff;
-      font-family:Arial,sans-serif;
-      min-height:100vh;
-    }
-
-    .page{
-      max-width:900px;
-      margin:0 auto;
-      padding:26px 18px 40px;
-    }
-
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom:24px;
-    }
-
-    .brand{
-      font-size:30px;
-      font-weight:900;
-      letter-spacing:.5px;
-      color:#fff;
-    }
-
-    .refresh-btn{
-      background:#f5c400;
-      color:#111;
-      border:none;
-      border-radius:12px;
-      padding:14px 20px;
-      font-size:16px;
-      font-weight:800;
-      cursor:pointer;
-      box-shadow:0 2px 0 #666;
-    }
-
-    .panel{
-      background:#222;
-      border-radius:24px;
-      padding:26px;
-      margin-bottom:24px;
-    }
-
-    .panel-title{
-      color:#ffd400;
-      font-size:34px;
-      font-weight:900;
-      margin-bottom:22px;
-      line-height:1.1;
-    }
-
-    .request-list{
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-    }
-
-    .request-card{
-      background:#3a3a3a;
-      border-radius:18px;
-      padding:18px;
-      color:#fff;
-      font-size:18px;
-      line-height:1.35;
-    }
-
-    .request-card b{
-      font-size:20px;
-    }
-
-    .field{
-      margin-top:4px;
-    }
-
-    textarea{
-      width:100%;
-      margin-top:14px;
-      background:#222;
-      border:none;
-      outline:none;
-      color:#fff;
-      padding:14px;
-      border-radius:12px;
-      min-height:84px;
-      resize:vertical;
-      font-size:16px;
-    }
-
-    textarea::placeholder{
-      color:#9a9a9a;
-    }
-
-    .btn-row{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-top:14px;
-    }
-
-    .btn{
-      border:none;
-      cursor:pointer;
-      border-radius:10px;
-      padding:14px 22px;
-      font-size:16px;
-      font-weight:800;
-      color:#fff;
-      box-shadow:0 2px 0 rgba(0,0,0,.45);
-    }
-
-    .btn-green{ background:#25b043; }
-    .btn-red{ background:#df3647; }
-    .btn-gold{ background:#f5c400; color:#111; }
-
-    .log{
-      margin-top:18px;
-      background:#111;
-      color:#00ff26;
-      border-radius:14px;
-      padding:16px;
-      font-size:18px;
-      line-height:1.35;
-      min-height:58px;
-      display:flex;
-      align-items:center;
-    }
-
-    .empty{
-      color:#9b9b9b;
-      text-align:center;
-      font-size:18px;
-      padding:18px 10px;
-    }
-
-    .access-box{
-      background:#222;
-      border-radius:24px;
-      padding:22px;
-      margin-bottom:24px;
-      display:none;
-    }
-
-    .access-box.show{
-      display:block;
-    }
-
-    .access-title{
-      color:#ffd400;
-      font-size:28px;
-      font-weight:900;
-      margin-bottom:10px;
-    }
-
-    .access-text{
-      color:#ddd;
-      font-size:18px;
-      line-height:1.4;
-    }
-
-    @media(max-width:700px){
-      .brand{
-        font-size:22px;
-      }
-
-      .panel{
-        padding:20px;
-        border-radius:20px;
-      }
-
-      .panel-title{
-        font-size:28px;
-      }
-
-      .request-card{
-        font-size:16px;
-      }
-
-      .request-card b{
-        font-size:18px;
-      }
-
-      .log{
-        font-size:16px;
-      }
-
-      .refresh-btn{
-        padding:12px 16px;
-        font-size:15px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bearbee Admin Wallet + Stats</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#111;color:#fff;}
+.page{max-width:1200px;margin:0 auto;padding:16px;}
+.panel{background:#222;border-radius:24px;padding:18px;margin-bottom:16px;}
+.panel-title{color:#ffd700;font-size:24px;margin-bottom:10px;text-align:center;}
+.history{display:grid;gap:10px;margin-top:12px;}
+.history-item{background:#030a13;border:1px solid #263f5d;border-radius:14px;padding:12px;color:#a8b4c4;}
+.history-item b{color:#ffd700;}
+.stats{background:#1a1a1a;border:1px solid #263f5d;border-radius:16px;padding:14px;margin-bottom:12px;}
+.stats h4{color:#ffd700;margin-bottom:6px;}
+.stats p{color:#98a8ba;margin:2px 0;font-size:13px;}
+.btn{padding:8px 12px;border-radius:8px;color:#fff;text-decoration:none;margin-top:6px;cursor:pointer;}
+.btn-green{background:#28a745;}
+.btn-red{background:#dc3545;}
+</style>
 </head>
 <body>
+<main class="page">
+<section class="panel">
+<h2 class="panel-title">💎 Pending Deposits</h2>
+<div id="depositHistory" class="history"></div>
+</section>
 
-  <main class="page">
+<section class="panel">
+<h2 class="panel-title">💰 Pending Withdrawals</h2>
+<div id="withdrawHistory" class="history"></div>
+</section>
 
-    <div class="topbar">
-      <div class="brand">BEARBEE ADMIN</div>
-      <button class="refresh-btn" onclick="loadPending()">Yenilə</button>
-    </div>
+<section class="panel">
+<h2 class="panel-title">📊 İstifadəçi Statistikası</h2>
+<div id="userStats"></div>
+</section>
 
-    <div id="accessBox" class="access-box">
-      <div class="access-title">Admin Access</div>
-      <div class="access-text" id="accessText">Məlumat yoxlanılır...</div>
-    </div>
+<script>
+const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const ADMIN_TELEGRAM_ID = 8591374417;
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    <section class="panel">
-      <div class="panel-title">Pending Deposits</div>
-      <div id="depositList" class="request-list">
-        <div class="empty">Yüklənir...</div>
-      </div>
-      <div id="depositLog" class="log">Məlumat yoxlanılır...</div>
-    </section>
+const tg = window.Telegram?.WebApp;
+tg?.ready();
+tg?.expand();
+const telegramUser = tg?.initDataUnsafe?.user || null;
 
-    <section class="panel">
-      <div class="panel-title">Pending Withdrawals</div>
-      <div id="withdrawList" class="request-list">
-        <div class="empty">Yüklənir...</div>
-      </div>
-      <div id="withdrawLog" class="log">Məlumat yoxlanılır...</div>
-    </section>
+function isAdmin() { return telegramUser && Number(telegramUser.id) === ADMIN_TELEGRAM_ID; }
 
-    <section class="panel">
-      <div class="panel-title">Pending TON Card Orders</div>
-      <div id="tonOrderList" class="request-list">
-        <div class="empty">Yüklənir...</div>
-      </div>
-      <div id="tonOrderLog" class="log">Məlumat yoxlanılır...</div>
-    </section>
+function renderDeposits(list) {
+  const depositHistory = document.getElementById("depositHistory");
+  depositHistory.innerHTML = "";
+  if(!list.length){ depositHistory.innerHTML='<div class="history-item">Pending deposit yoxdur.</div>'; return; }
+  list.forEach(d=>{
+    const div = document.createElement("div");
+    div.className = "history-item";
+    div.innerHTML = `<b>#${d.id}</b> — ${d.ton_amount} TON → ${d.coin_amount} coin<br>Status: <span>${d.status}</span><br>TX: ${d.tx_hash||"-"}<br>
+      <button class="btn btn-green" onclick="approveDeposit(${d.id})">Approve</button>
+      <button class="btn btn-red" onclick="rejectDeposit(${d.id})">Reject</button>`;
+    depositHistory.appendChild(div);
+  });
+}
 
-  </main>
+function renderWithdrawals(list) {
+  const withdrawHistory = document.getElementById("withdrawHistory");
+  withdrawHistory.innerHTML = "";
+  if(!list.length){ withdrawHistory.innerHTML='<div class="history-item">Pending withdraw yoxdur.</div>'; return; }
+  list.forEach(w=>{
+    const div = document.createElement("div");
+    div.className = "history-item";
+    div.innerHTML = `<b>#${w.id}</b> — ${w.coin_amount} coin<br>Alacaq: ${w.ton_amount} TON<br>Status: <span>${w.status}</span><br>Wallet: ${w.wallet_address||"-"}<br>
+      <button class="btn btn-green" onclick="markWithdrawPaid(${w.id})">Mark Paid</button>
+      <button class="btn btn-red" onclick="rejectWithdraw(${w.id})">Reject</button>`;
+    withdrawHistory.appendChild(div);
+  });
+}
 
-  <script>
-    const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg";
-    const ADMIN_TELEGRAM_ID = 8591374417;
+function renderUserStats(list) {
+  const userStats = document.getElementById("userStats");
+  userStats.innerHTML = "";
+  if(!list.length){ userStats.innerHTML='<div class="stats">İstifadəçi yoxdur.</div>'; return; }
+  list.forEach(u=>{
+    const div = document.createElement("div");
+    div.className = "stats";
+    div.innerHTML = `<h4>Telegram ID: ${u.telegram_id}</h4>
+      <p>Total Deposit: ${u.total_deposit} TON</p>
+      <p>Total Withdraw: ${u.total_withdraw} TON</p>
+      <p>Coin Balans: ${u.coin_balance}</p>
+      <p>TON Balans: ${u.ton_balance}</p>`;
+    userStats.appendChild(div);
+  });
+}
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function loadPending() {
+  if(!isAdmin()){ alert("Admin deyilsiniz!"); return; }
+  const { data: deposits } = await supabase.from('deposits').select('*').eq('status','Pending');
+  const { data: withdrawals } = await supabase.from('withdrawals').select('*').eq('status','Pending');
+  const { data: users } = await supabase.from('wallets').select('telegram_id, ton_balance, coin_balance, deposits:deposits(amount_ton), withdrawals:withdrawals(amount_ton)');
+  renderDeposits(deposits||[]);
+  renderWithdrawals(withdrawals||[]);
+  const statsList = users.map(u=>({
+    telegram_id:u.telegram_id,
+    ton_balance:u.ton_balance,
+    coin_balance:u.coin_balance,
+    total_deposit:(u.deposits||[]).reduce((a,b)=>a+b.amount_ton,0),
+    total_withdraw:(u.withdrawals||[]).reduce((a,b)=>a+b.amount_ton,0)
+  }));
+  renderUserStats(statsList);
+}
 
-    const tg = window.Telegram?.WebApp;
-    tg?.ready();
-    tg?.expand();
+// Manual approve/reject
+async function approveDeposit(id){ const note=prompt("Admin qeyd yaz:"); await supabase.rpc('admin_approve_deposit',{request_id:id,p_admin_note:note}); loadPending();}
+async function rejectDeposit(id){ const note=prompt("Reject səbəbini yaz:"); await supabase.rpc('admin_reject_deposit',{request_id:id,p_admin_note:note}); loadPending();}
+async function markWithdrawPaid(id){ const note=prompt("TON göndərildi"); await supabase.rpc('admin_mark_withdrawal_paid',{request_id:id,p_admin_note:note}); loadPending();}
+async function rejectWithdraw(id){ const note=prompt("Withdraw rədd edildi"); await supabase.rpc('admin_reject_withdrawal',{request_id:id,p_admin_note:note}); loadPending();}
 
-    const telegramUser = tg?.initDataUnsafe?.user || null;
-
-    const accessBox   = document.getElementById("accessBox");
-    const accessText  = document.getElementById("accessText");
-
-    const depositList = document.getElementById("depositList");
-    const withdrawList = document.getElementById("withdrawList");
-    const tonOrderList = document.getElementById("tonOrderList");
-
-    const depositLog = document.getElementById("depositLog");
-    const withdrawLog = document.getElementById("withdrawLog");
-    const tonOrderLog = document.getElementById("tonOrderLog");
-
-    function safe(v){
-      return String(v ?? "");
-    }
-
-    function setLog(el, text){
-      el.textContent = text;
-    }
-
-    function showAccess(message){
-      accessBox.classList.add("show");
-      accessText.textContent = message;
-    }
-
-    function isAdminTelegram(){
-      return telegramUser && Number(telegramUser.id) === ADMIN_TELEGRAM_ID;
-    }
-
-    function getNoteValue(id){
-      const el = document.getElementById(id);
-      return el ? el.value.trim() : "";
-    }
-
-    async function startAdmin(){
-      if(!window.Telegram?.WebApp){
-        showAccess("Bu panel Telegram Mini App içində açılmalıdır.");
-        setLog(depositLog, "Telegram Mini App tapılmadı.");
-        setLog(withdrawLog, "Telegram Mini App tapılmadı.");
-        setLog(tonOrderLog, "Telegram Mini App tapılmadı.");
-        return;
-      }
-
-      if(!telegramUser){
-        showAccess("Telegram user məlumatı gəlmədi.");
-        setLog(depositLog, "Telegram user tapılmadı.");
-        setLog(withdrawLog, "Telegram user tapılmadı.");
-        setLog(tonOrderLog, "Telegram user tapılmadı.");
-        return;
-      }
-
-      if(!isAdminTelegram()){
-        showAccess("Bu panel yalnız admin üçündür. Sənin ID: " + telegramUser.id);
-        setLog(depositLog, "Admin girişi yoxdur.");
-        setLog(withdrawLog, "Admin girişi yoxdur.");
-        setLog(tonOrderLog, "Admin girişi yoxdur.");
-        return;
-      }
-
-      showAccess("Admin tanındı. Telegram ID: " + telegramUser.id);
-      await loadPending();
-    }
-
-    async function loadPending(){
-      try{
-        depositList.innerHTML = '<div class="empty">Yüklənir...</div>';
-        withdrawList.innerHTML = '<div class="empty">Yüklənir...</div>';
-        tonOrderList.innerHTML = '<div class="empty">Yüklənir...</div>';
-
-        setLog(depositLog, "Məlumat yoxlanılır...");
-        setLog(withdrawLog, "Məlumat yoxlanılır...");
-        setLog(tonOrderLog, "Məlumat yoxlanılır...");
-
-        const { data: deposits, error: depositErr } = await supabaseClient.rpc("fetch_pending_deposits");
-        if(depositErr) throw new Error("Deposits: " + depositErr.message);
-        renderDeposits(deposits || []);
-        setLog(depositLog, "Depositlər yükləndi.");
-
-        const { data: withdrawals, error: withdrawErr } = await supabaseClient.rpc("fetch_pending_withdrawals");
-        if(withdrawErr) throw new Error("Withdrawals: " + withdrawErr.message);
-        renderWithdrawals(withdrawals || []);
-        setLog(withdrawLog, "Withdraw-lar yükləndi.");
-
-        const { data: tonOrders, error: tonErr } = await supabaseClient.rpc("fetch_pending_ton_card_orders");
-        if(tonErr) throw new Error("TON Card Orders: " + tonErr.message);
-        renderTonOrders(tonOrders || []);
-        setLog(tonOrderLog, "TON kart order-ləri yükləndi.");
-
-      }catch(error){
-        setLog(depositLog, "Xəta: " + error.message);
-        setLog(withdrawLog, "Xəta: " + error.message);
-        setLog(tonOrderLog, "Xəta: " + error.message);
-      }
-    }
-
-    function renderDeposits(list){
-      depositList.innerHTML = "";
-
-      if(!list.length){
-        depositList.innerHTML = '<div class="empty">Pending deposit yoxdur.</div>';
-        return;
-      }
-
-      list.forEach(item => {
-        const noteId = "dep_note_" + item.id;
-
-        const div = document.createElement("div");
-        div.className = "request-card";
-        div.innerHTML = `
-          <b>Deposit #${safe(item.id)}</b><br>
-          <div class="field">User ID: ${safe(item.telegram_id)}</div>
-          <div class="field">TON: ${safe(item.ton_amount)}</div>
-          <div class="field">Coin: ${safe(item.coin_amount)}</div>
-          <div class="field">TX: ${safe(item.tx_hash)}</div>
-          <div class="field">Status: ${safe(item.status)}</div>
-
-          <textarea id="${noteId}" placeholder="Admin qeyd">${safe(item.admin_note)}</textarea>
-
-          <div class="btn-row">
-            <button class="btn btn-green" onclick="approveDeposit(${item.id})">Approve</button>
-            <button class="btn btn-red" onclick="rejectDeposit(${item.id})">Reject</button>
-          </div>
-        `;
-        depositList.appendChild(div);
-      });
-    }
-
-    function renderWithdrawals(list){
-      withdrawList.innerHTML = "";
-
-      if(!list.length){
-        withdrawList.innerHTML = '<div class="empty">Pending withdraw yoxdur.</div>';
-        return;
-      }
-
-      list.forEach(item => {
-        const noteId = "wd_note_" + item.id;
-
-        const div = document.createElement("div");
-        div.className = "request-card";
-        div.innerHTML = `
-          <b>Withdraw #${safe(item.id)}</b><br>
-          <div class="field">User ID: ${safe(item.telegram_id)}</div>
-          <div class="field">Wallet: ${safe(item.wallet_address)}</div>
-          <div class="field">Coin: ${safe(item.coin_amount)}</div>
-          <div class="field">Fee: ${safe(item.fee_coin_amount)}</div>
-          <div class="field">Receive Coin: ${safe(item.receive_coin_amount)}</div>
-          <div class="field">TON: ${safe(item.ton_amount)}</div>
-          <div class="field">Status: ${safe(item.status)}</div>
-
-          <textarea id="${noteId}" placeholder="Admin qeyd">${safe(item.admin_note)}</textarea>
-
-          <div class="btn-row">
-            <button class="btn btn-green" onclick="markWithdrawalPaid(${item.id})">Mark Paid</button>
-            <button class="btn btn-red" onclick="rejectWithdrawal(${item.id})">Reject</button>
-          </div>
-        `;
-        withdrawList.appendChild(div);
-      });
-    }
-
-    function renderTonOrders(list){
-      tonOrderList.innerHTML = "";
-
-      if(!list.length){
-        tonOrderList.innerHTML = '<div class="empty">Pending TON kart order yoxdur.</div>';
-        return;
-      }
-
-      list.forEach(item => {
-        const noteId = "ton_note_" + item.id;
-
-        const div = document.createElement("div");
-        div.className = "request-card";
-        div.innerHTML = `
-          <b>TON Card Order #${safe(item.id)}</b><br>
-          <div class="field">Buyer ID: ${safe(item.buyer_telegram_id)}</div>
-          <div class="field">Card: ${safe(item.card_name)}</div>
-          <div class="field">Amount: ${safe(item.amount_ton)} TON</div>
-          <div class="field">Wallet: ${safe(item.pay_to_wallet)}</div>
-          <div class="field">Status: ${safe(item.status)}</div>
-
-          <textarea id="${noteId}" placeholder="Admin qeyd">${safe(item.admin_note)}</textarea>
-
-          <div class="btn-row">
-            <button class="btn btn-green" onclick="approveTonOrder(${item.id})">Approve</button>
-            <button class="btn btn-red" onclick="rejectTonOrder(${item.id})">Reject</button>
-          </div>
-        `;
-        tonOrderList.appendChild(div);
-      });
-    }
-
-    async function approveDeposit(id){
-      try{
-        const note = getNoteValue("dep_note_" + id) || "Deposit approved";
-        const { error } = await supabaseClient.rpc("admin_approve_deposit", {
-          request_id: id,
-          p_admin_note: note
-        });
-        if(error) throw error;
-        setLog(depositLog, "Deposit #" + id + " approve edildi.");
-        await loadPending();
-      }catch(error){
-        setLog(depositLog, "Xəta: " + error.message);
-      }
-    }
-
-    async function rejectDeposit(id){
-      try{
-        const note = getNoteValue("dep_note_" + id) || "Deposit rejected";
-        const { error } = await supabaseClient.rpc("admin_reject_deposit", {
-          request_id: id,
-          p_admin_note: note
-        });
-        if(error) throw error;
-        setLog(depositLog, "Deposit #" + id + " reject edildi.");
-        await loadPending();
-      }catch(error){
-        setLog(depositLog, "Xəta: " + error.message);
-      }
-    }
-
-    async function markWithdrawalPaid(id){
-      try{
-        const note = getNoteValue("wd_note_" + id) || "Withdrawal paid";
-        const { error } = await supabaseClient.rpc("admin_mark_withdrawal_paid", {
-          request_id: id,
-          p_admin_note: note
-        });
-        if(error) throw error;
-        setLog(withdrawLog, "Withdraw #" + id + " paid edildi.");
-        await loadPending();
-      }catch(error){
-        setLog(withdrawLog, "Xəta: " + error.message);
-      }
-    }
-
-    async function rejectWithdrawal(id){
-      try{
-        const note = getNoteValue("wd_note_" + id) || "Withdrawal rejected";
-        const { error } = await supabaseClient.rpc("admin_reject_withdrawal", {
-          request_id: id,
-          p_admin_note: note
-        });
-        if(error) throw error;
-        setLog(withdrawLog, "Withdraw #" + id + " reject edildi.");
-        await loadPending();
-      }catch(error){
-        setLog(withdrawLog, "Xəta: " + error.message);
-      }
-    }
-
-    async function approveTonOrder(id){
-      try{
-        const note = getNoteValue("ton_note_" + id) || "TON card order approved";
-        const { error } = await supabaseClient.rpc("admin_approve_ton_card_order", {
-          order_id: id,
-          p_admin_note: note
-        });
-        if(error) throw error;
-        setLog(tonOrderLog, "TON Card Order #" + id + " approve edildi.");
-        await loadPending();
-      }catch(error){
-        setLog(tonOrderLog, "Xəta: " + error.message);
-      }
-    }
-
-    async function rejectTonOrder(id){
-      try{
-        const note = getNoteValue("ton_note_" + id) || "TON card order rejected";
-        const { error } = await supabaseClient.rpc("admin_reject_ton_card_order", {
-          order_id: id,
-          p_admin_note: note
-        });
-        if(error) throw error;
-        setLog(tonOrderLog, "TON Card Order #" + id + " reject edildi.");
-        await loadPending();
-      }catch(error){
-        setLog(tonOrderLog, "Xəta: " + error.message);
-      }
-    }
-
-    startAdmin();
-  </script>
+loadPending();
+</script>
+</main>
 </body>
-  </html>
+</html>
