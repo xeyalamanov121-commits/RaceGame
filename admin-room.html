@@ -2,96 +2,84 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bearbee Arena | Full Admin Panel</title>
+<title>Bearbee Arena | Admin Panel Quick ID</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Segoe UI',sans-serif;background:#01040a;color:#fff;padding-bottom:95px;}
 .page{max-width:1100px;margin:0 auto;padding:16px;}
-.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.logo{text-align:center;}
-.btn{padding:12px;border-radius:14px;color:#fff;border:none;font-weight:900;cursor:pointer;}
-.btn-dark{background:#152339;}
+.panel{background:#0c1220;padding:18px;border-radius:24px;margin-bottom:16px;}
+.panel-title{color:#ffd700;text-align:center;font-size:24px;margin-bottom:10px;}
+.request-list{display:grid;gap:12px;}
+.request-card{background:#030a13;padding:14px;border-radius:16px;border:1px solid #263f5d;color:#a8b4c4;}
+.btn{padding:12px;border-radius:14px;color:#fff;border:none;font-weight:900;cursor:pointer;margin-top:6px;}
 .btn-green{background:#20c235;}
 .btn-red{background:#e0182e;}
 .btn-gold{background:#ffd700;color:#111;}
-.panel{background:#0c1220;padding:18px;border-radius:24px;margin-bottom:16px;}
-.panel-title{color:#ffd700;text-align:center;font-size:24px;margin-bottom:10px;}
-.panel-sub{color:#98a8ba;text-align:center;font-size:14px;margin-bottom:14px;}
-.request-list{display:grid;gap:12px;}
-.request-card{background:#030a13;padding:14px;border-radius:16px;border:1px solid #263f5d;color:#a8b4c4;}
-.request-card b{color:#ffd700;}
 .log{background:#030a13;padding:12px;border:1px solid #263f5d;border-radius:14px;color:#00ffcc;min-height:45px;text-align:center;}
 .empty{background:#030a13;padding:15px;border:1px solid #263f5d;border-radius:14px;text-align:center;color:#98a8ba;}
-.nav{position:fixed;left:0;bottom:0;width:100%;height:82px;background:rgba(6,11,18,0.96);border-top:1px solid rgba(70,100,132,0.55);display:grid;grid-template-columns:repeat(5,1fr);z-index:999;backdrop-filter:blur(12px);}
-.nav a{color:#8793a3;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-weight:1000;font-size:11px;}
-.nav a.active{color:#ffd700;text-shadow:0 0 14px rgba(255,215,0,.45);}
-.nav .icon{font-size:23px;}
 </style>
 </head>
 <body>
 <main class="page">
-<div class="top-bar">
-<div class="logo">BEARBEE ADMIN</div>
-<button class="btn btn-dark" onclick="loadPending()">Yenilə</button>
-</div>
-<section class="panel" id="loginPanel">
+<div class="panel" id="loginPanel">
 <h2 class="panel-title">Telegram ID yoxlanır</h2>
-<p class="panel-sub">Bu admin panel yalnız sahib Telegram hesabı üçün açılır.</p>
 <div class="log" id="loginLog">Telegram Mini App məlumatı yoxlanılır...</div>
-</section>
-<section class="layout" id="adminPanel" style="display:none">
+</div>
+<div id="adminPanel" style="display:none">
 <section class="panel">
 <h2 class="panel-title">Pending Deposits</h2>
-<p class="panel-sub">TON gəlibsə approve et. Tapılmayıbsa reject et.</p>
 <div class="request-list" id="depositList"><div class="empty">Depositlər yüklənir...</div></div>
 <div class="log" id="depositLog">Deposit statusu burada görünəcək.</div>
 </section>
 <section class="panel">
 <h2 class="panel-title">Pending Withdrawals</h2>
-<p class="panel-sub">TON-u manual göndər, sonra Paid bas. Problem varsa Reject et.</p>
 <div class="request-list" id="withdrawList"><div class="empty">Withdraw-lar yüklənir...</div></div>
 <div class="log" id="withdrawLog">Withdraw statusu burada görünəcək.</div>
 </section>
 <section class="panel">
 <h2 class="panel-title">Pending TON Card Orders</h2>
-<p class="panel-sub">Kart üçün TON ödənişini wallet-də yoxla, sonra approve et.</p>
 <div class="request-list" id="tonOrderList"><div class="empty">TON kart order-ləri yüklənir...</div></div>
 <div class="log" id="tonOrderLog">TON kart order statusu burada görünəcək.</div>
 </section>
-</section>
+</div>
 </main>
-<nav class="nav">
-<a href="./index.html"><span class="icon">🏠</span>ARENA</a>
-<a href="./click-room.html"><span class="icon">🐻</span>CLICK</a>
-<a href="./mining-room.html"><span class="icon">⛏</span>MINING</a>
-<a href="./wallet-room.html"><span class="icon">💎</span>WALLET</a>
-<a href="./admin-room.html" class="active"><span class="icon">🛡</span>ADMIN</a>
-</nav>
 <script>
 const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
-const WALLET_API_URL = SUPABASE_URL + "/functions/v1/tg-wallet";
-const TON_CARD_API_URL = SUPABASE_URL + "/functions/v1/tg-card-orders";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
 const ADMIN_TELEGRAM_ID = 8591374417;
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);const loginPanel = document.getElementById("loginPanel"); const adminPanel = document.getElementById("adminPanel"); const loginLog = document.getElementById("loginLog"); const depositList = document.getElementById("depositList"); const withdrawList = document.getElementById("withdrawList"); const depositLog = document.getElementById("depositLog"); const withdrawLog = document.getElementById("withdrawLog"); const tonOrderList = document.getElementById("tonOrderList"); const tonOrderLog = document.getElementById("tonOrderLog");
 
 const tg = window.Telegram?.WebApp; tg?.ready(); tg?.expand();
 
-const telegramUser = tg?.initDataUnsafe?.user || null; const telegramInitData = tg?.initData || "";
+const telegramUser = tg?.initDataUnsafe?.user || {};
 
-function denyAccess(message){ loginPanel.style.display="block"; adminPanel.style.display="none"; loginLog.innerHTML="⛔ Giriş qadağandır.<br>"+message; } function isAdminTelegram(){ return telegramUser && Number(telegramUser.id)===ADMIN_TELEGRAM_ID; } function showAdmin(){ loginPanel.style.display="none"; adminPanel.style.display="grid"; }
+function denyAccess(message){ loginPanel.style.display="block"; adminPanel.style.display="none"; loginLog.innerHTML="⛔ Giriş qadağandır.<br>"+message; } function isAdminTelegram(){ return telegramUser.id && Number(telegramUser.id) === ADMIN_TELEGRAM_ID; } function showAdmin(){ loginPanel.style.display="none"; adminPanel.style.display="block"; }
 
-async function startAdmin(){ if(!tg){ denyAccess("Bu səhifə Telegram Mini App içində açılmalıdır."); return; } if(!telegramUser){ denyAccess("Telegram istifadəçi məlumatı gəlmədi. Bot içindən aç."); return; } if(!isAdminTelegram()){ denyAccess("Sənin Telegram ID: "+telegramUser.id+". Bu ID admin deyil."); return; } loginLog.innerText="✅ Admin tanındı. Telegram ID: "+telegramUser.id; showAdmin(); await loadPending(); }
+function startAdmin(){ if(!tg){ denyAccess("Bu səhifə Telegram Mini App içində açılmalıdır."); return; } if(!isAdminTelegram()){ denyAccess("Sənin Telegram ID: " + (telegramUser.id||'-') + ". Bu ID admin deyil."); return; } loginLog.innerText = "✅ Admin tanındı. Telegram ID: " + telegramUser.id; showAdmin(); loadPending(); }
 
-async function walletApi(action,payload={}){ if(!isAdminTelegram()){ throw new Error("Admin Telegram ID uyğun deyil."); } const res=await fetch(WALLET_API_URL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+SUPABASE_ANON_KEY,"X-Telegram-Admin-Id":String(telegramUser.id),"X-Telegram-Init-Data":telegramInitData},body:JSON.stringify({action,payload:{...payload,admin_telegram_id:telegramUser.id,telegram_init_data:telegramInitData}})}); const data=await res.json(); if(!res.ok||!data.ok){throw new Error(data.error||"Admin API xətası");} return data; }
+async function loadPending(){ depositList.innerHTML='<div class="empty">Depositlər yüklənir...</div>'; withdrawList.innerHTML='<div class="empty">Withdraw-lar yüklənir...</div>'; tonOrderList.innerHTML='<div class="empty">TON kart order-ləri yüklənir...</div>';
 
-async function loadPending(){try{const data=await walletApi("admin_load_pending");const pending=data.pending||{};showAdmin();renderDeposits(pending.deposits||[]);renderWithdrawals(pending.withdrawals||[]);depositLog.innerText="Depositlər yükləndi.";withdrawLog.innerText="Withdraw-lar yükləndi.";}catch(error){showAdmin();depositLog.innerText="Yükləmə xətası: "+error.message;withdrawLog.innerText="Yükləmə xətası: "+error.message;}}
+try{
+    const { data: deposits } = await supabaseClient.from('deposits').select('*');
+    const { data: withdrawals } = await supabaseClient.from('withdrawals').select('*');
+    const { data: tonOrders } = await supabaseClient.from('ton_card_orders').select('*');
 
-function renderDeposits(list){depositList.innerHTML="";if(!list.length){depositList.innerHTML='<div class="empty">Pending deposit yoxdur.</div>';return;}list.forEach(item=>{const div=document.createElement("div");div.className="request-card";div.innerHTML=<b>Deposit #${item.id}</b><br>User ID: ${item.telegram_id}<br>TON: <span class="ton">${item.ton_amount}</span><br>Coin: <span class="coin">${item.coin_amount}</span><br>TX / Qeyd: ${escapeHtml(item.tx_hash||"-")}<br>Status: <span class="status">${item.status}</span><br><textarea id="dep_note_${item.id}" placeholder="Admin qeyd"></textarea><button class="btn btn-green" onclick="approveDeposit(${item.id})">Approve Deposit</button><button class="btn btn-red" onclick="rejectDeposit(${item.id})">Reject Deposit</button>;depositList.appendChild(div);});} function renderWithdrawals(list){withdrawList.innerHTML="";if(!list.length){withdrawList.innerHTML='<div class="empty">Pending withdraw yoxdur.</div>';return;}list.forEach(item=>{const div=document.createElement("div");div.className="request-card";div.innerHTML=<b>Withdraw #${item.id}</b><br>User ID: ${item.telegram_id}<br>Wallet: ${escapeHtml(item.wallet_address)}<br>Coin: <span class="coin">${item.coin_amount}</span><br>Fee: <span class="danger">${item.fee_coin_amount}</span> coin<br>Receive Coin: ${item.receive_coin_amount}<br>Send TON: <span class="ton">${item.ton_amount}</span><br>Status: <span class="status">${item.status}</span><br><textarea id="wd_note_${item.id}" placeholder="Admin qeyd"></textarea><button class="btn btn-gold" onclick="copyText('${escapeForJs(item.wallet_address)}')">Wallet Kopyala</button><button class="btn btn-green" onclick="markWithdrawPaid(${item.id})">Mark Paid</button><button class="btn btn-red" onclick="rejectWithdraw(${item.id})">Reject Withdraw</button>;withdrawList.appendChild(div);});}
+    depositList.innerHTML = deposits.length ? deposits.map(d=>`<div class="request-card"><b>Deposit #${d.id}</b><br>User ID: ${d.telegram_id}<br>TON: ${d.ton_amount}<br>Coin: ${d.coin_amount}</div>`).join('') : '<div class="empty">Pending deposit yoxdur.</div>';
+    withdrawList.innerHTML = withdrawals.length ? withdrawals.map(w=>`<div class="request-card"><b>Withdraw #${w.id}</b><br>User ID: ${w.telegram_id}<br>Wallet: ${w.wallet_address}</div>`).join('') : '<div class="empty">Pending withdraw yoxdur.</div>';
+    tonOrderList.innerHTML = tonOrders.length ? tonOrders.map(t=>`<div class="request-card"><b>TON Card Order #${t.id}</b><br>Buyer ID: ${t.buyer_telegram_id}<br>Amount: ${t.amount_ton} TON</div>`).join('') : '<div class="empty">Pending TON kart order yoxdur.</div>';
 
-async function approveDeposit(id){const note=document.getElementById("dep_note_"+id)?.value||"TON gəldi, coin əlavə edildi";await walletApi("admin_approve_deposit",{request_id:id,admin_note:note});depositLog.innerText="Deposit #"+id+" approve edildi.";await loadPending();} async function rejectDeposit(id){const note=document.getElementById("dep_note_"+id)?.value||"Ödəniş tapılmadı";await walletApi("admin_reject_deposit",{request_id:id,admin_note:note});depositLog.innerText="Deposit #"+id+" reject edildi.";await loadPending();} async function markWithdrawPaid(id){const note=document.getElementById("wd_note_"+id)?.value||"TON göndərildi";await walletApi("admin_mark_withdraw_paid",{request_id:id,admin_note:note});withdrawLog.innerText="Withdraw #"+id+" paid edildi.";await loadPending();} async function rejectWithdraw(id){const note=document.getElementById("wd_note_"+id)?.value||"Withdraw rədd edildi, coin geri qaytarıldı";await walletApi("admin_reject_withdraw",{request_id:id,admin_note:note});withdrawLog.innerText="Withdraw #"+id+" reject edildi və coin geri qaytarıldı.";await loadPending();} async function logoutAdmin(){tg?.close();} async function copyText(text){try{await navigator.clipboard.writeText(text);withdrawLog.innerText="Wallet kopyalandı.";}catch(error){alert(text);}} function escapeHtml(text){return String(text).replaceAll("&","&").replaceAll("<","<").replaceAll(">",">").replaceAll('"','"').replaceAll("'","'");} function escapeForJs(text){return String(text).replaceAll("\","\\").replaceAll("'","\'").replaceAll('"','\"').replaceAll("\n"," ");} startAdmin(); </script>
+    depositLog.innerText = "Depositlər yükləndi.";
+    withdrawLog.innerText = "Withdraw-lar yükləndi.";
+    tonOrderLog.innerText = "TON kart order-ləri yükləndi.";
+} catch(err){
+    depositLog.innerText = withdrawLog.innerText = tonOrderLog.innerText = "Yükləmə xətası: " + err.message;
+}
+
+}
+
+startAdmin(); </script>
 
 </body>
 </html>
