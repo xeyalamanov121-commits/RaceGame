@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bearbee Admin Panel Full</title>
+<title>Bearbee Admin Panel Real</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
@@ -22,23 +22,24 @@ th,td{padding:10px;border:1px solid #263f5d;text-align:center;}
 th{background-color:#1c2536;color:#ffd700;}
 td{background-color:#131b2b;color:#00d4ff;}
 .stats-block{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;}
-.stat-card{background:#1c2536;border-radius:14px;padding:12px;flex:1 1 200px;}
+.stat-card{background:#1c2536;border-radius:14px;padding:12px;flex:1 1 220px;}
 .stat-card h4{color:#ffd700;margin-bottom:6px;}
 .stat-card p{color:#98a8ba;margin:2px 0;font-size:13px;}
+.loader{color:#ffd700;text-align:center;font-weight:800;padding:20px;}
 </style>
 </head>
 <body>
 <div class="container">
-<h1>💎 Bearbee Admin Panel</h1>
+<h1>💎 Bearbee Admin Panel (Real)</h1>
 
 <section class="panel">
 <h2 class="panel-title">Pending Deposits</h2>
-<div id="depositHistory">Yüklənir...</div>
+<div id="depositHistory" class="loader">Yüklənir...</div>
 </section>
 
 <section class="panel">
 <h2 class="panel-title">Pending Withdrawals</h2>
-<div id="withdrawHistory">Yüklənir...</div>
+<div id="withdrawHistory" class="loader">Yüklənir...</div>
 </section>
 
 <section class="panel">
@@ -49,7 +50,7 @@ td{background-color:#131b2b;color:#00d4ff;}
 
 <script>
 const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // REAL KEY
 const ADMIN_TELEGRAM_ID = 8591374417;
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -105,27 +106,31 @@ function renderUserStats(list){
 
 async function loadPending(){
   if(!isAdmin()){ alert("Admin deyilsiniz!"); return; }
+  try {
+    const [depositsRes, withdrawalsRes, usersRes] = await Promise.all([
+      supabase.from('deposits').select('*').eq('status','Pending'),
+      supabase.from('withdrawals').select('*').eq('status','Pending'),
+      supabase.from('wallets').select('*')
+    ]);
 
-  const [depositsRes, withdrawalsRes, usersRes] = await Promise.all([
-    supabase.from('deposits').select('*').eq('status','Pending'),
-    supabase.from('withdrawals').select('*').eq('status','Pending'),
-    supabase.from('wallets').select('*')
-  ]);
+    renderDeposits(depositsRes.data || []);
+    renderWithdrawals(withdrawalsRes.data || []);
 
-  renderDeposits(depositsRes.data || []);
-  renderWithdrawals(withdrawalsRes.data || []);
-
-  const statsList = (usersRes.data || []).map(u=>({
-    telegram_id:u.telegram_id,
-    ton_balance:u.ton_balance,
-    coin_balance:u.coin_balance,
-    total_deposit:u.total_deposit||0,
-    total_withdraw:u.total_withdraw||0
-  }));
-  renderUserStats(statsList);
+    const statsList = (usersRes.data || []).map(u=>({
+      telegram_id:u.telegram_id,
+      ton_balance:u.ton_balance,
+      coin_balance:u.coin_balance,
+      total_deposit:u.total_deposit||0,
+      total_withdraw:u.total_withdraw||0
+    }));
+    renderUserStats(statsList);
+  } catch(e) {
+    document.getElementById("depositHistory").innerText = "Yükləmə xətası: " + e.message;
+    document.getElementById("withdrawHistory").innerText = "Yükləmə xətası: " + e.message;
+  }
 }
 
-// RPC manual actions
+// RPC actions
 async function approveDeposit(id){ await supabase.rpc('admin_approve_deposit',{request_id:id}); loadPending(); }
 async function rejectDeposit(id){ await supabase.rpc('admin_reject_deposit',{request_id:id}); loadPending(); }
 async function markWithdrawPaid(id){ await supabase.rpc('admin_mark_withdrawal_paid',{request_id:id}); loadPending(); }
