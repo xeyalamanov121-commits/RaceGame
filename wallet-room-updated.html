@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bearbee Arena | Wallet</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+    body{
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top, rgba(0,120,255,.25), transparent 35%),
+        radial-gradient(circle at bottom, rgba(255,215,0,.14), transparent 35%),
+        linear-gradient(180deg,#01040a,#030812 60%,#000);
+      color:#fff;
+      font-family:'Segoe UI',Arial,sans-serif;
+      padding-bottom:95px;
+      overflow-x:hidden;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(90deg,transparent 0 95%,rgba(21,151,255,.07) 96% 100%),
+        linear-gradient(0deg,transparent 0 95%,rgba(255,255,255,.025) 96% 100%);
+      background-size:34px 34px;
+      opacity:.38;
+    }
+
+    .page{
+      width:min(1050px,100%);
+      margin:0 auto;
+      padding:16px 14px;
+    }
+
+    .top-bar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:16px;
+    }
+
+    .back{
+      color:#ffd700;
+      text-decoration:none;
+      font-weight:1000;
+      background:rgba(8,18,32,.88);
+      border:1px solid rgba(60,91,128,.75);
+      border-radius:14px;
+      padding:12px 14px;
+    }
+
+    .logo{text-align:center;line-height:.9}
+    .logo .bearbee{font-size:22px;font-weight:1000;font-style:italic;letter-spacing:2px;color:#fff}
+    .logo .arena{font-size:33px;font-weight:1000;font-style:italic;letter-spacing:3px;color:#ffd700}
+
+    .btn{
+      width:100%;
+      border:none;
+      cursor:pointer;
+      border-radius:14px;
+      padding:14px;
+      font-size:15px;
+      font-weight:1000;
+      color:#fff;
+      text-decoration:none;
+      text-align:center;
+      text-transform:uppercase;
+      display:block;
+      margin-top:10px;
+    }
+
+    .btn-dark{background:linear-gradient(180deg,#152339,#0a1220);border:1px solid #33557d}
+    .btn-green{background:linear-gradient(180deg,#20c235,#087816);border:1px solid #66ff7e}
+    .btn-gold{background:linear-gradient(180deg,#ffd700,#a56b00);border:1px solid #ffef92;color:#111}
+    .btn-purple{background:linear-gradient(180deg,#973dff,#5515a0);border:1px solid #c692ff}
+
+    .hero,.panel{
+      background:linear-gradient(180deg,rgba(12,22,36,.96),rgba(4,9,16,.96));
+      border:1px solid rgba(71,101,136,.62);
+      border-radius:24px;
+      padding:18px;
+      margin-bottom:16px;
+      box-shadow:inset 0 0 22px rgba(21,151,255,.08),0 0 26px rgba(21,151,255,.08);
+    }
+
+    .hero{text-align:center}
+    .hero h1{color:#ffd700;font-size:31px;font-weight:1000;margin-bottom:9px}
+    .hero p{color:#a8b4c4;font-size:14px;line-height:1.5}
+
+    .layout{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    .panel-title{
+      color:#ffd700;
+      text-align:center;
+      font-size:24px;
+      font-weight:1000;
+      margin-bottom:10px;
+    }
+
+    .panel-sub{
+      color:#98a8ba;
+      text-align:center;
+      font-size:14px;
+      line-height:1.5;
+      margin-bottom:14px;
+    }
+
+    .wallet-box{
+      background:#030a13;
+      border:1px solid #263f5d;
+      border-radius:16px;
+      padding:14px;
+      margin-bottom:12px;
+      word-break:break-word;
+      text-align:center;
+    }
+
+    .wallet-box h3{
+      color:#98a8ba;
+      font-size:13px;
+      margin-bottom:7px;
+      text-transform:uppercase;
+    }
+
+    .wallet-box strong{
+      color:#ffd700;
+      font-size:18px;
+    }
+
+    input, textarea{
+      width:100%;
+      background:#030a13;
+      border:1px solid #2a547d;
+      border-radius:14px;
+      color:#fff;
+      outline:none;
+      padding:13px;
+      font-size:15px;
+      font-weight:800;
+      margin-top:9px;
+    }
+
+    textarea{
+      min-height:72px;
+      resize:none;
+    }
+
+    .log{
+      margin-top:12px;
+      background:#030a13;
+      border:1px solid #263f5d;
+      border-radius:14px;
+      padding:12px;
+      color:#00ffcc;
+      min-height:45px;
+      font-weight:800;
+      font-size:14px;
+      text-align:center;
+      line-height:1.45;
+    }
+
+    .history{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .history-item{
+      background:#030a13;
+      border:1px solid #263f5d;
+      border-radius:14px;
+      padding:12px;
+      font-size:13px;
+      color:#a8b4c4;
+      line-height:1.5;
+    }
+
+    .history-item b{color:#ffd700}
+    .pending{color:#ffd700}
+    .approved,.paid{color:#22ff66}
+    .rejected{color:#ff6674}
+
+    .nav{
+      position:fixed;
+      left:0;
+      bottom:0;
+      width:100%;
+      height:82px;
+      background:rgba(6,11,18,.96);
+      border-top:1px solid rgba(70,100,132,.55);
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      z-index:999;
+      backdrop-filter:blur(12px);
+    }
+
+    .nav a{
+      color:#8793a3;
+      text-decoration:none;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      font-weight:1000;
+      letter-spacing:1px;
+      font-size:11px;
+    }
+
+    .nav a.active{
+      color:#ffd700;
+      text-shadow:0 0 14px rgba(255,215,0,.45);
+    }
+
+    .nav .icon{font-size:23px}
+
+    @media(max-width:850px){
+      .layout{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+
+<main class="page">
+
+  <div class="top-bar">
+    <a href="./click-room.html" class="back">← CLICK</a>
+
+    <div class="logo">
+      <div class="bearbee">BEARBEE</div>
+      <div class="arena">WALLET</div>
+    </div>
+
+    <button class="btn btn-dark" onclick="loadWallet()">Yenilə</button>
+  </div>
+
+  <section class="hero">
+    <h1>💎 TON Wallet</h1>
+    <p>Deposit və withdraw manual təsdiqlə işləyir. 100000 coin = 1 TON.</p>
+  </section>
+
+  <section class="layout">
+
+    <section class="panel">
+      <h2 class="panel-title">Deposit</h2>
+      <p class="panel-sub">TON göndər, sonra request yarat. Admin təsdiqləyəndən sonra coin balansına əlavə olunacaq.</p>
+
+      <div class="wallet-box">
+        <h3>Deposit TON Address</h3>
+        <strong id="walletAddress">EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp</strong>
+        <button class="btn btn-gold" onclick="copyText(DEPOSIT_WALLET)">Wallet Kopyala</button>
+      </div>
+
+      <div class="wallet-box">
+        <h3>Tag / Comment</h3>
+        <strong id="depositTag">9947429</strong>
+        <button class="btn btn-dark" onclick="copyText(DEPOSIT_TAG)">Tag Kopyala</button>
+      </div>
+
+      <input id="depositTon" type="number" step="0.01" placeholder="TON miqdarı, məsələn 0.1">
+      <textarea id="depositTx" placeholder="TX hash və ya ödəniş qeydi"></textarea>
+
+      <button class="btn btn-green" onclick="requestDeposit()">Deposit Request Göndər</button>
+
+      <div class="log" id="depositLog">Deposit məlumatları yüklənir...</div>
+
+      <div class="history" id="depositHistory"></div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Withdraw</h2>
+      <p class="panel-sub">Coin çıxarış istəyi yarat. Admin manual TON göndərəcək. Fee: 20%.</p>
+
+      <div class="wallet-box">
+        <h3>Coin Balans</h3>
+        <strong id="coinBalance">0</strong>
+      </div>
+
+      <input id="withdrawWallet" type="text" placeholder="Sənin TON wallet address">
+      <input id="withdrawCoins" type="number" placeholder="Coin miqdarı, minimum 100000">
+
+      <button class="btn btn-purple" onclick="requestWithdraw()">Withdraw Request Göndər</button>
+
+      <div class="log" id="withdrawLog">Withdraw məlumatları yüklənir...</div>
+
+      <div class="history" id="withdrawHistory"></div>
+    </section>
+
+  </section>
+
+</main>
+
+<nav class="nav">
+  <a href="./index.html"><span class="icon">🏠</span>ARENA</a>
+  <a href="./click-room.html"><span class="icon">🐻</span>CLICK</a>
+  <a href="./mining-room.html"><span class="icon">⛏</span>MINING</a>
+  <a href="./market-room.html"><span class="icon">🛒</span>MARKET</a>
+  <a href="./wallet-room.html" class="active"><span class="icon">💎</span>WALLET</a>
+</nav>
+
+<script>
+  const WALLET_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-wallet";
+  const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
+
+  const DEPOSIT_WALLET = "EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp";
+  const DEPOSIT_TAG = "9947429";
+
+  const walletAddress = document.getElementById("walletAddress");
+  const depositTag = document.getElementById("depositTag");
+  const coinBalance = document.getElementById("coinBalance");
+  const depositLog = document.getElementById("depositLog");
+  const withdrawLog = document.getElementById("withdrawLog");
+  const depositHistory = document.getElementById("depositHistory");
+  const withdrawHistory = document.getElementById("withdrawHistory");
+
+  function initTelegram(){
+    if(window.Telegram && window.Telegram.WebApp){
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+
+      const liveInitData = window.Telegram.WebApp.initData;
+      if(liveInitData && liveInitData.length > 10){
+        sessionStorage.setItem("bearbee_initData", liveInitData);
+        localStorage.setItem("bearbee_initData_backup", liveInitData);
+      }
+    }
+  }
+
+  function getStoredInitData(){
+    const liveInitData = window.Telegram?.WebApp?.initData;
+    const sessionInitData = sessionStorage.getItem("bearbee_initData");
+    const backupInitData = localStorage.getItem("bearbee_initData_backup");
+
+    if(liveInitData && liveInitData.length > 10) return liveInitData;
+    if(sessionInitData && sessionInitData.length > 10) return sessionInitData;
+    if(backupInitData && backupInitData.length > 10) return backupInitData;
+
+    return "";
+  }
+
+  function hasInitData(){
+    return getStoredInitData().length > 10;
+  }
+
+  function getInitData(){
+    const initData = getStoredInitData();
+
+    if(!initData){
+      throw new Error("Oyunu Telegram botda PLAY ilə aç.");
+    }
+
+    return initData;
+  }
+
+  async function walletApi(action, payload = {}){
+    const res = await fetch(WALLET_API_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        initData:getInitData(),
+        action,
+        payload
+      })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok || !data.ok){
+      throw new Error(data.error || "Wallet API xətası");
+    }
+
+    return data;
+  }
+
+  function setDepositInfo(){
+    walletAddress.innerText = DEPOSIT_WALLET;
+    depositTag.innerText = DEPOSIT_TAG;
+  }
+
+  async function loadWallet(){
+    setDepositInfo();
+
+    try{
+      if(!hasInitData()){
+        depositLog.innerHTML = 'Wallet üçün oyunu PLAY ilə aç.<br><br><button class="btn btn-green" onclick="location.href=MINI_APP_URL">🎮 PLAY ilə aç</button>';
+        withdrawLog.innerText = "Mini App kimi açılmayıb.";
+        return;
+      }
+
+      const data = await walletApi("load_wallet");
+      const w = data.wallet || {};
+
+      // Deposit ünvanını frontend-də sabit saxlayırıq.
+      setDepositInfo();
+
+      coinBalance.innerText = Number(w.profile?.coins || w.coins || 0);
+
+      renderDeposits(w.deposits || []);
+      renderWithdrawals(w.withdrawals || []);
+
+      depositLog.innerText = "Deposit məlumatları yükləndi.";
+      withdrawLog.innerText = "Withdraw məlumatları yükləndi.";
+    }catch(error){
+      setDepositInfo();
+      depositLog.innerText = "Wallet xətası: " + error.message;
+      withdrawLog.innerText = "Wallet xətası: " + error.message;
+    }
+  }
+
+  async function requestDeposit(){
+    try{
+      const ton = Number(document.getElementById("depositTon").value || 0);
+      const tx = document.getElementById("depositTx").value || "";
+
+      if(!ton || ton <= 0){
+        alert("TON miqdarını yaz.");
+        return;
+      }
+
+      await walletApi("request_deposit", {
+        ton_amount: ton,
+        tx_hash: tx,
+        deposit_wallet: DEPOSIT_WALLET,
+        deposit_tag: DEPOSIT_TAG
+      });
+
+      depositLog.innerText = "Deposit request yaradıldı. Admin təsdiqini gözlə.";
+      document.getElementById("depositTon").value = "";
+      document.getElementById("depositTx").value = "";
+      await loadWallet();
+    }catch(error){
+      depositLog.innerText = "Deposit xətası: " + error.message;
+    }
+  }
+
+  async function requestWithdraw(){
+    try{
+      const wallet = document.getElementById("withdrawWallet").value || "";
+      const coins = Number(document.getElementById("withdrawCoins").value || 0);
+
+      if(wallet.trim().length < 30){
+        alert("TON wallet address düzgün deyil.");
+        return;
+      }
+
+      if(!coins || coins <= 0){
+        alert("Coin miqdarını yaz.");
+        return;
+      }
+
+      await walletApi("request_withdraw", {
+        wallet_address: wallet,
+        coin_amount: coins
+      });
+
+      withdrawLog.innerText = "Withdraw request yaradıldı. Admin ödənişini gözlə.";
+      document.getElementById("withdrawWallet").value = "";
+      document.getElementById("withdrawCoins").value = "";
+      await loadWallet();
+    }catch(error){
+      withdrawLog.innerText = "Withdraw xətası: " + error.message;
+    }
+  }
+
+  function renderDeposits(list){
+    depositHistory.innerHTML = "";
+
+    if(!list.length){
+      depositHistory.innerHTML = '<div class="history-item">Deposit tarixçəsi yoxdur.</div>';
+      return;
+    }
+
+    list.forEach(d => {
+      const div = document.createElement("div");
+      div.className = "history-item";
+      div.innerHTML = `
+        <b>#${d.id}</b> — ${d.ton_amount} TON → ${d.coin_amount} coin<br>
+        Status: <span class="${d.status}">${d.status}</span><br>
+        TX: ${escapeHtml(d.tx_hash || "-")}
+      `;
+      depositHistory.appendChild(div);
+    });
+  }
+
+  function renderWithdrawals(list){
+    withdrawHistory.innerHTML = "";
+
+    if(!list.length){
+      withdrawHistory.innerHTML = '<div class="history-item">Withdraw tarixçəsi yoxdur.</div>';
+      return;
+    }
+
+    list.forEach(w => {
+      const div = document.createElement("div");
+      div.className = "history-item";
+      div.innerHTML = `
+        <b>#${w.id}</b> — ${w.coin_amount} coin<br>
+        Fee: ${w.fee_coin_amount} coin<br>
+        Alacaq: ${w.ton_amount} TON<br>
+        Status: <span class="${w.status}">${w.status}</span><br>
+        Wallet: ${escapeHtml(w.wallet_address || "-")}
+      `;
+      withdrawHistory.appendChild(div);
+    });
+  }
+
+  async function copyText(text){
+    try{
+      await navigator.clipboard.writeText(text);
+      depositLog.innerText = "Kopyalandı: " + text;
+    }catch(error){
+      alert(text);
+    }
+  }
+
+  function escapeHtml(text){
+    return String(text)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  initTelegram();
+  loadWallet();
+</script>
+
+</body>
+</html>
