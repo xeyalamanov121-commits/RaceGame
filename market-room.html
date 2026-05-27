@@ -7,8 +7,6 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
     <style>
 
@@ -911,29 +909,6 @@
             }
         }
 
-
-        .open-warning{
-            margin:12px 0 16px;
-            padding:16px;
-            border-radius:18px;
-            border:1px solid rgba(255,215,0,0.55);
-            background:linear-gradient(180deg, rgba(255,215,0,0.10), rgba(3,10,19,0.90));
-            color:#fff;
-            text-align:center;
-            box-shadow:0 0 24px rgba(255,215,0,0.12);
-        }
-        .open-warning h3{
-            color:#ffd700;
-            margin-bottom:8px;
-            font-size:20px;
-        }
-        .open-warning p{
-            color:#a8b4c4;
-            line-height:1.5;
-            font-size:14px;
-            margin-bottom:10px;
-        }
-
     </style>
 </head>
 
@@ -1030,120 +1005,6 @@
         const MINING_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-mining";
         const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCzywfKRvjp0stL9ptl1ox3mUpfZ8VG27o",
-            authDomain: "gamer-d11ba.firebaseapp.com",
-            projectId: "gamer-d11ba",
-            storageBucket: "gamer-d11ba.firebasestorage.app",
-            messagingSenderId: "696457199951",
-            appId: "1:696457199951:web:d1ec83b76af07b47a6853a"
-        };
-
-        let firebaseDb = null;
-
-        function initFirebaseStats(){
-            try{
-                if(window.firebase && !firebase.apps.length){
-                    firebase.initializeApp(firebaseConfig);
-                }
-
-                if(window.firebase){
-                    firebaseDb = firebase.firestore();
-                }
-            }catch(error){
-                console.log("Firebase init xətası:", error);
-            }
-        }
-
-        function getPlayerDocId(){
-            return telegramUser ? String(telegramUser.id) : "";
-        }
-
-        async function saveFirebaseLogin(){
-            if(!firebaseDb || !telegramUser){
-                return;
-            }
-
-            const playerId = getPlayerDocId();
-
-            try{
-                await firebaseDb.collection("players").doc(playerId).set({
-                    telegram_id: Number(telegramUser.id),
-                    username: telegramUser.username || "",
-                    first_name: telegramUser.first_name || "",
-                    last_name: telegramUser.last_name || "",
-                    coins: Number(coins) || 0,
-                    energy: Number(energy) || 0,
-                    ad_points: Number(adPoints) || 0,
-                    login_count: firebase.firestore.FieldValue.increment(1),
-                    last_login_at: firebase.firestore.FieldValue.serverTimestamp(),
-                    last_active_at: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge:true });
-
-                await firebaseDb.collection("login_events").add({
-                    telegram_id: Number(telegramUser.id),
-                    username: telegramUser.username || "",
-                    first_name: telegramUser.first_name || "",
-                    page: "click-room",
-                    user_agent: navigator.userAgent,
-                    created_at: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }catch(error){
-                console.log("Firebase login log xətası:", error);
-            }
-        }
-
-        async function saveFirebaseClickReward(clicks, rewardCoins){
-            if(!firebaseDb || !telegramUser){
-                return;
-            }
-
-            const playerId = getPlayerDocId();
-
-            try{
-                await firebaseDb.collection("players").doc(playerId).set({
-                    telegram_id: Number(telegramUser.id),
-                    username: telegramUser.username || "",
-                    first_name: telegramUser.first_name || "",
-                    coins: Number(coins) || 0,
-                    energy: Number(energy) || 0,
-                    total_clicks: firebase.firestore.FieldValue.increment(Number(clicks) || 0),
-                    total_click_coins: firebase.firestore.FieldValue.increment(Number(rewardCoins) || 0),
-                    last_active_at: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge:true });
-
-                await firebaseDb.collection("click_events").add({
-                    telegram_id: Number(telegramUser.id),
-                    username: telegramUser.username || "",
-                    clicks: Number(clicks) || 0,
-                    reward_coins: Number(rewardCoins) || 0,
-                    boost: Number(selectedBoost) || 1,
-                    created_at: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }catch(error){
-                console.log("Firebase click log xətası:", error);
-            }
-        }
-
-        async function saveFirebaseMarketEvent(type, data = {}){
-            if(!firebaseDb || !telegramUser){
-                return;
-            }
-
-            try{
-                await firebaseDb.collection("market_events").add({
-                    telegram_id: Number(telegramUser.id),
-                    username: telegramUser.username || "",
-                    type,
-                    data,
-                    created_at: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }catch(error){
-                console.log("Firebase market log xətası:", error);
-            }
-        }
-
-
         /*
             CANLI REKLAM:
             AdsGram block id tapanda bura yaz:
@@ -1215,37 +1076,22 @@
 
         function showMiniAppOpenScreen(){
             const html = `
-                <div class="open-warning">
-                    <h3>⚠️ Mini App kimi açılmayıb</h3>
-                    <p>Bu səhifə adi brauzer/link kimi açılıb. Kart bazarı işləməsi üçün oyunu Telegram bot içində PLAY/Menu düyməsi ilə açmaq lazımdır.</p>
-                    <button class="miniapp-open" onclick="openTelegramMiniApp()">🎮 BOTDA PLAY İLƏ AÇ</button>
+                <div>
+                    Bu səhifə adi link kimi açılıb. Coin/kart yadda qalması üçün oyunu Telegram Mini App kimi açmaq lazımdır.
+                    <button class="miniapp-open" onclick="openTelegramMiniApp()">🎮 PLAY ilə aç</button>
                 </div>
             `;
 
-            const existing = document.getElementById("miniAppWarning");
-            if(!existing){
-                const box = document.createElement("div");
-                box.id = "miniAppWarning";
-                box.innerHTML = html;
-
-                const hero = document.querySelector(".market-hero");
-                if(hero && hero.parentNode){
-                    hero.parentNode.insertBefore(box, hero.nextSibling);
-                }else{
-                    document.body.insertAdjacentHTML("afterbegin", html);
-                }
+            if(clickLog){
+                clickLog.innerHTML = html + "<br><br>İndi klik effekti işləyəcək, amma yadda saxlamaq üçün PLAY ilə açmaq lazımdır.";
             }
 
             if(cardLog){
-                cardLog.innerText = "Telegram initData yoxdur. Bot içində PLAY/Menu ilə aç.";
+                cardLog.innerText = "Telegram initData yoxdur. PLAY düyməsi ilə aç.";
             }
 
             if(marketLog){
-                marketLog.innerText = "Telegram initData yoxdur. Bot içində PLAY/Menu ilə aç.";
-            }
-
-            if(clickLog){
-                clickLog.innerText = "Mini App initData yoxdur.";
+                marketLog.innerText = "Telegram initData yoxdur. PLAY düyməsi ilə aç.";
             }
         }
 
@@ -1453,7 +1299,6 @@
                     return;
                 }
 
-                initFirebaseStats();
 
                 const data = await api("init", { referrer_id: getReferrerIdFromStartParam() });
 
@@ -1471,7 +1316,6 @@
                 cardLog.innerText = "Telegram ID ilə giriş edildi: " + telegramUser.id;
                 marketLog.innerText = "Birja yükləndi.";
                 clickLog.innerText = "Hazırdır. Cyber ayıya klik et.";
-                saveFirebaseLogin();
 
                 updateBoxTimers();
                 setInterval(updateBoxTimers, 1000);
@@ -1581,7 +1425,6 @@
                 pendingCoins = 0;
 
                 applyProfile(data.profile);
-                saveFirebaseClickReward(clicksToSend, rewardToLog);
 
                 clickLog.innerText = silent ? "Click xalları avtomatik yadda saxlandı." : "Click reward serverdə təsdiqləndi.";
             }catch(error){
@@ -1824,7 +1667,6 @@
 
                 renderMyCards(data.myCards || []);
                 renderMarketplace(data.marketplace || []);
-                saveFirebaseMarketEvent("list_card_for_sale", { user_card_id: Number(userCardId), price });
                 cardLog.innerText = "Kart satışa qoyuldu.";
             }catch(error){
                 cardLog.innerText = "Satış xətası: " + error.message;
@@ -1965,7 +1807,6 @@
                 applyProfile(data.profile);
                 renderMyCards(data.myCards || []);
                 renderMarketplace(data.marketplace || []);
-                saveFirebaseMarketEvent("buy_card_listing", { listing_id: Number(listingId) });
                 marketLog.innerText = "Kart alındı.";
             }catch(error){
                 marketLog.innerText = "Alış xətası: " + error.message;
@@ -2008,21 +1849,6 @@
                 claimClickReward(true);
             }
         }, 5000);
-
-
-        window.addEventListener("error", function(event){
-            const msg = "Səhifə xətası: " + (event.message || "naməlum xəta");
-            if(marketLog){ marketLog.innerText = msg; }
-            if(cardLog){ cardLog.innerText = msg; }
-            console.error(event.error || event.message);
-        });
-
-        window.addEventListener("unhandledrejection", function(event){
-            const msg = "Server/API xətası: " + (event.reason?.message || event.reason || "naməlum xəta");
-            if(marketLog){ marketLog.innerText = msg; }
-            if(cardLog){ cardLog.innerText = msg; }
-            console.error(event.reason);
-        });
 
         init();
     
