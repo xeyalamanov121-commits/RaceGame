@@ -269,6 +269,19 @@
       </div>
     </section>
 
+    <section class="panel">
+      <h2 class="panel-title">Pending TON Card Orders</h2>
+      <p class="panel-sub">Kart üçün TON ödənişini wallet-də yoxla, sonra approve et.</p>
+
+      <div class="request-list" id="tonOrderList">
+        <div class="empty">TON kart order-ləri yüklənir...</div>
+      </div>
+
+      <div class="log" id="tonOrderLog">
+        TON kart order statusu burada görünəcək.
+      </div>
+    </section>
+
   </section>
 
 </main>
@@ -285,6 +298,7 @@
   const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg";
   const WALLET_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-wallet";
+  const TON_CARD_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-card-orders";
   const ADMIN_TELEGRAM_ID = 8591374417;
 
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -296,6 +310,8 @@
   const withdrawList = document.getElementById("withdrawList");
   const depositLog = document.getElementById("depositLog");
   const withdrawLog = document.getElementById("withdrawLog");
+  const tonOrderList = document.getElementById("tonOrderList");
+  const tonOrderLog = document.getElementById("tonOrderLog");
 
   const tg = window.Telegram?.WebApp;
   tg?.ready();
@@ -367,6 +383,38 @@
     return data;
   }
 
+
+  async function tonCardApi(action, payload = {}){
+    if(!isAdminTelegram()){
+      throw new Error("Admin Telegram ID uyğun deyil.");
+    }
+
+    const res = await fetch(TON_CARD_API_URL, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "X-Telegram-Admin-Id": String(telegramUser.id),
+        "X-Telegram-Init-Data": telegramInitData
+      },
+      body:JSON.stringify({
+        action,
+        payload:{
+          ...payload,
+          admin_telegram_id: telegramUser.id,
+          telegram_init_data: telegramInitData
+        }
+      })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok || !data.ok){
+      throw new Error(data.error || "TON Card API xətası");
+    }
+
+    return data;
+  }
+
   function showAdmin(){
     loginPanel.style.display = "none";
     adminPanel.style.display = "grid";
@@ -388,10 +436,13 @@
 
       depositLog.innerText = "Depositlər yükləndi.";
       withdrawLog.innerText = "Withdraw-lar yükləndi.";
+
+      await loadTonCardOrders();
     }catch(error){
       showAdmin();
       depositLog.innerText = "Yükləmə xətası: " + error.message;
       withdrawLog.innerText = "Yükləmə xətası: " + error.message;
+      if(tonOrderLog){ tonOrderLog.innerText = "Yükləmə xətası: " + error.message; }
     }
   }
 
@@ -532,6 +583,96 @@
       await loadPending();
     }catch(error){
       withdrawLog.innerText = "Reject xətası: " + error.message;
+    }
+  }
+
+  async function loadTonCardOrders(){
+    try{
+      const data = await tonCardApi("admin_load_ton_card_orders");
+      renderTonCardOrders(data.orders || []);
+      tonOrderLog.innerText = "TON kart order-ləri yükləndi.";
+    }catch(error){
+      tonOrderLog.innerText = "TON kart order xətası: " + error.message;
+    }
+  }
+
+  function renderTonCardOrders(list){
+    tonOrderList.innerHTML = "";
+
+    if(!list.length){
+      tonOrderList.innerHTML = '<div class="empty">Pending TON kart order yoxdur.</div>';
+      return;
+    }
+
+    list.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "request-card";
+
+      div.innerHTML = `
+        <b>TON Card Order #${item.id}</b><br>
+        Buyer ID: ${item.buyer_telegram_id}<br>
+        Seller ID: ${item.seller_telegram_id || "-"}<br>
+        Listing ID: ${item.listing_id}<br>
+        User Card ID: ${item.user_card_id || "-"}<br>
+        Card: <span class="coin">${escapeHtml(item.card_name || "Card")}</span><br>
+        Amount: <span class="ton">${item.amount_ton} TON</span><br>
+        Wallet: ${escapeHtml(item.pay_to_wallet || "-")}<br>
+        Tag: <span class="status">${escapeHtml(item.payment_tag || "-")}</span><br>
+        TX/Qeyd: ${escapeHtml(item.tx_note || "-")}<br>
+        Status: <span class="status">${item.status}</span><br>
+
+        <textarea id="ton_note_${item.id}" placeholder="Admin qeyd"></textarea>
+
+        <button class="btn btn-gold" onclick="copyText('${escapeForJs(item.pay_to_wallet || "")}')">
+          Wallet Kopyala
+        </button>
+
+        <button class="btn btn-dark" onclick="copyText('${escapeForJs(item.payment_tag || "")}')">
+          Tag Kopyala
+        </button>
+
+        <button class="btn btn-green" onclick="approveTonCardOrder(${item.id})">
+          Approve Card Transfer
+        </button>
+
+        <button class="btn btn-red" onclick="rejectTonCardOrder(${item.id})">
+          Reject Order
+        </button>
+      `;
+
+      tonOrderList.appendChild(div);
+    });
+  }
+
+  async function approveTonCardOrder(id){
+    try{
+      const note = document.getElementById("ton_note_" + id)?.value || "TON gəldi, kart alıcıya verildi";
+
+      await tonCardApi("admin_approve_ton_card_order", {
+        order_id:id,
+        admin_note:note
+      });
+
+      tonOrderLog.innerText = "TON Card Order #" + id + " approve edildi.";
+      await loadPending();
+    }catch(error){
+      tonOrderLog.innerText = "Approve xətası: " + error.message;
+    }
+  }
+
+  async function rejectTonCardOrder(id){
+    try{
+      const note = document.getElementById("ton_note_" + id)?.value || "Ödəniş tapılmadı";
+
+      await tonCardApi("admin_reject_ton_card_order", {
+        order_id:id,
+        admin_note:note
+      });
+
+      tonOrderLog.innerText = "TON Card Order #" + id + " reject edildi.";
+      await loadTonCardOrders();
+    }catch(error){
+      tonOrderLog.innerText = "Reject xətası: " + error.message;
     }
   }
 
