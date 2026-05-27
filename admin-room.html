@@ -2,94 +2,89 @@
 <html lang="az">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Panel</title>
+  <title>Admin Panel - RaceGame</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: Arial, sans-serif; background:#111; color:#eee; }
-    h2 { color:#0ff; }
-    .section { margin:20px; padding:15px; border:1px solid #444; border-radius:8px; }
-    button { margin:5px; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; }
-    .approve { background:#0a0; color:#fff; }
-    .reject { background:#a00; color:#fff; }
-    .paid { background:#06f; color:#fff; }
+    body { font-family: Arial, sans-serif; background: #111; color: #eee; }
+    h1 { color: #0ff; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #444; padding: 8px; text-align: center; }
+    button { margin: 4px; padding: 6px 12px; cursor: pointer; border: none; }
+    .approve { background: #0a0; color: #fff; }
+    .reject { background: #a00; color: #fff; }
+    .paid { background: #06c; color: #fff; }
   </style>
 </head>
 <body>
-  <h1>Admin Panel</h1>
+  <h1>Admin Panel - Pending Transactions</h1>
+  <button onclick="fetchPending()">Yenilə</button>
+  <table id="transactions">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>User</th>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  <div class="section">
-    <h2>Pending Deposits</h2>
-    <div id="deposits"></div>
-  </div>
-
-  <div class="section">
-    <h2>Pending Withdrawals</h2>
-    <div id="withdrawals"></div>
-  </div>
-
-  <div class="section">
-    <h2>Pending TON Card Orders</h2>
-    <div id="cards"></div>
-  </div>
-
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-    // 🔑 Sənin Supabase URL və anon key
-    const supabase = createClient(
+  <script>
+    const supabase = window.supabase.createClient(
       "https://tddvicvdndrckoiynbay.supabase.co",
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg"
     );
 
-    async function loadTransactions() {
-      let { data, error } = await supabase
+    async function fetchPending() {
+      const { data, error } = await supabase
         .from("transactions")
         .select("*")
         .eq("status", "pending");
 
       if (error) {
-        console.error(error);
+        alert("Fetch error: " + error.message);
         return;
       }
 
-      const deposits = data.filter(t => t.type === "deposit");
-      const withdrawals = data.filter(t => t.type === "withdraw");
-      const cards = data.filter(t => t.type === "card");
-
-      renderSection("deposits", deposits);
-      renderSection("withdrawals", withdrawals);
-      renderSection("cards", cards);
-    }
-
-    function renderSection(id, items) {
-      const container = document.getElementById(id);
-      container.innerHTML = "";
-      items.forEach(t => {
-        const div = document.createElement("div");
-        div.innerHTML = `
-          <p>User: ${t.user_id} | Amount: ${t.amount} ${t.coin}</p>
-          <button class="approve" onclick="updateStatus('${t.id}','approve')">Approve</button>
-          <button class="reject" onclick="updateStatus('${t.id}','reject')">Reject</button>
-          <button class="paid" onclick="updateStatus('${t.id}','paid')">Paid</button>
+      const tbody = document.querySelector("#transactions tbody");
+      tbody.innerHTML = "";
+      data.forEach(tx => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${tx.id}</td>
+          <td>${tx.user_id}</td>
+          <td>${tx.type}</td>
+          <td>${tx.amount}</td>
+          <td>${tx.status}</td>
+          <td>
+            <button class="approve" onclick="updateStatus('${tx.id}','approve')">Approve</button>
+            <button class="reject" onclick="updateStatus('${tx.id}','reject')">Reject</button>
+            <button class="paid" onclick="updateStatus('${tx.id}','paid')">Paid</button>
+          </td>
         `;
-        container.appendChild(div);
+        tbody.appendChild(row);
       });
     }
 
-    window.updateStatus = async (id, status) => {
-      let { error } = await supabase
+    async function updateStatus(id, newStatus) {
+      const { error } = await supabase
         .from("transactions")
-        .update({ status })
+        .update({ status: newStatus })
         .eq("id", id);
 
       if (error) {
-        alert("Xəta: " + error.message);
+        alert("Update error: " + error.message);
       } else {
-        alert("Status dəyişdirildi: " + status);
-        loadTransactions();
+        alert("Status updated to " + newStatus);
+        fetchPending();
       }
-    };
+    }
 
-    loadTransactions();
+    // İlk açılışda pending əməliyyatları göstər
+    fetchPending();
   </script>
 </body>
 </html>
