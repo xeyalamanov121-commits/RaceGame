@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BearBee Admin Panel</title>
+<title>Bearbee Admin Panel</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 body{margin:0;padding:0;font-family:sans-serif;background:#111;color:#fff;}
-.page{max-width:900px;margin:0 auto;padding:20px;}
+.page{max-width:800px;margin:0 auto;padding:20px;}
 .panel{background:#222;border-radius:12px;padding:15px;margin-bottom:15px;}
 .panel h2{color:#ffd700;font-size:20px;margin-bottom:10px;}
 .empty{color:#888;text-align:center;padding:10px;}
@@ -32,9 +32,23 @@ textarea{width:100%;padding:8px;border-radius:6px;background:#222;color:#fff;bor
 </div>
 
 <div id="adminPanel" style="display:none">
-  <div class="panel"><h2>Pending Deposits</h2><div id="depositList" class="request-list"><div class="empty">Yüklənir...</div></div><div class="log" id="depositLog"></div></div>
-  <div class="panel"><h2>Pending Withdrawals</h2><div id="withdrawList" class="request-list"><div class="empty">Yüklənir...</div></div><div class="log" id="withdrawLog"></div></div>
-  <div class="panel"><h2>Pending TON Card Orders</h2><div id="tonOrderList" class="request-list"><div class="empty">Yüklənir...</div></div><div class="log" id="tonOrderLog"></div></div>
+  <div class="panel">
+    <h2>Pending Deposits</h2>
+    <div id="depositList" class="request-list"><div class="empty">Yüklənir...</div></div>
+    <div class="log" id="depositLog"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Pending Withdrawals</h2>
+    <div id="withdrawList" class="request-list"><div class="empty">Yüklənir...</div></div>
+    <div class="log" id="withdrawLog"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Pending TON Card Orders</h2>
+    <div id="tonOrderList" class="request-list"><div class="empty">Yüklənir...</div></div>
+    <div class="log" id="tonOrderLog"></div>
+  </div>
 </div>
 
 <button class="btn btn-gold" onclick="loadPending()">Yenilə</button>
@@ -43,11 +57,10 @@ textarea{width:100%;padding:8px;border-radius:6px;background:#222;color:#fff;bor
 
 <script>
 const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 const ADMIN_TELEGRAM_ID = 8591374417;
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const loginPanel = document.getElementById("loginPanel");
 const adminPanel = document.getElementById("adminPanel");
 const loginLog = document.getElementById("loginLog");
@@ -86,17 +99,34 @@ async function startAdmin(){
 async function loadPending(){
   try{
     showAdmin();
-    const { data: deposits } = await supabase.from('deposits').select('*').eq('status','Pending');
-    const { data: withdrawals } = await supabase.from('withdrawals').select('*').eq('status','Pending');
-    const { data: tonOrders } = await supabase.from('ton_card_orders').select('*').eq('status','Pending');
+    depositLog.innerText="Yüklənir...";
+    withdrawLog.innerText="Yüklənir...";
+    tonOrderLog.innerText="Yüklənir...";
 
+    // Deposits
+    const {data: deposits, error: depErr} = await supabaseClient
+      .from('deposits')
+      .select('*')
+      .eq('status','Pending');
     renderDeposits(deposits || []);
-    renderWithdrawals(withdrawals || []);
-    renderTonCardOrders(tonOrders || []);
+    depositLog.innerText= depErr ? "Xəta: " + depErr.message : "Depositlər yükləndi.";
 
-    depositLog.innerText="Depositlər yükləndi.";
-    withdrawLog.innerText="Withdraw-lar yükləndi.";
-    tonOrderLog.innerText="TON kart order-ləri yükləndi.";
+    // Withdrawals
+    const {data: withdrawals, error: witErr} = await supabaseClient
+      .from('withdrawals')
+      .select('*')
+      .eq('status','Pending');
+    renderWithdrawals(withdrawals || []);
+    withdrawLog.innerText= witErr ? "Xəta: " + witErr.message : "Withdraw-lar yükləndi.";
+
+    // TON Card Orders
+    const {data: tonOrders, error: tonErr} = await supabaseClient
+      .from('ton_card_orders')
+      .select('*')
+      .eq('status','Pending');
+    renderTonCardOrders(tonOrders || []);
+    tonOrderLog.innerText= tonErr ? "Xəta: " + tonErr.message : "TON kart order-ləri yükləndi.";
+
   }catch(e){
     depositLog.innerText="Yükləmə xətası: " + e.message;
     withdrawLog.innerText="Yükləmə xətası: " + e.message;
@@ -104,15 +134,25 @@ async function loadPending(){
   }
 }
 
+// --- Render funksiyaları ---
 function renderDeposits(list){
   depositList.innerHTML="";
   if(!list.length){ depositList.innerHTML='<div class="empty">Pending deposit yoxdur.</div>'; return; }
   list.forEach(item=>{
     const div = document.createElement("div"); div.className="request-card";
-    div.innerHTML=`<b>Deposit #${item.id}</b><br>User ID: ${item.telegram_id}<br>TON: ${item.ton_amount}<br>Coin: ${item.coin_amount}<br>TX: ${item.tx_hash}<br>Status: ${item.status}<br>
-      <textarea id="dep_note_${item.id}" placeholder="Redd etmə səbəbini yaz"></textarea>
-      <button class="btn btn-green" onclick="approveDeposit(${item.id})">Approve</button>
-      <button class="btn btn-red" onclick="rejectDeposit(${item.id})">Reject</button>`;
+    div.innerHTML=`<b>Deposit #${item.id}</b><br>User ID: ${item.telegram_id}<br>TON: ${item.ton_amount}<br>Coin: ${item.coin_amount}<br>TX: ${item.tx_hash}<br>Status: ${item.status}<br><textarea placeholder="Admin qeyd"></textarea><button class="btn btn-green">Approve</button><button class="btn btn-red">Reject</button>`;
+    const approveBtn = div.querySelector('.btn-green');
+    approveBtn.addEventListener('click', async ()=>{
+      const note = div.querySelector('textarea').value;
+      await supabaseClient.rpc('admin_approve_deposit', {request_id:item.id, p_admin_note:note});
+      div.remove();
+    });
+    const rejectBtn = div.querySelector('.btn-red');
+    rejectBtn.addEventListener('click', async ()=>{
+      const note = div.querySelector('textarea').value;
+      await supabaseClient.rpc('admin_reject_deposit', {request_id:item.id, p_admin_note:note});
+      div.remove();
+    });
     depositList.appendChild(div);
   });
 }
@@ -122,10 +162,17 @@ function renderWithdrawals(list){
   if(!list.length){ withdrawList.innerHTML='<div class="empty">Pending withdraw yoxdur.</div>'; return; }
   list.forEach(item=>{
     const div = document.createElement("div"); div.className="request-card";
-    div.innerHTML=`<b>Withdraw #${item.id}</b><br>User ID: ${item.telegram_id}<br>Wallet: ${item.wallet_address}<br>Coin: ${item.coin_amount}<br>Fee: ${item.fee_coin_amount}<br>Receive Coin: ${item.receive_coin_amount}<br>TON: ${item.ton_amount}<br>Status: ${item.status}<br>
-      <textarea id="wd_note_${item.id}" placeholder="Admin qeyd"></textarea>
-      <button class="btn btn-green" onclick="markWithdrawPaid(${item.id})">Mark Paid</button>
-      <button class="btn btn-red" onclick="rejectWithdraw(${item.id})">Reject</button>`;
+    div.innerHTML=`<b>Withdraw #${item.id}</b><br>User ID: ${item.telegram_id}<br>Wallet: ${item.wallet_address}<br>Coin: ${item.coin_amount}<br>Fee: ${item.fee_coin_amount}<br>Receive Coin: ${item.receive_coin_amount}<br>TON: ${item.ton_amount}<br>Status: ${item.status}<br><textarea placeholder="Admin qeyd"></textarea><button class="btn btn-green">Mark Paid</button><button class="btn btn-red">Reject</button>`;
+    div.querySelector('.btn-green').addEventListener('click', async ()=>{
+      const note = div.querySelector('textarea').value;
+      await supabaseClient.rpc('admin_mark_withdrawal_paid', {request_id:item.id, p_admin_note:note});
+      div.remove();
+    });
+    div.querySelector('.btn-red').addEventListener('click', async ()=>{
+      const note = div.querySelector('textarea').value;
+      await supabaseClient.rpc('admin_reject_withdrawal', {request_id:item.id, p_admin_note:note});
+      div.remove();
+    });
     withdrawList.appendChild(div);
   });
 }
@@ -135,43 +182,19 @@ function renderTonCardOrders(list){
   if(!list.length){ tonOrderList.innerHTML='<div class="empty">Pending TON kart order yoxdur.</div>'; return; }
   list.forEach(item=>{
     const div = document.createElement("div"); div.className="request-card";
-    div.innerHTML=`<b>TON Card Order #${item.id}</b><br>Buyer ID: ${item.buyer_telegram_id}<br>Card: ${item.card_name}<br>Amount: ${item.amount_ton} TON<br>Wallet: ${item.pay_to_wallet}<br>Status: ${item.status}<br>
-      <textarea id="ton_note_${item.id}" placeholder="Admin qeyd"></textarea>
-      <button class="btn btn-green" onclick="approveTonCardOrder(${item.id})">Approve</button>
-      <button class="btn btn-red" onclick="rejectTonCardOrder(${item.id})">Reject</button>`;
+    div.innerHTML=`<b>TON Card Order #${item.id}</b><br>Buyer ID: ${item.buyer_telegram_id}<br>Card: ${item.card_name}<br>Amount: ${item.amount_ton} TON<br>Wallet: ${item.pay_to_wallet}<br>Status: ${item.status}<br><textarea placeholder="Admin qeyd"></textarea><button class="btn btn-green">Approve</button><button class="btn btn-red">Reject</button>`;
+    div.querySelector('.btn-green').addEventListener('click', async ()=>{
+      const note = div.querySelector('textarea').value;
+      await supabaseClient.rpc('admin_approve_ton_card_order', {order_id:item.id, p_admin_note:note});
+      div.remove();
+    });
+    div.querySelector('.btn-red').addEventListener('click', async ()=>{
+      const note = div.querySelector('textarea').value;
+      await supabaseClient.rpc('admin_reject_ton_card_order', {order_id:item.id, p_admin_note:note});
+      div.remove();
+    });
     tonOrderList.appendChild(div);
   });
-}
-
-async function approveDeposit(id){
-  const note = document.getElementById("dep_note_"+id).value || "";
-  await supabase.rpc('admin_approve_deposit',{request_id:id,p_admin_note:note});
-  loadPending();
-}
-async function rejectDeposit(id){
-  const note = document.getElementById("dep_note_"+id).value || "";
-  await supabase.rpc('admin_reject_deposit',{request_id:id,p_admin_note:note});
-  loadPending();
-}
-async function markWithdrawPaid(id){
-  const note = document.getElementById("wd_note_"+id).value || "";
-  await supabase.rpc('admin_mark_withdrawal_paid',{request_id:id,p_admin_note:note});
-  loadPending();
-}
-async function rejectWithdraw(id){
-  const note = document.getElementById("wd_note_"+id).value || "";
-  await supabase.rpc('admin_reject_withdrawal',{request_id:id,p_admin_note:note});
-  loadPending();
-}
-async function approveTonCardOrder(id){
-  const note = document.getElementById("ton_note_"+id).value || "";
-  await supabase.rpc('admin_approve_ton_card_order',{order_id:id,p_admin_note:note});
-  loadPending();
-}
-async function rejectTonCardOrder(id){
-  const note = document.getElementById("ton_note_"+id).value || "";
-  await supabase.rpc('admin_reject_ton_card_order',{order_id:id,p_admin_note:note});
-  loadPending();
 }
 
 startAdmin();
