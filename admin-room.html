@@ -2,74 +2,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bearbee Admin MiniApp</title>
+<title>Bearbee Admin Panel</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-body { margin:0; padding:16px; font-family:'Segoe UI',sans-serif; background:#01040a; color:#fff; }
-.page { max-width:1100px; margin:0 auto; }
-.top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-.btn { padding:10px 14px; border:none; border-radius:12px; font-weight:900; cursor:pointer; }
-.btn-green { background:#20c235; color:#fff; }
-.btn-red { background:#e0182e; color:#fff; }
-.btn-gold { background:#ffd700; color:#111; }
-.panel { background:#0c1220; padding:16px; border-radius:18px; margin-bottom:16px; box-shadow:0 0 14px rgba(255,215,0,0.08); }
-.panel-title { font-size:22px; color:#ffd700; text-align:center; margin-bottom:10px; }
-.request-list { display:grid; gap:12px; }
-.request-card { background:#0c1220; padding:12px; border-radius:14px; border:1px solid rgba(71,101,136,0.55); }
-.request-card b { color:#ffd700; }
-.log, .empty { background:#030a13; padding:10px; border-radius:12px; margin-top:10px; text-align:center; }
-.log { color:#00ffcc; }
-.empty { color:#98a8ba; }
-.nav { position:fixed; left:0; bottom:0; width:100%; height:82px; background:rgba(6,11,18,0.96); border-top:1px solid rgba(70,100,132,0.55); display:grid; grid-template-columns:repeat(5,1fr); z-index:999; }
-.nav a { color:#8793a3; text-decoration:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; font-weight:1000; font-size:11px; }
-.nav a.active { color:#ffd700; text-shadow:0 0 14px rgba(255,215,0,0.45); }
+body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#01040a;color:#fff;}
+.page{max-width:1100px;margin:0 auto;padding:16px;}
+.panel{background:#020a13;border-radius:16px;padding:16px;margin-bottom:16px;}
+.panel h2{color:#ffd700;margin-bottom:8px;}
+.request-list{display:grid;gap:12px;}
+.request-card{background:#030a13;padding:12px;border-radius:12px;border:1px solid #222;}
+.btn{padding:10px 14px;border:none;border-radius:12px;color:#fff;cursor:pointer;margin-top:6px;display:inline-block;}
+.btn-green{background:#20c235;}
+.btn-red{background:#e0182e;}
+.btn-gold{background:#ffd700;color:#000;}
+.log{margin-top:10px;padding:8px;background:#030a13;border:1px solid #263f5d;border-radius:12px;color:#00ffcc;}
+.empty{color:#98a8ba;text-align:center;}
 </style>
 </head>
 <body>
 <main class="page">
-  <div class="top-bar">
-    <div class="logo">BEARBEE ADMIN</div>
-    <button class="btn btn-green" onclick="loadPending()">Yenilə</button>
-  </div>  <section class="panel" id="loginPanel">
-    <h2 class="panel-title">Telegram ID yoxlanır</h2>
-    <div class="log" id="loginLog">Telegram Mini App məlumatı yoxlanılır...</div>
-  </section>  <section class="panel" id="adminPanel" style="display:none">
-    <section class="panel">
-      <h2 class="panel-title">💰 Pending Deposits</h2>
-      <div class="request-list" id="depositList">
-        <div class="empty">Depositlər yüklənir...</div>
-      </div>
-      <div class="log" id="depositLog">Deposit statusu burada görünəcək.</div>
-    </section><section class="panel">
-  <h2 class="panel-title">💎 Pending Withdrawals</h2>
-  <div class="request-list" id="withdrawList">
-    <div class="empty">Withdraw-lar yüklənir...</div>
-  </div>
-  <div class="log" id="withdrawLog">Withdraw statusu burada görünəcək.</div>
-</section>
-
+<div class="panel" id="loginPanel">
+<h2>Telegram ID yoxlanır</h2>
+<div class="log" id="loginLog">Telegram Mini App məlumatı yoxlanılır...</div>
+</div>
+<div id="adminPanel" style="display:none">
 <section class="panel">
-  <h2 class="panel-title">🃏 Pending TON Card Orders</h2>
-  <div class="request-list" id="tonOrderList">
-    <div class="empty">TON kart order-ləri yüklənir...</div>
-  </div>
-  <div class="log" id="tonOrderLog">TON kart order statusu burada görünəcək.</div>
+<h2>Pending Deposits</h2>
+<div class="request-list" id="depositList"><div class="empty">Depositlər yüklənir...</div></div>
+<div class="log" id="depositLog"></div>
 </section>
-
-  </section>
-</main><nav class="nav">
-  <a href="./index.html"><span>🏠</span>ARENA</a>
-  <a href="./click-room.html"><span>🐻</span>CLICK</a>
-  <a href="./mining-room.html"><span>⛏</span>MINING</a>
-  <a href="./wallet-room.html"><span>💎</span>WALLET</a>
-  <a href="./admin-room.html" class="active"><span>🛡</span>ADMIN</a>
-</nav><script>
+<section class="panel">
+<h2>Pending Withdrawals</h2>
+<div class="request-list" id="withdrawList"><div class="empty">Withdraw-lar yüklənir...</div></div>
+<div class="log" id="withdrawLog"></div>
+</section>
+<section class="panel">
+<h2>Pending TON Card Orders</h2>
+<div class="request-list" id="tonOrderList"><div class="empty">TON kart order-ləri yüklənir...</div></div>
+<div class="log" id="tonOrderLog"></div>
+</section>
+</div>
+</main>
+<script>
 const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const WALLET_API_URL = SUPABASE_URL + "/functions/v1/tg-wallet";
+const TON_CARD_API_URL = SUPABASE_URL + "/functions/v1/tg-card-orders";
 const ADMIN_TELEGRAM_ID = 8591374417;
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+const supabaseClient = supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const loginPanel = document.getElementById("loginPanel");
 const adminPanel = document.getElementById("adminPanel");
 const loginLog = document.getElementById("loginLog");
@@ -78,49 +59,31 @@ const withdrawList = document.getElementById("withdrawList");
 const depositLog = document.getElementById("depositLog");
 const withdrawLog = document.getElementById("withdrawLog");
 const tonOrderList = document.getElementById("tonOrderList");
-const tonOrderLog = document.getElementById("tonOrderLog");
-
-const tg = window.Telegram?.WebApp;
-tg?.ready();
-tg?.expand();
-const telegramUser = tg?.initDataUnsafe?.user || null;
+const tonOrderLog = document.getElementById("tonOrderLog");const tg = window.Telegram?.WebApp; tg?.ready(); tg?.expand();
 
 function denyAccess(message){ loginPanel.style.display="block"; adminPanel.style.display="none"; loginLog.innerHTML="⛔ Giriş qadağandır.<br>"+message; }
-function isAdminTelegram(){ return telegramUser && Number(telegramUser.id)===ADMIN_TELEGRAM_ID; }
-function showAdmin(){ loginPanel.style.display="none"; adminPanel.style.display="block"; }
 
-async function startAdmin(){
-  if(!tg){ denyAccess("Telegram Mini App içində açılmalıdır."); return; }
-  if(!telegramUser){ denyAccess("Telegram istifadəçi məlumatı gəlmədi."); return; }
-  if(!isAdminTelegram()){ denyAccess("Sənin Telegram ID: "+telegramUser.id+" admin deyil."); return; }
-  loginLog.innerText="✅ Admin tanındı. Telegram ID: "+telegramUser.id;
-  showAdmin();
-  await loadPending();
-}
+function isAdminTelegram(user){ return user && Number(user.id)===ADMIN_TELEGRAM_ID; }
 
-async function loadPending(){
-  try{
-    const { data: deposits, error: depErr } = await supabaseClient.from('deposits').select('*');
-    const { data: withdrawals, error: wdErr } = await supabaseClient.from('withdrawals').select('*');
-    const { data: tonOrders, error: tonErr } = await supabaseClient.from('ton_card_orders').select('*');
-    if(depErr || wdErr || tonErr){ throw new Error('Database fetch xətası'); }
-    renderDeposits(deposits || []);
-    renderWithdrawals(withdrawals || []);
-    renderTonCardOrders(tonOrders || []);
-    depositLog.innerText = "Depositlər yükləndi.";
-    withdrawLog.innerText = "Withdraw-lar yükləndi.";
-    tonOrderLog.innerText = "TON kart order-ləri yükləndi.";
-  } catch(err){
-    depositLog.innerText = "Yükləmə xətası: "+err.message;
-    withdrawLog.innerText = "Yükləmə xətası: "+err.message;
-    tonOrderLog.innerText = "Yükləmə xətası: "+err.message;
-  }
-}
+async function startAdmin(){ if(!tg){denyAccess("Bu səhifə Telegram Mini App içində açılmalıdır."); return;}
 
-function renderDeposits(list){ depositList.innerHTML=''; if(!list.length){ depositList.innerHTML='<div class="empty">Pending deposit yoxdur.</div>'; return; } list.forEach(item=>{ const div=document.createElement('div'); div.className='request-card'; div.innerHTML=`<b>Deposit #${item.id}</b><br>User ID: ${item.telegram_id}<br>TON: ${item.ton_amount}<br>Coin: ${item.coin_amount}`; depositList.appendChild(div); }); }
-function renderWithdrawals(list){ withdrawList.innerHTML=''; if(!list.length){ withdrawList.innerHTML='<div class="empty">Pending withdraw yoxdur.</div>'; return; } list.forEach(item=>{ const div=document.createElement('div'); div.className='request-card'; div.innerHTML=`<b>Withdraw #${item.id}</b><br>User ID: ${item.telegram_id}<br>Wallet: ${item.wallet_address}<br>Coin: ${item.coin_amount}`; withdrawList.appendChild(div); }); }
-function renderTonCardOrders(list){ tonOrderList.innerHTML=''; if(!list.length){ tonOrderList.innerHTML='<div class="empty">Pending TON kart order yoxdur.</div>'; return; } list.forEach(item=>{ const div=document.createElement('div'); div.className='request-card'; div.innerHTML=`<b>TON Card Order #${item.id}</b><br>Buyer ID: ${item.buyer_telegram_id}<br>Card: ${item.card_name}<br>Amount: ${item.amount_ton} TON<br>Wallet: ${item.pay_to_wallet}`; tonOrderList.appendChild(div); }); }
+const waitUser=()=>new Promise(resolve=>{ const interval=setInterval(()=>{ if(tg.initDataUnsafe && tg.initDataUnsafe.user){ clearInterval(interval);resolve(tg.initDataUnsafe.user); } },100); setTimeout(()=>resolve(null),5000); });
 
-startAdmin();
-</script></body>
+const telegramUser=await waitUser();
+
+if(!telegramUser){denyAccess("Telegram istifadəçi məlumatı gəlmədi. Bot içindən aç."); return;} if(!isAdminTelegram(telegramUser)){denyAccess("Sənin Telegram ID: "+telegramUser.id+". Bu ID admin deyil."); return;}
+
+loginLog.innerText="✅ Admin tanındı. Telegram ID: "+telegramUser.id; loginPanel.style.display="none"; adminPanel.style.display="block"; await loadPending(telegramUser); }
+
+async function walletApi(action,payload={}){ const res=await fetch(WALLET_API_URL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+SUPABASE_ANON_KEY},body:JSON.stringify({action,payload})}); return await res.json(); }
+
+async function tonCardApi(action,payload={}){ const res=await fetch(TON_CARD_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,payload})}); return await res.json(); }
+
+async function loadPending(user){ try{ const data=await walletApi("admin_load_pending",{admin_telegram_id:user.id}); renderDeposits(data.pending?.deposits||[]); renderWithdrawals(data.pending?.withdrawals||[]); await loadTonCardOrders(user); }catch(err){ depositLog.innerText=withdrawLog.innerText=tonOrderLog.innerText="Yükləmə xətası: "+err.message; } }
+
+function renderDeposits(list){depositList.innerHTML=list.length?list.map(item=><div class="request-card"><b>Deposit #${item.id}</b><br>User ID: ${item.telegram_id}<br>TON: ${item.ton_amount}<br>Coin: ${item.coin_amount}</div>).join(''):'<div class="empty">Pending deposit yoxdur.</div>'} function renderWithdrawals(list){withdrawList.innerHTML=list.length?list.map(item=><div class="request-card"><b>Withdraw #${item.id}</b><br>User ID: ${item.telegram_id}<br>Wallet: ${item.wallet_address}</div>).join(''):'<div class="empty">Pending withdraw yoxdur.</div>'} async function loadTonCardOrders(user){try{const data=await tonCardApi("admin_load_ton_card_orders",{admin_telegram_id:user.id});tonOrderList.innerHTML=data.orders?.length?data.orders.map(item=><div class="request-card"><b>TON Card Order #${item.id}</b><br>Buyer ID: ${item.buyer_telegram_id}<br>Amount: ${item.amount_ton} TON</div>).join(''):'<div class="empty">Pending TON kart order yoxdur.</div>'}catch(err){tonOrderLog.innerText="TON Card order xətası: "+err.message}}
+
+startAdmin(); </script>
+
+</body>
 </html>
