@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bearbee Arena | Admin Market Control</title>
+  <title>Bearbee Arena | Real Firebase Market</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
     :root{
@@ -164,13 +166,6 @@
       font-size:14px;
       font-weight:900;
       text-align:center;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-    }
-    select {
-      text-align-last: center;
-      cursor: pointer;
     }
 
     select option{background:#030a13;color:#fff}
@@ -228,22 +223,17 @@
     }
 
     .art{
-      height:140px;
+      height:120px;
       border-radius:15px;
-      background:#02060d;
+      background:
+        radial-gradient(circle at center, rgba(255,215,0,.2), transparent 45%),
+        linear-gradient(135deg,#183a61,#1b1540 55%,#2a103d);
       display:grid;
       place-items:center;
       overflow:hidden;
       margin-bottom:10px;
       font-size:48px;
       border:1px solid rgba(255,255,255,.08);
-    }
-
-    .art img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
     }
 
     .card h3{
@@ -262,6 +252,7 @@
       background:#142033;
       color:#bde5ff;
       margin-bottom:7px;
+      text-transform:uppercase;
     }
 
     .rarity.legendary{background:linear-gradient(90deg,#ffd700,#ff8c00);color:#111}
@@ -306,9 +297,7 @@
 
     .btn-green{background:linear-gradient(180deg,#20c235,#087816);border:1px solid #66ff7e}
     .btn-gold{background:linear-gradient(180deg,#ffd700,#a56b00);border:1px solid #ffef92;color:#111}
-    .btn-blue{background:linear-gradient(180deg,#1678e8,#064fad);border:1px solid #58b9ff}
     .btn-dark{background:linear-gradient(180deg,#152339,#0a1220);border:1px solid #33557d}
-    .btn-red{background:linear-gradient(180deg,#e0182e,#8d0a18);border:1px solid #ff6674}
 
     .btn:disabled{opacity:.45;cursor:not-allowed}
 
@@ -355,6 +344,56 @@
       text-align:center;
       color:#98a8ba;
       font-weight:900;
+    }
+
+    .ref-panel{
+      background:#07101b;
+      border:1px solid rgba(71,101,136,.62);
+      border-radius:22px;
+      padding:14px;
+      margin-bottom:14px;
+      box-shadow:0 0 18px rgba(21,151,255,.07);
+    }
+
+    .ref-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .ref-stat{
+      background:#030a13;
+      border:1px solid #263f5d;
+      border-radius:14px;
+      padding:12px;
+      text-align:center;
+    }
+
+    .ref-stat h3{
+      color:#98a8ba;
+      font-size:12px;
+      text-transform:uppercase;
+      margin-bottom:6px;
+    }
+
+    .ref-stat strong{
+      color:#ffd700;
+      font-size:22px;
+      font-weight:1000;
+    }
+
+    .ref-link{
+      background:#030a13;
+      border:1px solid #263f5d;
+      border-radius:14px;
+      padding:12px;
+      color:#00ffcc;
+      font-weight:900;
+      font-size:13px;
+      text-align:center;
+      overflow-wrap:anywhere;
+      margin-bottom:10px;
     }
 
     .shop-layout{
@@ -478,40 +517,54 @@
         <div class="small">BEARBEE</div>
         <div class="big">MARKET</div>
       </div>
-      <button class="top-btn" onclick="refreshMarket()">Yenilə</button>
+      <div style="width:40px;"></div>
     </div>
 
-    <!-- 🛠️ ADMİN KART BURAXILIŞ PANELİ -->
-    <section class="panel" style="border: 2px solid var(--purple); background: linear-gradient(180deg, #100a26, #04020a); margin-bottom:14px;">
-      <h2 class="section-title" style="color: var(--purple); font-size:18px;">👑 Admin Central System Sales</h2>
+    <section class="panel" id="adminControlPanel" style="display: none; border: 2px solid var(--purple); background: linear-gradient(180deg, #100a26, #04020a); margin-bottom:14px;">
+      <h2 class="section-title" style="color: var(--purple); font-size:18px;">👑 System Card Generator (Model B)</h2>
       <p style="font-size: 12px; text-align: center; color: var(--muted); margin-bottom: 12px;">
-        Buradan birbaşa Qlobal Marketa rəsmi sistem kartları buraxa bilərsən. Oyunçular alıb P2P satacaqlar.
+        ID Qorunması Aktivdir. Buradan çıxan rəsmi kartlar hovuz satıldıqca avtomatik olaraq bahalaşır.
       </p>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+      <div style="margin-bottom: 8px;">
         <select id="adminTemplateSelect">
-          <option value="1">Alpha Bear (Rare)</option>
-          <option value="2">Neon Mecha (Epic)</option>
-          <option value="3">Quantum Overlord (Legendary)</option>
-          <option value="4">Steampunk Rebel (Common)</option>
+          <option value="1">AI Steampunk Rebel (Common)</option>
+          <option value="2">AI Cyber Bear - Alpha (Rare)</option>
+          <option value="3">AI Neon Mecha Bear (Epic)</option>
+          <option value="4">AI Quantum Overlord Ayı (Legendary)</option>
         </select>
-        <input id="adminPriceInput" type="number" min="1000" placeholder="Satış Qiyməti (Coin)">
       </div>
-      <button class="btn btn-blue" onclick="adminPublishToMarket()" style="margin: 0; background: linear-gradient(180deg, #9b3dff, #5700cc); border-color:#d7b3ff;">
-        🚀 Qlobal Marketa Kartı At!
+      <button class="btn" onclick="adminPublishToMarket()" style="margin: 0; background: linear-gradient(180deg, #9b3dff, #5700cc); border-color:#d7b3ff; font-weight: 1000;">
+        🚀 Qlobal Marketa Qiyməti Artan Sistem Kartı At!
       </button>
       <div id="adminLog" style="font-size: 12px; color: var(--green); text-align: center; margin-top: 6px; font-weight: 800;"></div>
     </section>
 
+    <section class="hero">
+      <h1>🌍 Fast Realtime Market</h1>
+      <p>Bütün alış-veriş, P2P transferlər və hovuz tipli qiymət artım mexanizmi tamamilə Firebase RDB üzərinden işləyir.</p>
+    </section>
+
     <section class="stats">
-      <div class="stat"><h3>Coin</h3><strong id="coinText">0</strong></div>
-      <div class="stat"><h3>TON Balans</h3><strong id="tonText">0.00</strong></div>
-      <div class="stat"><h3>Cards</h3><strong id="cardsText">0</strong></div>
+      <div class="stat"><h3>Coin Balans</h3><strong id="coinText">0</strong></div>
+      <div class="stat"><h3>Aktiv Boost</h3><strong id="boostText">1x</strong></div>
+      <div class="stat"><h3>Kartlarım</h3><strong id="cardsText">0</strong></div>
     </section>
 
     <div class="tabs">
-      <button class="tab active" id="marketTab" onclick="showMarket()">🛒 Global Market</button>
-      <button class="tab" id="myCardsTab" onclick="showMyCards()">🎴 My Cards</button>
+      <button class="tab active" id="marketTab" onclick="switchTab('market')">🛒 Global Market</button>
+      <button class="tab" id="myCardsTab" onclick="switchTab('mycards')">🎴 My Cards</button>
     </div>
+
+    <section class="ref-panel">
+      <h2 class="section-title">🤝 Referral Bonus</h2>
+      <div class="ref-grid">
+        <div class="ref-stat"><h3>Dəvət Sayı</h3><strong id="refCount">0</strong></div>
+        <div class="ref-stat"><h3>Qazanc</h3><strong id="refEarned">0</strong></div>
+      </div>
+      <div class="ref-link" id="refLink">Referral link hazırlanır...</div>
+      <button class="btn btn-gold" onclick="copyReferralLink()">Referral Linki Kopyala</button>
+      <div class="log" id="refLog">Dostların linklə girəndə bonus qazana bilərsən.</div>
+    </section>
 
     <section class="shop-layout" id="shopLayout">
       <aside class="sidebar" id="filterBox">
@@ -536,20 +589,15 @@
       <section class="panel" id="marketPanel">
         <h2 class="section-title">Global Card Listings</h2>
         <div class="summary" id="marketSummary">Market hazırlanır...</div>
-        <div class="grid" id="marketGrid">
-          <div class="empty">Yüklənir...</div>
-        </div>
-        <div class="log" id="marketLog">Market açılır...</div>
+        <div class="grid" id="marketGrid"><div class="empty">Yüklənir...</div></div>
+        <div class="log" id="marketLog">Firebase qoşulur...</div>
       </section>
     </section>
 
     <section class="panel" id="myCardsPanel" style="display:none">
       <h2 class="section-title">Mənim Kartlarım</h2>
-      <div class="summary">Sənin satın aldığın və ya digər oyunçulardan P2P ilə əldə etdiyin kartlar. İstədiyin qiymətə təkrar sata bilərsən.</div>
-      <div class="grid" id="myCardsGrid">
-        <div class="empty">Yüklənir...</div>
-      </div>
-      <div class="log" id="cardsLog">Kartlar hələ yüklənməyib.</div>
+      <div class="summary">Əlində olan real kartları digər oyunçulara təhlükəsiz şəkildə sata bilərsən.</div>
+      <div class="grid" id="myCardsGrid"><div class="empty">Yüklənir...</div></div>
     </section>
   </main>
 
@@ -561,10 +609,8 @@
     <a href="./wallet-room.html"><span class="icon">💎</span>WALLET</a>
   </nav>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
 <script>
+  // 📥 1. REAL FIREBASE DATA CONFIG INTEGRATION
   const firebaseConfig = {
     apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
     authDomain: "racegane.firebaseapp.com",
@@ -574,332 +620,342 @@
     messagingSenderId: "477893876737",
     appId: "1:477893876737:web:1b561bb3224b0086c63400"
   };
-
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  
+  firebase.initializeApp(firebaseConfig);
   const rdb = firebase.database();
 
-  let userId = "test_user_123";
-  let userCoins = 0;
-  let userTon = 0;
-  let marketCache = [];
-  let myCardsCache = [];
+  // 🔒 SƏNİN SƏRT VƏ REAL ADMİN TELEGRAM ID-N
+  const SYSTEM_ADMIN_ID = "8591374417";
+  let userId = "guest_player"; 
 
-  const AI_TEMPLATES = {
-    1: { id: 1, name: "AI Cyber Bear - Alpha", rarity: "rare", boost: 2, power: 15, img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=300&auto=format&fit=crop" },
-    2: { id: 2, name: "AI Neon Mecha Bear", rarity: "epic", boost: 4, power: 45, img: "https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=300&auto=format&fit=crop" },
-    3: { id: 3, name: "AI Quantum Overlord Ayı", rarity: "legendary", boost: 8, power: 120, img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=300&auto=format&fit=crop" },
-    4: { id: 4, name: "AI Steampunk Rebel", rarity: "common", boost: 1.5, power: 5, img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=300&auto=format&fit=crop" }
+  // Qorunacaq Statik Şablon Data Bazası
+  const CARD_TEMPLATES = {
+    1: { name: "AI Steampunk Rebel", rarity: "common", click_boost: 1.5, mining_power: 5, emoji: "⚙️" },
+    2: { name: "AI Cyber Bear - Alpha", rarity: "rare", click_boost: 2.5, mining_power: 18, emoji: "🦾" },
+    3: { name: "AI Neon Mecha Bear", rarity: "epic", click_boost: 4.5, mining_power: 50, emoji: "🤖" },
+    4: { name: "AI Quantum Overlord Ayı", rarity: "legendary", click_boost: 9.0, mining_power: 130, emoji: "🌌" }
   };
 
-  const coinText = document.getElementById("coinText");
-  const tonText = document.getElementById("tonText");
-  const cardsText = document.getElementById("cardsText");
-  const marketGrid = document.getElementById("marketGrid");
-  const myCardsGrid = document.getElementById("myCardsGrid");
-  const marketLog = document.getElementById("marketLog");
-  const cardsLog = document.getElementById("cardsLog");
-  const marketSummary = document.getElementById("marketSummary");
+  let marketCache = [];
 
-  function initTelegram(){
-    const tg = window.Telegram?.WebApp;
-    if(tg){
-      tg.ready();
-      tg.expand();
-      if(tg.initDataUnsafe?.user?.id) userId = String(tg.initDataUnsafe.user.id);
-    }
+  // Telegram User ID Təyini
+  if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
+    userId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
   }
 
-  function loadDatabaseData(){
+  // 🔐 ADMİN PANELİNİ SƏNDƏN BAŞQASINA KÖKÜNDƏN SİLMƏK
+  if (userId === SYSTEM_ADMIN_ID) {
+    document.getElementById("adminControlPanel").style.display = "block";
+  } else {
+    document.getElementById("adminControlPanel").remove(); 
+  }
+
+  // Realtime Data Sync Mexanizmi
+  function startRealtimeSync() {
+    // Balans Sync
     rdb.ref(`users/${userId}`).on('value', (snapshot) => {
-      const uData = snapshot.val();
-      if(uData){
-        userCoins = uData.coins || 0;
-        userTon = uData.ton || 0;
-        coinText.innerText = userCoins;
-        tonText.innerText = Number(userTon).toFixed(2);
-      }
+      const uData = snapshot.val() || {};
+      document.getElementById("coinText").innerText = uData.coins || 0;
+      document.getElementById("boostText").innerText = (uData.active_boost || 1) + "x";
+      
+      // Referral Statistikasını Yazmaq
+      document.getElementById("refCount").innerText = uData.referrals_count || 0;
+      document.getElementById("refEarned").innerText = uData.referrals_earned || 0;
     });
 
+    // Mənim Kartlarım Sync
     rdb.ref(`users/${userId}/my_cards`).on('value', (snapshot) => {
-      const data = snapshot.val();
-      myCardsCache = [];
-      if(data){
-        Object.keys(data).forEach(k => { myCardsCache.push({ id: k, ...data[k] }); });
-      }
-      cardsText.innerText = myCardsCache.length;
-      renderMyCards();
+      const cards = snapshot.val() || {};
+      document.getElementById("cardsText").innerText = Object.keys(cards).length;
+      renderMyCards(cards);
     });
 
+    // Qlobal Market Listings Sync
     rdb.ref(`p2p_market`).on('value', (snapshot) => {
-      const data = snapshot.val();
+      const marketData = snapshot.val() || {};
       marketCache = [];
-      if(data){
-        Object.keys(data).forEach(k => { marketCache.push({ listing_id: k, ...data[k] }); });
-      }
+      Object.keys(marketData).forEach(k => {
+        marketCache.push({ listing_id: k, ...marketData[k] });
+      });
       applyFilters();
     });
+
+    // Referral Linki Ekrana çıxarmaq
+    document.getElementById("refLink").innerText = "https://t.me/Bearbeee_bot/GameR?startapp=ref_" + userId;
   }
 
-  // BİRBAŞA ADMİN SİSTEMİNDƏN QLOBAL BAZARA KART ATMAQ 
+  // 🚀 MODEL B: AVTOMATİK OLARAK SATILDIQCA BAHALAŞAN SİSTEM KARTI BURAXILIŞI
   function adminPublishToMarket() {
+    if (userId !== SYSTEM_ADMIN_ID) { alert("Yetkiniz yoxdur!"); return; }
+
     const templateId = Number(document.getElementById("adminTemplateSelect").value);
-    const price = Number(document.getElementById("adminPriceInput").value);
     const logBox = document.getElementById("adminLog");
+    logBox.innerText = "Hovuz cədvəli yoxlanılır...";
 
-    if(!price || price < 1000) {
-      alert("Zəhmət olmasa düzgün qiymət yazın (Min: 1000 Coin).");
-      return;
-    }
+    rdb.ref(`system_card_prices/${templateId}`).once('value', (snapshot) => {
+      let priceData = snapshot.val();
+      
+      if (!priceData) {
+        const defaults = { 1: 15000, 2: 35000, 3: 120000, 4: 600000 };
+        const multipliers = { 1: 1.25, 2: 1.4, 3: 1.7, 4: 2.1 };
+        priceData = {
+          current_tier: 1,
+          sold_count: 0,
+          tier_limit: 5, // Hər 5 satışdan bir qiymət artımı trigger olunur!
+          base_price: defaults[templateId] || 15000,
+          price_multiplier: multipliers[templateId] || 1.5
+        };
+        rdb.ref(`system_card_prices/${templateId}`).set(priceData);
+      }
 
-    logBox.innerText = "Sistem kartı bazara göndərilir...";
+      // Qiymət Hesablama Alqoritmi
+      const calculatedPrice = Math.floor(priceData.base_price * Math.pow(priceData.price_multiplier, priceData.current_tier - 1));
 
-    rdb.ref(`p2p_market`).push().set({
-      seller_id: "admin_system", // Satıcı şəxs deyil, rəsmi admin sistemidir!
-      user_card_id: "system_generated_" + Date.now(),
-      template_id: templateId,
-      price_coin: price,
-      timestamp: Date.now()
-    }).then(() => {
-      logBox.innerText = "✅ Uğurlu! Kart admin adından Qlobal Bazara buraxıldı!";
-      document.getElementById("adminPriceInput").value = "";
-      setTimeout(() => { logBox.innerText = ""; }, 3000);
+      // Marketə buraxırıq
+      rdb.ref(`p2p_market`).push().set({
+        seller_id: "admin_system",
+        template_id: templateId,
+        price_coin: calculatedPrice,
+        timestamp: Date.now()
+      }).then(() => {
+        logBox.innerText = `✅ Uğurlu! Öz dəyəri qorunan kart (${calculatedPrice} Coin) bazara çıxarıldı!`;
+        setTimeout(() => { logBox.innerText = ""; }, 3000);
+      });
     });
   }
 
-  function showMarket(){
-    document.getElementById("marketPanel").style.display = "block";
-    document.getElementById("myCardsPanel").style.display = "none";
-    document.getElementById("marketTab").classList.add("active");
-    document.getElementById("myCardsTab").classList.remove("active");
-    document.getElementById("shopLayout").style.display = "grid";
-  }
-
-  function showMyCards(){
-    document.getElementById("marketPanel").style.display = "none";
-    document.getElementById("myCardsPanel").style.display = "block";
-    document.getElementById("marketTab").classList.remove("active");
-    document.getElementById("myCardsTab").classList.add("active");
-    document.getElementById("shopLayout").style.display = "none";
-  }
-
-  function applyFilters(){
+  // FİLTERLƏRİ TƏTBİQ ETMƏK VƏ BAZARI YENİLƏMƏK
+  function applyFilters() {
     let list = [...marketCache];
     const search = String(document.getElementById("searchInput")?.value || "").toLowerCase().trim();
     const rarityValue = String(document.getElementById("rarityFilter")?.value || "all").toLowerCase();
     const sortValue = String(document.getElementById("sortFilter")?.value || "newest");
 
-    if(search){
-      list = list.filter(item => (AI_TEMPLATES[item.template_id] || {}).name.toLowerCase().includes(search));
+    if (search) {
+      list = list.filter(item => {
+        const t = CARD_TEMPLATES[item.template_id] || {};
+        return t.name.toLowerCase().includes(search);
+      });
     }
-    if(rarityValue !== "all"){
-      list = list.filter(item => (AI_TEMPLATES[item.template_id] || {}).rarity === rarityValue);
-    }
-    if(sortValue === "low_price") list.sort((a,b) => a.price_coin - b.price_coin);
-    if(sortValue === "high_price") list.sort((a,b) => b.price_coin - a.price_coin);
-    if(sortValue === "newest") list.reverse();
 
-    renderMarket(list);
+    if (rarityValue !== "all") {
+      list = list.filter(item => {
+        const t = CARD_TEMPLATES[item.template_id] || {};
+        return t.rarity.toLowerCase() === rarityValue;
+      });
+    }
+
+    list.sort((a, b) => {
+      if (sortValue === "low_price") return Number(a.price_coin) - Number(b.price_coin);
+      if (sortValue === "high_price") return Number(b.price_coin) - Number(a.price_coin);
+      return Number(b.timestamp || 0) - Number(a.timestamp || 0);
+    });
+
+    renderMarketList(list);
   }
 
-  function renderMarket(list){
-    marketGrid.innerHTML = "";
-    marketSummary.innerText = "Aktiv elan: " + marketCache.length + " | Göstərilən: " + list.length;
+  // QLOBAL MARKETİ REZULTAT OLARAK RENDERING ETMEK
+  function renderMarketList(list) {
+    const grid = document.getElementById("marketGrid");
+    grid.innerHTML = "";
+    document.getElementById("marketSummary").innerText = "Aktiv Satış: " + marketCache.length + " | Göstərilən: " + list.length;
 
-    if(!list.length){
-      marketGrid.innerHTML = `<div class="empty">Qlobal marketdə aktiv satış yoxdur.</div>`;
+    if (!list.length) {
+      grid.innerHTML = `<div class="empty">Marketdə elan tapılmadı.</div>`;
       return;
     }
 
     list.forEach(item => {
-      const t = AI_TEMPLATES[item.template_id] || {};
+      const t = CARD_TEMPLATES[item.template_id] || {};
       const isMine = item.seller_id === userId;
-      const isAdminCard = item.seller_id === "admin_system";
-      const priceCoin = item.price_coin;
-      const tonPrice = (priceCoin / 100000).toFixed(2);
+      const isAdmin = item.seller_id === "admin_system";
+      const manualTon = (Number(item.price_coin) / 100000).toFixed(2);
 
       const div = document.createElement("div");
       div.className = "card product-card";
       div.innerHTML = `
-        <div class="art"><img src="${t.img}" alt="AI Card"></div>
-        <h3>${escapeHtml(t.name)}</h3>
-        <span class="rarity ${t.rarity}">${t.rarity.toUpperCase()}</span>
-        <div class="info">Boost: ${t.boost}x</div>
-        <div class="info">Power: ${t.power}</div>
-        <div class="price">🪙 ${priceCoin} coin</div>
-        <div class="info">💎 Manual TON: ${tonPrice} TON</div>
-        <div class="seller">${isAdminCard ? "⚡ RƏSMİ SİSTEM SATIŞI" : "Satıcı ID: " + escapeHtml(item.seller_id)}</div>
-
-        <button class="btn ${isMine ? "btn-dark" : "btn-green"}" ${isMine ? "disabled" : ""} onclick="buyCardCoin('${item.listing_id}')">
-          ${isMine ? "Sənin Elanındır" : "🪙 Coin ilə al"}
-        </button>
-
-        <button class="btn ${isMine ? "btn-dark" : "btn-gold"}" ${isMine ? "disabled" : ""} onclick="buyCardTon('${item.listing_id}')">
-          ${isMine ? "Sənin Elanındır" : "💎 TON ilə al"}
+        <div class="art">${t.emoji || "🎴"}</div>
+        <h3>${t.name}</h3>
+        <span class="rarity ${t.rarity}">${t.rarity}</span>
+        <div class="info">Boost: ${t.click_boost}x | Power: ${t.mining_power}</div>
+        <div class="price">🪙 ${item.price_coin} Coin</div>
+        <div class="info" style="color:var(--blue); font-weight:700; font-size:12px; margin-bottom:4px;">💎 Manual TON: ${manualTon} TON</div>
+        <div class="seller">${isAdmin ? "⚡ RƏSMİ SİSTEM SATIŞI" : "Satıcı ID: " + item.seller_id}</div>
+        
+        <button class="btn ${isMine ? 'btn-dark' : 'btn-green'}" ${isMine ? 'disabled' : ''} onclick="buyCard('${item.listing_id}')">
+          ${isMine ? "Sənin Elanındır" : "🪙 Satın Al"}
         </button>
       `;
-      marketGrid.appendChild(div);
+      grid.appendChild(div);
     });
-    marketLog.innerText = "Bazar yeniləndi.";
+    document.getElementById("marketLog").innerText = "Market vitrini yeniləndi (Realtime).";
   }
 
-  function renderMyCards(){
-    myCardsGrid.innerHTML = "";
-    if(!myCardsCache.length){
-      myCardsGrid.innerHTML = `<div class="empty">Heç bir kartınız yoxdur. Marketdən satın alın.</div>`;
+  // MƏNİM KARTLARIMI RENDERING ETMEK
+  function renderMyCards(myCards) {
+    const grid = document.getElementById("myCardsGrid");
+    grid.innerHTML = "";
+    const keys = Object.keys(myCards);
+
+    if (keys.length === 0) {
+      grid.innerHTML = `<div class="empty">Sizin heç bir kartınız yoxdur. Rəsmi marketdən kart alın.</div>`;
       return;
     }
-    myCardsCache.forEach(item => {
-      const t = AI_TEMPLATES[item.template_id] || {};
+
+    keys.forEach(key => {
+      const item = myCards[key];
+      const t = CARD_TEMPLATES[item.template_id] || {};
       const listedBadge = item.is_listed ? `<div class="badge">SATIŞDA</div>` : "";
 
       const div = document.createElement("div");
       div.className = "card";
       div.innerHTML = `
         ${listedBadge}
-        <div class="art"><img src="${t.img}" alt="AI Card"></div>
-        <h3>${escapeHtml(t.name)}</h3>
-        <span class="rarity ${t.rarity}">${t.rarity.toUpperCase()}</span>
-        <div class="info">Boost: ${t.boost}x</div>
-        <div class="info">Power: ${t.power}</div>
-
+        <div class="art">${t.emoji || "🎴"}</div>
+        <h3>${t.name}</h3>
+        <span class="rarity ${t.rarity}">${t.rarity}</span>
+        <div class="info">Boost: ${t.click_boost}x | Power: ${t.mining_power}</div>
+        
         <div class="sell-row">
-          <input id="price_${item.id}" type="number" min="1000" placeholder="Yenidən satış qiyməti" ${item.is_listed ? "disabled" : ""}>
-          ${item.is_listed ? 
-            `<button class="btn btn-red" onclick="cancelListing('${item.id}')">Satışdan çıxar</button>` :
-            `<button class="btn btn-gold" onclick="listCardForSale('${item.id}', ${item.template_id})">P2P Yenidən Sat</button>`
-          }
+          <input id="price_${key}" type="number" placeholder="Coin Qiyməti">
+          <button class="btn btn-gold" ${item.is_listed ? 'disabled' : ''} onclick="listForSale('${key}', ${item.template_id})">
+            ${item.is_listed ? 'Satışdadır' : 'P2P Satışa Qoy'}
+          </button>
         </div>
       `;
-      myCardsGrid.appendChild(div);
-    });
-    cardsLog.innerText = "Kartların siyahılandı.";
-  }
-
-  function listCardForSale(userCardId, templateId){
-    const price = Number(document.getElementById("price_" + userCardId)?.value || 0);
-    if(price < 1000){ alert("Minimum P2P satış qiyməti 1000 coindir."); return; }
-
-    rdb.ref(`users/${userId}/my_cards/${userCardId}`).update({ is_listed: true });
-    rdb.ref(`p2p_market`).push().set({
-      seller_id: userId,
-      user_card_id: userCardId,
-      template_id: templateId,
-      price_coin: price,
-      timestamp: Date.now()
-    }).then(() => { alert("Kartınız digər oyunçular üçün satışa çıxarıldı!"); });
-  }
-
-  function cancelListing(userCardId){
-    rdb.ref(`users/${userId}/my_cards/${userCardId}`).update({ is_listed: false });
-    rdb.ref(`p2p_market`).once('value', (snapshot) => {
-      const data = snapshot.val();
-      if(data){
-        Object.keys(data).forEach(k => {
-          if(data[k].user_card_id === userCardId && data[k].seller_id === userId) rdb.ref(`p2p_market/${k}`).remove();
-        });
-      }
+      grid.appendChild(div);
     });
   }
 
-  // 🪙 COIN İLƏ SATIN ALMA
-  function buyCardCoin(listingId){
+  // P2P SATIŞA ÇIXARIŞ
+  function listForSale(userCardId, templateId) {
+    const priceInput = document.getElementById("price_" + userCardId);
+    const price = Number(priceInput ? priceInput.value : 0);
+
+    if (price < 1000) { alert("Minimum P2P satış qiyməti 1000 coindir."); return; }
+
+    rdb.ref(`users/${userId}/my_cards/${userCardId}`).once('value', (snapshot) => {
+      const cardExists = snapshot.val();
+      if (!cardExists) { alert("Xəta: Sahib olmadığınız kartı sata bilməzsiniz!"); return; }
+      if (cardExists.is_listed) { alert("Bu kart artıq satışdadır."); return; }
+
+      rdb.ref(`users/${userId}/my_cards/${userCardId}`).update({ is_listed: true });
+      rdb.ref(`p2p_market`).push().set({
+        seller_id: userId,
+        user_card_id: userCardId,
+        template_id: templateId,
+        price_coin: price,
+        timestamp: Date.now()
+      });
+    });
+  }
+
+  // 🪙 KART SATIN ALMA MEXANİZMİ
+  function buyCard(listingId) {
     rdb.ref(`p2p_market/${listingId}`).once('value', (snapshot) => {
       const listing = snapshot.val();
-      if(!listing){ alert("Elan tapılmadı."); return; }
-      if(userCoins < listing.price_coin){ alert("Kifayət qədər Coininiz yoxdur!"); return; }
+      if (!listing) { alert("Bu elan artıq mövcud deyil!"); return; }
+      if (listing.seller_id === userId) { alert("Öz elanınızı ala bilməzsiniz."); return; }
 
-      const ok = confirm("Bu kartı satın almaq istəyirsiniz?");
-      if(!ok) return;
+      const cost = listing.price_coin;
 
-      const totalCost = listing.price_coin;
-      const commission = Math.floor(totalCost * 0.10);
-      const sellerNet = totalCost - commission;
+      rdb.ref(`users/${userId}/coins`).once('value', (coinSnap) => {
+        const buyerBalance = coinSnap.val() || 0;
+        if (buyerBalance < cost) { alert("Balansınızda kifayət qədər Coin yoxdur!"); return; }
 
-      // Alıcıdan çıxış
-      rdb.ref(`users/${userId}`).update({ coins: userCoins - totalCost });
+        // Coin çıxılması
+        rdb.ref(`users/${userId}/coins`).set(buyerBalance - cost);
 
-      if(listing.seller_id === "admin_system") {
-        // Əgər admindən alıbsa, 100% pul Admin Coin Profitə gedir
-        rdb.ref(`system_profit/coins`).once('value', (sysCoin) => {
-          const currentSys = sysCoin.val() || 0;
-          rdb.ref(`system_profit`).update({ coins: currentSys + totalCost });
+        if (listing.seller_id === "admin_system") {
+          // Pul admin gəlir qovluğuna köçür
+          rdb.ref(`system_profit/coins`).once('value', (sysProfit) => {
+            const oldProfit = sysProfit.val() || 0;
+            rdb.ref(`system_profit`).update({ coins: oldProfit + cost });
+          });
+
+          // 🔄 MODEL B TRİGGER: Qiymət artımı hesabatı
+          rdb.ref(`system_card_prices/${listing.template_id}`).once('value', (pSnap) => {
+            let pData = pSnap.val();
+            if (pData) {
+              let sCount = (pData.sold_count || 0) + 1;
+              let sTier = pData.current_tier || 1;
+
+              if (sCount >= pData.tier_limit) {
+                sCount = 0;
+                sTier += 1;
+              }
+              rdb.ref(`system_card_prices/${listing.template_id}`).update({
+                sold_count: sCount,
+                current_tier: sTier
+              });
+            }
+          });
+        } else {
+          // Normal P2P
+          rdb.ref(`users/${listing.seller_id}/coins`).once('value', (sCoinSnap) => {
+            const oldCoins = sCoinSnap.val() || 0;
+            rdb.ref(`users/${listing.seller_id}/coins`).set(oldCoins + cost);
+          });
+          rdb.ref(`users/${listing.seller_id}/my_cards/${listing.user_card_id}`).remove();
+        }
+
+        // Kartın ötürülməsi
+        rdb.ref(`users/${userId}/my_cards`).push().set({
+          template_id: listing.template_id,
+          is_listed: false,
+          purchased_at: Date.now()
         });
-      } else {
-        // Oyunçudan oyunçuya (P2P) ticarətdirsə satıcıya 90% gedir, 10% admin komissiyası tutulur
-        rdb.ref(`users/${listing.seller_id}/coins`).once('value', (sCoin) => {
-          const oldCoins = sCoin.val() || 0;
-          rdb.ref(`users/${listing.seller_id}`).update({ coins: oldCoins + sellerNet });
-        });
-        rdb.ref(`system_profit/coins`).once('value', (sysCoin) => {
-          const currentSys = sysCoin.val() || 0;
-          rdb.ref(`system_profit`).update({ coins: currentSys + commission });
-        });
-        // Köhnə sahibindən silirik
-        rdb.ref(`users/${listing.seller_id}/my_cards/${listing.user_card_id}`).remove();
-      }
 
-      // Alıcıya kartı veririk
-      rdb.ref(`users/${userId}/my_cards`).push().set({
-        template_id: listing.template_id,
-        is_listed: false
+        // Klik Boost yenilənməsi
+        setTimeout(() => { updateBestBoost(userId); }, 400);
+
+        // Elanın silinməsi
+        rdb.ref(`p2p_market/${listingId}`).remove().then(() => {
+          alert("🎉 Təbriklər! Kart uğurla balansınıza əlavə olundu.");
+        });
       });
-
-      rdb.ref(`p2p_market/${listingId}`).remove().then(() => { alert("Kart uğurla balansınıza əlavə edildi!"); });
     });
   }
 
-  // 💎 TON İLƏ SATIN ALMA
-  function buyCardTon(listingId){
-    rdb.ref(`p2p_market/${listingId}`).once('value', (snapshot) => {
-      const listing = snapshot.val();
-      if(!listing){ alert("Elan tapılmadı."); return; }
-      const requiredTon = (listing.price_coin / 100000);
-      if(userTon < requiredTon){ alert("Daxili cüzdanınızda kifayət qədər TON yoxdur!"); return; }
-
-      const ok = confirm("Bu kartı " + requiredTon.toFixed(2) + " TON ilə almaq istəyirsiniz?");
-      if(!ok) return;
-
-      const totalTonCost = requiredTon;
-      const tonCommission = totalTonCost * 0.10;
-      const sellerNetTon = totalTonCost - tonCommission;
-
-      // Alıcı TON azaldılması
-      rdb.ref(`users/${userId}`).update({ ton: userTon - totalTonCost });
-
-      if(listing.seller_id === "admin_system") {
-        // Sistem satışıdırsa, 100% TON Adminə qazanclı gəlir!
-        rdb.ref(`system_profit/ton`).once('value', (sysTon) => {
-          const currentSysTon = sysTon.val() || 0;
-          rdb.ref(`system_profit`).update({ ton: currentSysTon + totalTonCost });
-        });
-      } else {
-        // Normal P2P satışdırsa satıcıya 90% TON gedir, sənə 10% TON komissiya qalır
-        rdb.ref(`users/${listing.seller_id}/ton`).once('value', (sTon) => {
-          const oldTon = sTon.val() || 0;
-          rdb.ref(`users/${listing.seller_id}`).update({ ton: oldTon + sellerNetTon });
-        });
-        rdb.ref(`system_profit/ton`).once('value', (sysTon) => {
-          const currentSysTon = sysTon.val() || 0;
-          rdb.ref(`system_profit`).update({ ton: currentSysTon + tonCommission });
-        });
-        rdb.ref(`users/${listing.seller_id}/my_cards/${listing.user_card_id}`).remove();
-      }
-
-      // Yeni karta sahiblik
-      rdb.ref(`users/${userId}/my_cards`).push().set({
-        template_id: listing.template_id,
-        is_listed: false
+  function updateBestBoost(uid) {
+    rdb.ref(`users/${uid}/my_cards`).once('value', (snap) => {
+      const cards = snap.val() || {};
+      let topBoost = 1;
+      Object.keys(cards).forEach(k => {
+        const t = CARD_TEMPLATES[cards[k].template_id];
+        if (t && t.click_boost > topBoost) topBoost = t.click_boost;
       });
-
-      rdb.ref(`p2p_market/${listingId}`).remove().then(() => { alert("Təbriklər! Kart TON balansı ilə satın alındı."); });
+      rdb.ref(`users/${uid}`).update({ active_boost: topBoost });
     });
   }
 
-  function refreshMarket(){ applyFilters(); }
-  function escapeHtml(text){ return String(text).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
+  async function copyReferralLink() {
+    const link = document.getElementById("refLink").innerText;
+    try {
+      await navigator.clipboard.writeText(link);
+      document.getElementById("refLog").innerText = "Referral link kopyalandı! Dostlarınla paylaş.";
+    } catch(err) {
+      alert(link);
+    }
+  }
 
-  initTelegram();
-  loadDatabaseData();
+  function switchTab(tab) {
+    if (tab === 'market') {
+      document.getElementById("marketPanel").style.display = "block";
+      document.getElementById("myCardsPanel").style.display = "none";
+      document.getElementById("marketTab").classList.add("active");
+      document.getElementById("myCardsTab").classList.remove("active");
+      document.getElementById("shopLayout").style.display = "grid";
+    } else {
+      document.getElementById("marketPanel").style.display = "none";
+      document.getElementById("myCardsPanel").style.display = "block";
+      document.getElementById("marketTab").classList.remove("active");
+      document.getElementById("myCardsTab").classList.add("active");
+      document.getElementById("shopLayout").style.display = "none";
+    }
+  }
+
+  startRealtimeSync();
 </script>
 </body>
 </html>
