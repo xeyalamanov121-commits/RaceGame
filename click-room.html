@@ -8,7 +8,6 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
-/* --- Mobil üçün optimallaşdırılmış CSS --- */
 body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#02060d;color:#fff;overflow-x:hidden;}
 .page{max-width:500px;margin:0 auto;padding:12px;}
 .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
@@ -72,7 +71,15 @@ body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#02060d;color:#
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {apiKey:"YOUR_API_KEY",authDomain:"YOUR_AUTH_DOMAIN",projectId:"YOUR_PROJECT_ID",storageBucket:"YOUR_STORAGE_BUCKET",messagingSenderId:"YOUR_MESSAGING_SENDER_ID",appId:"YOUR_APP_ID"};
+const firebaseConfig = {
+  apiKey:"YOUR_API_KEY",
+  authDomain:"YOUR_AUTH_DOMAIN",
+  projectId:"YOUR_PROJECT_ID",
+  storageBucket:"YOUR_STORAGE_BUCKET",
+  messagingSenderId:"YOUR_MESSAGING_SENDER_ID",
+  appId:"YOUR_APP_ID"
+};
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -92,30 +99,99 @@ const tapBear=document.getElementById("tapBear");
 const saveBtn=document.getElementById("saveBtn");
 const syncBtn=document.getElementById("syncBtn");
 
-function updateUI(){coinText.innerText=userData.coins;energyText.innerText=userData.energy;boostText.innerText=userData.boost+"x";adPointText.innerText=userData.adPoints;energyFill.style.width=userData.energy+"%";}
-async function loadUserData(){try{const userRef=doc(db,"users",userId);const snap=await getDoc(userRef);if(snap.exists())userData={...userData,...snap.data()};else await setDoc(userRef,userData);updateUI();checkTimers();}catch(e){console.log(e);}}
-tapBear.addEventListener("click",()=>{if(userData.energy<userData.boost)return;userData.energy-=userData.boost;userData.coins+=userData.boost;pendingClicks+=userData.boost;updateUI();});
-async function saveProgress(){if(pendingClicks===0)return;try{const userRef=doc(db,"users",userId);await updateDoc(userRef,{coins:userData.coins,energy:userData.energy});pendingClicks=0;}catch(e){console.log(e);}}
+function updateUI(){
+  coinText.innerText=userData.coins;
+  energyText.innerText=userData.energy;
+  boostText.innerText=userData.boost+"x";
+  adPointText.innerText=userData.adPoints;
+  energyFill.style.width=userData.energy+"%";
+}
+
+async function loadUserData(){
+  try{
+    const userRef=doc(db,"users",userId);
+    const snap=await getDoc(userRef);
+    if(snap.exists()) userData={...userData,...snap.data()};
+    else await setDoc(userRef,userData);
+    updateUI(); checkTimers();
+  }catch(e){console.log(e);}
+}
+
+tapBear.addEventListener("click",()=>{
+  if(userData.energy<userData.boost)return;
+  userData.energy-=userData.boost;
+  userData.coins+=userData.boost;
+  pendingClicks+=userData.boost;
+  updateUI();
+  saveProgress();
+});
+
+async function saveProgress(){
+  if(pendingClicks===0)return;
+  try{
+    const userRef=doc(db,"users",userId);
+    await updateDoc(userRef,{coins:userData.coins,energy:userData.energy});
+    pendingClicks=0;
+  }catch(e){console.log(e);}
+}
+
 saveBtn.addEventListener("click",saveProgress);
 syncBtn.addEventListener("click",loadUserData);
 
 /* RichAds Video */
-document.getElementById("energyAdBtn").addEventListener("click",async()=>{const adController=window.RichAds?.init({blockId:"YOUR_BLOCK_ID"});if(!adController)return alert("Reklam hazır deyil!");try{await adController.show();userData.energy=100;updateUI();const userRef=doc(db,"users",userId);await updateDoc(userRef,{energy:100});}catch(e){console.log(e);}});
+document.getElementById("energyAdBtn").addEventListener("click",async()=>{
+  const adController=window.RichAds?.init({blockId:"1012853"});
+  if(!adController)return alert("Reklam hazır deyil!");
+  try{
+    await adController.show();
+    userData.energy=100;
+    updateUI();
+    const userRef=doc(db,"users",userId);
+    await updateDoc(userRef,{energy:100});
+    saveProgress();
+  }catch(e){console.log(e);}
+});
 
 /* Qutular */
-function checkTimers(){setupBox(2,userData.lastBox2,2*60*1000,20);setupBox(5,userData.lastBox5,5*60*1000,60);setupBox(10,userData.lastBox10,10*60*1000,150);}
-function setupBox(m,last,duration,reward){const btn=document.getElementById("boxBtn"+m);const now=Date.now();if(now>=last+duration){btn.disabled=false;btn.onclick=()=>triggerBoxAd(m,reward);}else{btn.disabled=true;setTimeout(()=>setupBox(m,last,duration,reward),1000);}}
-async function triggerBoxAd(m,reward){userData.coins+=reward;userData.adPoints+=reward;userData["lastBox"+m]=Date.now();updateUI();const userRef=doc(db,"users",userId);const upd={coins:userData.coins,adPoints:userData.adPoints};upd["lastBox"+m]=userData["lastBox"+m];await updateDoc(userRef,upd);checkTimers();}
+function checkTimers(){
+  setupBox(2,userData.lastBox2,2*60*1000,20);
+  setupBox(5,userData.lastBox5,5*60*1000,60);
+  setupBox(10,userData.lastBox10,10*60*1000,150);
+}
+function setupBox(m,last,duration,reward){
+  const btn=document.getElementById("boxBtn"+m);
+  const now=Date.now();
+  if(now>=last+duration){
+    btn.disabled=false;
+    btn.onclick=()=>triggerBoxAd(m,reward);
+  }else{
+    btn.disabled=true;
+    setTimeout(()=>setupBox(m,last,duration,reward),1000);
+  }
+}
+async function triggerBoxAd(m,reward){
+  userData.coins+=reward;
+  userData.adPoints+=reward;
+  userData["lastBox"+m]=Date.now();
+  updateUI();
+  const userRef=doc(db,"users",userId);
+  const upd={coins:userData.coins,adPoints:userData.adPoints};
+  upd["lastBox"+m]=userData["lastBox"+m];
+  await updateDoc(userRef,upd);
+  checkTimers();
+}
 
 /* Enerji bərpası */
 setInterval(()=>{if(userData.energy<100)userData.energy++;updateUI();},4000);
-
-/* Avtomatik arxa planda saxla */
 setInterval(saveProgress,10000);
 loadUserData();
 </script>
 
-<script src="https://richinfo.co/richpartners/pops/js/richads-pu-ob.js" data-pubid="YOUR_PUBID" data-siteid="YOUR_SITEID" async data-cfasync="false"></script>
+<script src="https://richinfo.co/richpartners/pops/js/richads-pu-ob.js"
+data-pubid="1012853"
+data-siteid="397995"
+async
+data-cfasync="false"></script>
 
 </body>
 </html>
