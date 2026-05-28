@@ -2,20 +2,20 @@
 <html lang="az">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Panel | Bearbee Arena</title>
+    <title>Bearbee Arena | Admin Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; }
+        body { background: #000; color: #fff; font-family: sans-serif; padding: 15px; }
         .card { background: #111; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .item { border-bottom: 1px solid #222; padding: 10px 0; font-size: 12px; }
+        .item { border-bottom: 1px solid #222; padding: 10px 0; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
         .btn-g { background: #ffd700; color: #000; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2 style="color:#ffd700">Maliyyə Sorğuları (Debug Mod)</h2>
-    <div id="financeList"></div>
+    <h2 style="color:#ffd700">Real İstifadəçi Depozitləri</h2>
+    <div id="userDeposits"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -26,32 +26,39 @@
     firebase.initializeApp(config);
     const rdb = firebase.database();
 
-    rdb.ref('p2p_market').on('value', (s) => {
-        const market = s.val() || {};
-        const finList = document.getElementById("financeList");
-        finList.innerHTML = "";
+    // 1. İSTİFADƏÇİLƏRİN 'deposits' QOVLUĞUNU SKAN ET
+    rdb.ref('users').on('value', (s) => {
+        const users = s.val() || {};
+        const container = document.getElementById("userDeposits");
+        container.innerHTML = "";
         
-        Object.keys(market).forEach(key => {
-            const item = market[key];
-            
-            // SORĞUNUN İÇİNDƏKİ HƏR ŞEYİ EKRANA ÇIXARIR
-            // Əgər istifadəçinin ID-si varsa, burada "seller_id", "user_id" və ya başqa adla görünəcək
-            const rawData = JSON.stringify(item, null, 2); 
-            
-            finList.innerHTML += `<div class="item">
-                <pre style="font-size: 10px; color: #888;">${rawData}</pre>
-                <button class="btn-g" onclick="processPayment('${key}', ${item.price_coin || 0})">Təsdiq Et</button>
-            </div>`;
+        Object.keys(users).forEach(uid => {
+            const user = users[uid];
+            if (user.deposits) {
+                Object.keys(user.deposits).forEach(depKey => {
+                    const dep = user.deposits[depKey];
+                    // Yalnız 'pending' (gözləyən) sorğuları çıxar
+                    if(dep.status === "pending") {
+                        container.innerHTML += `
+                        <div class="item">
+                            <span>ID: <b>${dep.user_tg_id}</b><br>Məbləğ: <b>${dep.coin_amount} Coin</b></span>
+                            <button class="btn-g" onclick="approveDep('${uid}', '${depKey}', ${dep.coin_amount})">Təsdiq Et</button>
+                        </div>`;
+                    }
+                });
+            }
         });
     });
 
-    window.processPayment = (key, amt) => {
-        const userId = prompt("Bu sorğu hansı ID-yə aiddir? (Yuxarıdakı məlumatdan bax və bura yaz):");
-        if(userId) {
-            rdb.ref(`users/${userId}/coins`).once('value', s => {
+    // 2. TƏSDİQ FUNKSİYASI
+    window.approveDep = (uid, depKey, amt) => {
+        if(confirm("Bu depoziti təsdiqləyirsiniz?")) {
+            const userCoinsRef = rdb.ref(`users/${uid}/coins`);
+            userCoinsRef.once('value', s => {
                 const current = s.val() || 0;
-                rdb.ref(`users/${userId}/coins`).set(current + Number(amt));
-                rdb.ref('p2p_market/' + key).remove();
+                userCoinsRef.set(current + Number(amt));
+                // Statusu 'completed' et və ya sadəcə sil
+                rdb.ref(`users/${uid}/deposits/${depKey}/status`).set("completed");
                 alert("Balans artırıldı!");
             });
         }
@@ -59,4 +66,3 @@
 </script>
 </body>
 </html>
-
