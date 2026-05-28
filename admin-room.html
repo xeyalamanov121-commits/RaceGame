@@ -11,9 +11,8 @@
         .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
         h2 { color: var(--gold); font-size: 16px; margin-bottom: 15px; }
         .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-        .btn { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .btn-g { background: var(--gold); color: #000; }
-        .btn-r { background: var(--red); color: #fff; }
         table { width: 100%; border-collapse: collapse; }
         td { padding: 10px; border-bottom: 1px solid var(--border); }
     </style>
@@ -21,26 +20,23 @@
 <body>
 
 <div id="adminWrapper">
-    <div class="card">
-        <h2>Oyunçular</h2>
-        <table id="userTable">
-            <tbody id="userTableBody"></tbody>
-        </table>
-    </div>
+    <div id="content" style="display:none;">
+        <div class="card">
+            <h2>İstifadəçilər</h2>
+            <table id="userTable">
+                <tbody id="userTableBody"></tbody>
+            </table>
+        </div>
 
-    <div class="card">
-        <h2 style="color:var(--green)">Maliyyə Sorğuları (p2p_market)</h2>
-        <div id="financeList"></div>
+        <div class="card">
+            <h2 style="color:var(--green)">Maliyyə Sorğuları (p2p_market)</h2>
+            <div id="financeList"></div>
+        </div>
     </div>
     
-    <div class="card">
-        <h2>Aktiv Yarışlar</h2>
-        <div id="roomsList"></div>
-    </div>
-
-    <div class="card">
-        <h2>Son 2 Saatın Fəaliyyəti</h2>
-        <div id="logList"></div>
+    <div id="accessDenied" style="text-align:center; margin-top:50px; color:var(--red);">
+        <h2>Giriş Qadağandır!</h2>
+        <p>Siz admin panelinə giriş icazəsi olmayan birisiniz.</p>
     </div>
 </div>
 
@@ -48,75 +44,73 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
-    const ADMIN_TELEGRAM_ID = 8591374417;
+    // --- KONFİQURASİYA ---
+    const ADMIN_TELEGRAM_ID = 8591374417; // Öz ID-ni bura yaz!
     const config = { apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ", databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "racegane" };
     firebase.initializeApp(config);
     const rdb = firebase.database();
 
-    // 1. İSTİFADƏÇİLƏR
-    rdb.ref('users').on('value', (s) => {
-        const users = s.val() || {};
-        const tbody = document.getElementById("userTableBody");
-        tbody.innerHTML = "";
-        Object.keys(users).forEach(uid => {
-            const u = users[uid];
-            tbody.innerHTML += `<tr><td>${u.name || "Ayı"}<br><small>${uid}</small></td><td>🪙 ${u.coins || 0}</td><td><button class="btn btn-g" onclick="editCoins('${uid}', ${u.coins || 0})">Dəyiş</button></td></tr>`;
+    // 1. GİRİŞ YOXLANILIŞI (Telegram ID)
+    const tg = window.Telegram.WebApp;
+    const user = tg.initDataUnsafe.user;
+
+    if (user && user.id == ADMIN_TELEGRAM_ID) {
+        document.getElementById('content').style.display = 'block';
+        document.getElementById('accessDenied').style.display = 'none';
+        startPanel();
+    } else {
+        document.getElementById('content').style.display = 'none';
+        document.getElementById('accessDenied').style.display = 'block';
+    }
+
+    function startPanel() {
+        // İSTİFADƏÇİLƏRİ YÜKLƏ
+        rdb.ref('users').on('value', (s) => {
+            const users = s.val() || {};
+            const tbody = document.getElementById("userTableBody");
+            tbody.innerHTML = "";
+            Object.keys(users).forEach(uid => {
+                const u = users[uid];
+                tbody.innerHTML += `<tr><td>${u.name || "Ayı"}<br><small>ID: ${uid}</small></td><td>🪙 ${u.coins || 0}</td><td><button class="btn btn-g" onclick="editCoins('${uid}', ${u.coins || 0})">Dəyiş</button></td></tr>`;
+            });
         });
-    });
 
-    // 2. MALIYYƏ SORĞULARI (p2p_market üçün xüsusi skaner)
-    rdb.ref('p2p_market').on('value', (s) => {
-        const market = s.val() || {};
-        const finList = document.getElementById("financeList");
-        finList.innerHTML = "";
-        Object.keys(market).forEach(key => {
-            const item = market[key];
-            // Firebase-də gördüyümüz real açar adları: price_coin və seller_id
-            const amt = item.price_coin || "0";
-            const seller = item.seller_id || "Naməlum";
-            
-            finList.innerHTML += `<div class="item">
-                <span>İstifadəçi: <b>${seller}</b><br>Məbləğ: <b>${amt} Coin</b></span>
-                <button class="btn btn-g" onclick="approveMarket('${key}', ${amt}, '${seller}')">Təsdiq</button>
-            </div>`;
+        // MARKET SORĞULARINI YÜKLƏ
+        rdb.ref('p2p_market').on('value', (s) => {
+            const market = s.val() || {};
+            const finList = document.getElementById("financeList");
+            finList.innerHTML = "";
+            Object.keys(market).forEach(key => {
+                const item = market[key];
+                const amt = item.price_coin || 0;
+                const userId = item.seller_id || "Naməlum";
+                
+                finList.innerHTML += `<div class="item">
+                    <span>ID: <b>${userId}</b><br>Məbləğ: <b>${amt} Coin</b></span>
+                    <button class="btn btn-g" onclick="approveMarket('${key}', ${amt}, '${userId}')">Təsdiq Et</button>
+                </div>`;
+            });
         });
-    });
+    }
 
-    // 3. OTAQLAR
-    rdb.ref('rooms').on('value', (s) => {
-        const list = document.getElementById("roomsList"); list.innerHTML = "";
-        Object.keys(s.val() || {}).forEach(k => list.innerHTML += `<div class="item">#${k} <button class="btn btn-r" onclick="rdb.ref('rooms/${k}').remove()">Sil</button></div>`);
-    });
-
-    // 4. LOGLAR
-    const twoHours = Date.now() - (2 * 60 * 60 * 1000);
-    rdb.ref('logs').orderByChild('timestamp').startAt(twoHours).on('value', (s) => {
-        const list = document.getElementById("logList"); list.innerHTML = "";
-        Object.values(s.val() || {}).forEach(l => list.innerHTML += `<div class="item">${l.time} - ${l.action}</div>`);
-    });
-
-    // FUNKSİYALAR
+    // BALANS DƏYİŞMƏ FUNKSİYASI
     window.editCoins = (uid, cur) => { const v = prompt("Yeni balans:", cur); if(v) rdb.ref(`users/${uid}/coins`).set(Number(v)); };
     
-    window.approveMarket = (key, amt, sellerId) => {
-        if(confirm(`Bu sorğunu təsdiq edib ${amt} Coin balansına əlavə edirsiniz?`)) {
-            // İstifadəçinin balansını tapıb artırırıq
-            rdb.ref(`users/${sellerId}/coins`).once('value', s => {
+    // TƏSDİQ FUNKSİYASI
+    window.approveMarket = (key, amt, userId) => {
+        if(userId === "admin_system") { alert("Bu sistem sorğusudur, təsdiq edilə bilməz!"); return; }
+        
+        if(confirm(`ID: ${userId} üçün ${amt} Coin balansına əlavə edilsin?`)) {
+            const userRef = rdb.ref(`users/${userId}/coins`);
+            userRef.once('value', s => {
                 const current = s.val() || 0;
-                rdb.ref(`users/${sellerId}/coins`).set(current + Number(amt));
-                
-                // Sorğunu silirik
+                userRef.set(current + Number(amt));
                 rdb.ref('p2p_market/' + key).remove();
-                
-                // Loga yazırıq
-                rdb.ref('logs').push({ 
-                    action: `Təsdiq edildi: ${sellerId} -> ${amt} Coin`, 
-                    time: new Date().toLocaleTimeString(), 
-                    timestamp: Date.now() 
-                });
+                alert("Balans uğurla artırıldı!");
             });
         }
     };
 </script>
 </body>
 </html>
+
