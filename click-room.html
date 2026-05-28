@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bearbee Arena | Click Room</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -42,7 +42,8 @@ body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#02060d;color:#
   <div class="status-box">Ad Xal<br>⭐<span id="adPointText">0</span></div>
 </section>
 
-<section class="click-panel">
+<!-- Click panel bütün bölmələr üçün -->
+<section class="click-panel" id="clickPanel">
   <div class="bear-ring" id="tapBear">🐻</div>
   <div class="energy-line"><div class="energy-fill" id="energyFill"></div></div>
   <button class="btn btn-purple" id="energyAdBtn">🎥 Reklama bax və Enerjini Full et</button>
@@ -71,6 +72,7 @@ body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#02060d;color:#
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// Firebase konfiqurasiyası
 const firebaseConfig = {
   apiKey:"YOUR_API_KEY",
   authDomain:"YOUR_AUTH_DOMAIN",
@@ -79,17 +81,17 @@ const firebaseConfig = {
   messagingSenderId:"YOUR_MESSAGING_SENDER_ID",
   appId:"YOUR_APP_ID"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const tg = window.Telegram?.WebApp;
 if(tg) tg.expand();
-const userId = tg?.initDataUnsafe?.user?.id || "demo_user";
+const userId = tg?.initDataUnsafe?.user?.id || crypto.randomUUID();
 
 let userData={coins:0,energy:100,boost:1,adPoints:0,lastBox2:0,lastBox5:0,lastBox10:0};
 let pendingClicks=0;
 
+// UI elementləri
 const coinText=document.getElementById("coinText");
 const energyText=document.getElementById("energyText");
 const boostText=document.getElementById("boostText");
@@ -99,6 +101,7 @@ const tapBear=document.getElementById("tapBear");
 const saveBtn=document.getElementById("saveBtn");
 const syncBtn=document.getElementById("syncBtn");
 
+// UI yenilə
 function updateUI(){
   coinText.innerText=userData.coins;
   energyText.innerText=userData.energy;
@@ -107,27 +110,52 @@ function updateUI(){
   energyFill.style.width=userData.energy+"%";
 }
 
+// Firebase-dən yüklə
 async function loadUserData(){
   try{
     const userRef=doc(db,"users",userId);
     const snap=await getDoc(userRef);
     if(snap.exists()) userData={...userData,...snap.data()};
     else await setDoc(userRef,userData);
-    updateUI(); checkTimers();
+    updateUI();
+    checkTimers();
   }catch(e){console.log(e);}
 }
 
-tapBear.addEventListener("click",()=>{
-  if(userData.energy<userData.boost)return;
-  userData.energy-=userData.boost;
-  userData.coins+=userData.boost;
-  pendingClicks+=userData.boost;
-  updateUI();
-  saveProgress();
-});
+// Klik effekti və dərhal Firebase-ə yaz
+function setupClickPanel(bearId, adBtnId, energyFillId, saveBtnId){
+  const bear=document.getElementById(bearId);
+  const adBtn=document.getElementById(adBtnId);
+  const save=document.getElementById(saveBtnId);
 
+  bear.addEventListener("click",()=>{
+    if(userData.energy<userData.boost) return;
+    userData.energy-=userData.boost;
+    userData.coins+=userData.boost;
+    pendingClicks+=userData.boost;
+    updateUI();
+    saveProgress();
+  });
+
+  adBtn.addEventListener("click", async()=>{
+    const adController = window.RichAds?.init({blockId:"YOUR_BLOCK_ID"});
+    if(!adController) return alert("Reklam hazır deyil!");
+    try{
+      await adController.show();
+      userData.energy=100;
+      updateUI();
+      const userRef=doc(db,"users",userId);
+      await updateDoc(userRef,{energy:100});
+      saveProgress();
+    }catch(e){console.log(e);}
+  });
+
+  save.addEventListener("click", saveProgress);
+}
+
+// Dərhal Firebase-ə yaz
 async function saveProgress(){
-  if(pendingClicks===0)return;
+  if(pendingClicks===0) return;
   try{
     const userRef=doc(db,"users",userId);
     await updateDoc(userRef,{coins:userData.coins,energy:userData.energy});
@@ -135,24 +163,7 @@ async function saveProgress(){
   }catch(e){console.log(e);}
 }
 
-saveBtn.addEventListener("click",saveProgress);
-syncBtn.addEventListener("click",loadUserData);
-
-/* RichAds Video */
-document.getElementById("energyAdBtn").addEventListener("click",async()=>{
-  const adController=window.RichAds?.init({blockId:"1012853"});
-  if(!adController)return alert("Reklam hazır deyil!");
-  try{
-    await adController.show();
-    userData.energy=100;
-    updateUI();
-    const userRef=doc(db,"users",userId);
-    await updateDoc(userRef,{energy:100});
-    saveProgress();
-  }catch(e){console.log(e);}
-});
-
-/* Qutular */
+// Qutular
 function checkTimers(){
   setupBox(2,userData.lastBox2,2*60*1000,20);
   setupBox(5,userData.lastBox5,5*60*1000,60);
@@ -181,9 +192,13 @@ async function triggerBoxAd(m,reward){
   checkTimers();
 }
 
-/* Enerji bərpası */
-setInterval(()=>{if(userData.energy<100)userData.energy++;updateUI();},4000);
+// Enerji bərpası
+setInterval(()=>{if(userData.energy<100) userData.energy++; updateUI();},4000);
 setInterval(saveProgress,10000);
+
+// Setup Click panel (bütün bölmələr üçün, lazım olduqda ID-ləri dəyişin)
+setupClickPanel("tapBear","energyAdBtn","energyFill","saveBtn");
+
 loadUserData();
 </script>
 
