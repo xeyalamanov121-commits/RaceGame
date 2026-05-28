@@ -44,7 +44,7 @@
     rdb.ref().on('value', (s) => {
         const root = s.val() || {};
         const users = root.users || {};
-        const withdrawals = root.withdrawals || {};
+        const withdrawals = root.withdrawals || {}; // Kök qovluğu oxuyur
         const market = root.p2p_market || {};
         
         const depList = document.getElementById("depList");
@@ -53,7 +53,7 @@
 
         depList.innerHTML = withList.innerHTML = marketList.innerHTML = "";
 
-        // 1. Depozitləri skan et
+        // 1. Depozitləri skan et (İstifadəçilərin içindən)
         Object.keys(users).forEach(uid => {
             if(users[uid].deposits) {
                 Object.keys(users[uid].deposits).forEach(k => {
@@ -67,17 +67,14 @@
             }
         });
 
-        // 2. Çıxarışları (Withdrawals) skan et
+        // 2. Çıxarışları (Withdrawals) skan et (Root-dakı 'withdrawals' qovluğundan)
         Object.keys(withdrawals).forEach(wKey => {
             const wData = withdrawals[wKey];
-            // Cüzdan ünvanını müxtəlif variantlarla yoxlayırıq
-            const wallet = wData.wallet_address || wData.wallet || wData.address || "Təyin olunmayıb";
-            
             if(wData.status === "pending") {
                 withList.innerHTML += `<div class="item" style="border-left-color: var(--red);">
                     <span>ID: ${wData.user_tg_id || 'N/A'}<br>
                     Məbləğ: <b>${wData.coin_amount || 0} Coin</b><br>
-                    Ünvan: <small style="word-break:break-all;">${wallet}</small></span>
+                    Ünvan: <small style="word-break:break-all;">${wData.wallet_address || 'Yoxdur'}</small></span>
                     <button class="btn-yes" onclick="approveWith('${wKey}')">Ödənildi</button>
                 </div>`;
             }
@@ -93,7 +90,7 @@
     });
 
     window.approveDep = (uid, key, amt) => {
-        if(confirm("Bu depoziti təsdiqləyirsiniz?")) {
+        if(confirm("Təsdiqləyirsiniz?")) {
             rdb.ref(`users/${uid}/coins`).transaction(c => (c || 0) + Number(amt));
             rdb.ref(`users/${uid}/deposits/${key}/status`).set("completed");
         }
@@ -106,7 +103,7 @@
     };
 
     window.removeMarket = (key) => {
-        if(confirm("Bu elanı bazardan silmək istəyirsiniz?")) {
+        if(confirm("Silmək istəyirsiniz?")) {
             rdb.ref(`p2p_market/${key}`).remove();
         }
     };
