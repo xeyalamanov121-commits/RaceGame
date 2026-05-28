@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bearbee Arena | Real Firebase Market</title>
+  <title>Bearbee Arena | Real Firebase Market & Finance</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Firebase Core və Database SDK (v8 CDN) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -520,28 +521,47 @@
       <div style="width:40px;"></div>
     </div>
 
+    <!-- 👑 GENİŞLƏNDİRİLMİŞ MULTİ-ADMİN PANELİ (CANLI DEPOZİT & ÇIXARIŞ SKANERLİ) -->
     <section class="panel" id="adminControlPanel" style="display: none; border: 2px solid var(--purple); background: linear-gradient(180deg, #100a26, #04020a); margin-bottom:14px;">
-      <h2 class="section-title" style="color: var(--purple); font-size:18px;">👑 System Card Generator (Model B)</h2>
-      <p style="font-size: 12px; text-align: center; color: var(--muted); margin-bottom: 12px;">
-        ID Qorunması Aktivdir. Buradan çıxan rəsmi kartlar hovuz satıldıqca avtomatik olaraq bahalaşır.
-      </p>
-      <div style="margin-bottom: 8px;">
-        <select id="adminTemplateSelect">
+      <h2 class="section-title" style="color: var(--purple); font-size:18px;">👑 System Supreme Admin Panel</h2>
+      
+      <!-- Sistem Kartı Atmaq -->
+      <div style="border-bottom: 1px solid rgba(155,61,255,0.25); padding-bottom: 12px; margin-bottom: 12px;">
+        <p style="font-size: 12px; text-align: center; color: var(--muted); margin-bottom: 8px;">🚀 Model B: Avtomatik Qiyməti Artan Sistem Kartı Buraxılışı</p>
+        <select id="adminTemplateSelect" style="margin-bottom: 8px;">
           <option value="1">AI Steampunk Rebel (Common)</option>
           <option value="2">AI Cyber Bear - Alpha (Rare)</option>
           <option value="3">AI Neon Mecha Bear (Epic)</option>
           <option value="4">AI Quantum Overlord Ayı (Legendary)</option>
         </select>
+        <button class="btn" onclick="adminPublishToMarket()" style="margin: 0; background: linear-gradient(180deg, #9b3dff, #5700cc); border-color:#d7b3ff; font-weight: 1000;">
+          Bazara Sistem Kartı At
+        </button>
       </div>
-      <button class="btn" onclick="adminPublishToMarket()" style="margin: 0; background: linear-gradient(180deg, #9b3dff, #5700cc); border-color:#d7b3ff; font-weight: 1000;">
-        🚀 Qlobal Marketa Qiyməti Artan Sistem Kartı At!
-      </button>
-      <div id="adminLog" style="font-size: 12px; color: var(--green); text-align: center; margin-top: 6px; font-weight: 800;"></div>
+
+      <!-- Canlı Skan Edilən Depozit və Çıxarışlar -->
+      <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+        <div>
+          <p style="font-size: 13px; font-weight: 1000; color: #ffd700; text-align: center; margin-bottom: 6px;">⏳ Gözləyən Depozit Sorğuları</p>
+          <div id="adminDepositList" style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-size: 11px; color: var(--muted); text-align: center; padding: 5px;">Depozitlər skan edilir...</div>
+          </div>
+        </div>
+        
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+          <p style="font-size: 13px; font-weight: 1000; color: #ff2438; text-align: center; margin-bottom: 6px;">💸 Gözləyən Çıxarış (Withdraw) Sorğuları</p>
+          <div id="adminWithdrawList" style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-size: 11px; color: var(--muted); text-align: center; padding: 5px;">Çıxarışlar skan edilir...</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="adminLog" style="font-size: 12px; color: var(--green); text-align: center; margin-top: 10px; font-weight: 800;"></div>
     </section>
 
     <section class="hero">
       <h1>🌍 Fast Realtime Market</h1>
-      <p>Bütün alış-veriş, P2P transferlər və hovuz tipli qiymət artım mexanizmi tamamilə Firebase RDB üzərinden işləyir.</p>
+      <p>Bütün alış-veriş, P2P transferlər və hovuz tipli qiymət artım mexanizmi tamamilə Firebase RDB üzərindən işləyir.</p>
     </section>
 
     <section class="stats">
@@ -555,6 +575,23 @@
       <button class="tab" id="myCardsTab" onclick="switchTab('mycards')">🎴 My Cards</button>
     </div>
 
+    <!-- OYUNÇU ÜÇÜN COIN ÇIXARIŞ (WITHDRAW) BÖLMƏSİ -->
+    <section class="ref-panel" style="border-color: rgba(255,36,56,0.4); background: linear-gradient(180deg, #12060a, #070204 70%);">
+      <h2 class="section-title" style="color: var(--red);">💸 Coin Çıxarış (Withdraw)</h2>
+      <div class="summary" style="color: #ff8fa3; background:#1a080d; border-color:#4a121a;">
+        Minimum Çıxarış: 50,000 Coin. Sorğular admin tərəfindən 24 saat ərzində yoxlanılır.
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <input id="withdrawAmountInput" type="number" placeholder="Çıxarılacaq Coin Məbləği">
+        <input id="withdrawWalletInput" type="text" placeholder="TON Wallet Ünvanınız və ya Telefon (m10)">
+        <button class="btn" onclick="submitWithdrawRequest()" style="background: linear-gradient(180deg, #ff2438, #a50010); border: 1px solid #ff929d; font-weight: 1000; margin:0;">
+          Çıxarış Sorğusu Göndər
+        </button>
+      </div>
+      <div class="log" id="withdrawLog" style="color: #ff8fa3; background: #120306; border-color: #380a11;">Balansınızı daxil edib sorğu göndərin.</div>
+    </section>
+
+    <!-- REFERRAL BÖLMƏSİ -->
     <section class="ref-panel">
       <h2 class="section-title">🤝 Referral Bonus</h2>
       <div class="ref-grid">
@@ -566,6 +603,7 @@
       <div class="log" id="refLog">Dostların linklə girəndə bonus qazana bilərsən.</div>
     </section>
 
+    <!-- MARKET LAYOUT -->
     <section class="shop-layout" id="shopLayout">
       <aside class="sidebar" id="filterBox">
         <div class="sidebar-title">🛍 Shop Filter</div>
@@ -594,6 +632,7 @@
       </section>
     </section>
 
+    <!-- MƏNİM KARTLARIM PANEL -->
     <section class="panel" id="myCardsPanel" style="display:none">
       <h2 class="section-title">Mənim Kartlarım</h2>
       <div class="summary">Əlində olan real kartları digər oyunçulara təhlükəsiz şəkildə sata bilərsən.</div>
@@ -610,7 +649,7 @@
   </nav>
 
 <script>
-  // 📥 1. REAL FIREBASE DATA CONFIG INTEGRATION
+  // 📥 1. SƏNİN REAL FIREBASE KONFİQURASİYAN
   const firebaseConfig = {
     apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
     authDomain: "racegane.firebaseapp.com",
@@ -624,11 +663,11 @@
   firebase.initializeApp(firebaseConfig);
   const rdb = firebase.database();
 
-  // 🔒 SƏNİN SƏRT VƏ REAL ADMİN TELEGRAM ID-N
+  // 🔒 ADMİN TELEGRAM ID QORUMASI
   const SYSTEM_ADMIN_ID = "8591374417";
   let userId = "guest_player"; 
+  let currentUserCoins = 0;
 
-  // Qorunacaq Statik Şablon Data Bazası
   const CARD_TEMPLATES = {
     1: { name: "AI Steampunk Rebel", rarity: "common", click_boost: 1.5, mining_power: 5, emoji: "⚙️" },
     2: { name: "AI Cyber Bear - Alpha", rarity: "rare", click_boost: 2.5, mining_power: 18, emoji: "🦾" },
@@ -638,39 +677,35 @@
 
   let marketCache = [];
 
-  // Telegram User ID Təyini
   if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
     userId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
   }
 
-  // 🔐 ADMİN PANELİNİ SƏNDƏN BAŞQASINA KÖKÜNDƏN SİLMƏK
   if (userId === SYSTEM_ADMIN_ID) {
     document.getElementById("adminControlPanel").style.display = "block";
   } else {
     document.getElementById("adminControlPanel").remove(); 
   }
 
-  // Realtime Data Sync Mexanizmi
   function startRealtimeSync() {
-    // Balans Sync
+    // Cari Oyunçu Balans və Referal Oxuyucusu
     rdb.ref(`users/${userId}`).on('value', (snapshot) => {
       const uData = snapshot.val() || {};
-      document.getElementById("coinText").innerText = uData.coins || 0;
+      currentUserCoins = uData.coins || 0;
+      document.getElementById("coinText").innerText = currentUserCoins;
       document.getElementById("boostText").innerText = (uData.active_boost || 1) + "x";
-      
-      // Referral Statistikasını Yazmaq
       document.getElementById("refCount").innerText = uData.referrals_count || 0;
       document.getElementById("refEarned").innerText = uData.referrals_earned || 0;
     });
 
-    // Mənim Kartlarım Sync
+    // Cari Oyunçunun Kartları
     rdb.ref(`users/${userId}/my_cards`).on('value', (snapshot) => {
       const cards = snapshot.val() || {};
       document.getElementById("cardsText").innerText = Object.keys(cards).length;
       renderMyCards(cards);
     });
 
-    // Qlobal Market Listings Sync
+    // P2P Market Elanları
     rdb.ref(`p2p_market`).on('value', (snapshot) => {
       const marketData = snapshot.val() || {};
       marketCache = [];
@@ -680,51 +715,208 @@
       applyFilters();
     });
 
-    // Referral Linki Ekrana çıxarmaq
     document.getElementById("refLink").innerText = "https://t.me/Bearbeee_bot/GameR?startapp=ref_" + userId;
+
+    // 🕵️‍♂️ ADMİN ÜÇÜN BÜTÜN USERS QOVLUĞUNU SKAN EDƏN CANLI DEPOZİT & ÇIXARIŞ DETEKTORU
+    if (userId === SYSTEM_ADMIN_ID) {
+      rdb.ref(`users`).on('value', (snapshot) => {
+        const allUsers = snapshot.val() || {};
+        
+        const depositListDiv = document.getElementById("adminDepositList");
+        const withdrawListDiv = document.getElementById("adminWithdrawList");
+        
+        depositListDiv.innerHTML = "";
+        withdrawListDiv.innerHTML = "";
+        
+        let hasPendingDeposit = false;
+        let hasPendingWithdraw = false;
+
+        Object.keys(allUsers).forEach(pUid => {
+          const pData = allUsers[pUid];
+          
+          // 1. DEPOZİT LOGİKASI
+          if (pData.deposit && (pData.deposit.status === "pending" || !pData.deposit.status)) {
+            hasPendingDeposit = true;
+            createDepositRow(depositListDiv, pUid, pData.deposit.amount || pData.deposit, "deposit");
+          } 
+          else if (pData.pending_deposit > 0) {
+            hasPendingDeposit = true;
+            createDepositRow(depositListDiv, pUid, pData.pending_deposit, "pending_deposit");
+          }
+
+          // 2. ÇIXARIŞ (WITHDRAW) LOGİKASI
+          if (pData.withdraw_request && pData.withdraw_request.status === "pending") {
+            hasPendingWithdraw = true;
+            createWithdrawRow(withdrawListDiv, pUid, pData.withdraw_request.amount, pData.withdraw_request.wallet);
+          }
+        });
+
+        if (!hasPendingDeposit) {
+          depositListDiv.innerHTML = `<div style="font-size: 11px; color: var(--muted); text-align: center; padding: 4px;">Gözləyən depozit yoxdur.</div>`;
+        }
+        if (!hasPendingWithdraw) {
+          withdrawListDiv.innerHTML = `<div style="font-size: 11px; color: var(--muted); text-align: center; padding: 4px;">Gözləyən çıxarış yoxdur.</div>`;
+        }
+      });
+    }
   }
 
-  // 🚀 MODEL B: AVTOMATİK OLARAK SATILDIQCA BAHALAŞAN SİSTEM KARTI BURAXILIŞI
+  // Oyunçunun Çıxarış Sorğusu Göndərmə Funksiyası (Pulu dərhal dondurur)
+  function submitWithdrawRequest() {
+    const amount = Math.floor(Number(document.getElementById("withdrawAmountInput").value));
+    const wallet = document.getElementById("withdrawWalletInput").value.trim();
+    const logDiv = document.getElementById("withdrawLog");
+
+    if (!amount || amount < 50000) {
+      logDiv.innerText = "⚠️ Minimum çıxarış məbləği 50,000 coindir!";
+      return;
+    }
+    if (!wallet) {
+      logDiv.innerText = "⚠️ Zəhmət olmasa pulun köçürüləcəği cüzdanı/hesabı yazın!";
+      return;
+    }
+    if (currentUserCoins < amount) {
+      logDiv.innerText = "❌ Balansınızda kifayət qədər coin yoxdur!";
+      return;
+    }
+
+    // Oyunçunun balansından pulu çıxırıq və istifadəçi qovluğuna sorğunu yazırıq
+    rdb.ref(`users/${userId}`).update({
+      coins: currentUserCoins - amount,
+      withdraw_request: {
+        amount: amount,
+        wallet: wallet,
+        status: "pending",
+        timestamp: Date.now()
+      }
+    }).then(() => {
+      logDiv.innerText = `✅ ${amount} Coin üçün çıxarış sorğusu göndərildi! Siyahıya alındı.`;
+      document.getElementById("withdrawAmountInput").value = "";
+      document.getElementById("withdrawWalletInput").value = "";
+    }).catch(() => {
+      logDiv.innerText = "❌ Xəta baş verdi, yenidən yoxlayın.";
+    });
+  }
+
+  // Admin panelində depozit sətirlərini yaradan vizual köməkçi
+  function createDepositRow(container, pUid, amount, nodeName) {
+    const div = document.createElement("div");
+    div.style = "background: #060b13; border: 1px solid #3a227d; padding: 8px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px;";
+    div.innerHTML = `
+      <div style="font-size: 11px; display:flex; justify-content:space-between; align-items:center;">
+        <span>👤 ID: <b style="color:var(--blue)">${pUid}</b></span>
+        <span style="color:var(--green);">🪙 <b>+${amount}</b></span>
+      </div>
+      <div style="display: flex; gap: 4px;">
+        <button class="btn btn-green" style="padding: 5px; font-size: 10px; margin:0;" onclick="approveUserDeposit('${pUid}', ${amount}, '${nodeName}')">Təsdiqlə</button>
+        <button class="btn" style="padding: 5px; font-size: 10px; margin:0; background:var(--red); border:1px solid #ff6b7b;" onclick="rejectUserDeposit('${pUid}', '${nodeName}')">Rədd Et</button>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+
+  // Admin panelində Çıxarış sətirlərini yaradan vizual köməkçi
+  function createWithdrawRow(container, pUid, amount, wallet) {
+    const div = document.createElement("div");
+    div.style = "background: #0d0406; border: 1px solid #6b1220; padding: 8px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px;";
+    div.innerHTML = `
+      <div style="font-size: 11px; display:flex; justify-content:space-between;">
+        <span>👤 ID: <b style="color:var(--blue)">${pUid}</b></span>
+        <span style="color:var(--red);">🪙 <b>-${amount}</b></span>
+      </div>
+      <div style="font-size: 10px; color: var(--muted); word-break: break-all;">💳 Rekvizit: <b>${wallet}</b></div>
+      <div style="display: flex; gap: 4px; margin-top: 2px;">
+        <button class="btn btn-green" style="padding: 5px; font-size: 10px; margin:0;" onclick="approveUserWithdraw('${pUid}')">✅ Ödənildi (Sil)</button>
+        <button class="btn" style="padding: 5px; font-size: 10px; margin:0; background:var(--red); border:1px solid #ff6b7b;" onclick="rejectUserWithdraw('${pUid}', ${amount})">❌ Geri Qaytar</button>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+
+  // 👑 DEPOZİTİ TƏSDİQLƏMƏK (Balansı artırır və sorğunu təmizləyir)
+  function approveUserDeposit(targetUid, amount, nodeName) {
+    if (userId !== SYSTEM_ADMIN_ID) return;
+    rdb.ref(`users/${targetUid}/coins`).once('value', (snap) => {
+      const currentCoins = snap.val() || 0;
+      rdb.ref(`users/${targetUid}`).update({ coins: currentCoins + Number(amount) }).then(() => {
+        if (nodeName === "deposit") rdb.ref(`users/${targetUid}/deposit`).remove();
+        else rdb.ref(`users/${targetUid}/pending_deposit`).remove();
+        
+        document.getElementById("adminLog").innerText = `✅ ${targetUid} üçün ${amount} Coin depoziti təsdiqləndi!`;
+        setTimeout(() => { document.getElementById("adminLog").innerText = ""; }, 3000);
+      });
+    });
+  }
+
+  // 👑 DEPOZİTİ RƏDD ETMƏK
+  function rejectUserDeposit(targetUid, nodeName) {
+    if (userId !== SYSTEM_ADMIN_ID) return;
+    if (nodeName === "deposit") rdb.ref(`users/${targetUid}/deposit`).remove();
+    else rdb.ref(`users/${targetUid}/pending_deposit`).remove();
+    document.getElementById("adminLog").innerText = "❌ Depozit sorğusu ləğv edildi.";
+    setTimeout(() => { document.getElementById("adminLog").innerText = ""; }, 3000);
+  }
+
+  // 👑 ÇIXARIŞI TƏSDİQLƏMƏK (Sən pulu manual ödədikdən sonra bu düyməyə basırsan, sorğunu arxivləyir/silir)
+  function approveUserWithdraw(targetUid) {
+    if (userId !== SYSTEM_ADMIN_ID) return;
+    rdb.ref(`users/${targetUid}/withdraw_request`).remove().then(() => {
+      document.getElementById("adminLog").innerText = `✅ ${targetUid} çıxarış sorğusu uğurla tamamlandı və arxivləndi!`;
+      setTimeout(() => { document.getElementById("adminLog").innerText = ""; }, 3000);
+    });
+  }
+
+  // 👑 ÇIXARIŞI RƏDD ETMƏK (Pul oyunçunun balansına geri qaytarılır və sorğu silinir)
+  function rejectUserWithdraw(targetUid, amount) {
+    if (userId !== SYSTEM_ADMIN_ID) return;
+    rdb.ref(`users/${targetUid}/coins`).once('value', (snap) => {
+      const currentCoins = snap.val() || 0;
+      rdb.ref(`users/${targetUid}`).update({ coins: currentCoins + Number(amount) });
+      rdb.ref(`users/${targetUid}/withdraw_request`).remove().then(() => {
+        document.getElementById("adminLog").innerText = `❌ Çıxarış rədd edildi, ${amount} coin ${targetUid} balansına geri köçürüldü.`;
+        setTimeout(() => { document.getElementById("adminLog").innerText = ""; }, 3000);
+      });
+    });
+  }
+
+  // 🚀 MODEL B KART BURAXILIŞI
   function adminPublishToMarket() {
     if (userId !== SYSTEM_ADMIN_ID) { alert("Yetkiniz yoxdur!"); return; }
 
     const templateId = Number(document.getElementById("adminTemplateSelect").value);
     const logBox = document.getElementById("adminLog");
-    logBox.innerText = "Hovuz cədvəli yoxlanılır...";
+    logBox.innerText = "Hovuz yoxlanılır...";
 
     rdb.ref(`system_card_prices/${templateId}`).once('value', (snapshot) => {
       let priceData = snapshot.val();
       
       if (!priceData) {
-        const defaults = { 1: 15000, 2: 35000, 3: 120000, 4: 600000 };
+        const defaults = { 1: 15000, 2: 45000, 3: 150000, 4: 600000 };
         const multipliers = { 1: 1.25, 2: 1.4, 3: 1.7, 4: 2.1 };
         priceData = {
           current_tier: 1,
           sold_count: 0,
-          tier_limit: 5, // Hər 5 satışdan bir qiymət artımı trigger olunur!
+          tier_limit: 5,
           base_price: defaults[templateId] || 15000,
           price_multiplier: multipliers[templateId] || 1.5
         };
         rdb.ref(`system_card_prices/${templateId}`).set(priceData);
       }
 
-      // Qiymət Hesablama Alqoritmi
       const calculatedPrice = Math.floor(priceData.base_price * Math.pow(priceData.price_multiplier, priceData.current_tier - 1));
 
-      // Marketə buraxırıq
       rdb.ref(`p2p_market`).push().set({
         seller_id: "admin_system",
         template_id: templateId,
         price_coin: calculatedPrice,
         timestamp: Date.now()
       }).then(() => {
-        logBox.innerText = `✅ Uğurlu! Öz dəyəri qorunan kart (${calculatedPrice} Coin) bazara çıxarıldı!`;
+        logBox.innerText = `✅ Model B Kartı (${calculatedPrice} Coin) bazara atıldı!`;
         setTimeout(() => { logBox.innerText = ""; }, 3000);
       });
     });
   }
 
-  // FİLTERLƏRİ TƏTBİQ ETMƏK VƏ BAZARI YENİLƏMƏK
   function applyFilters() {
     let list = [...marketCache];
     const search = String(document.getElementById("searchInput")?.value || "").toLowerCase().trim();
@@ -754,7 +946,6 @@
     renderMarketList(list);
   }
 
-  // QLOBAL MARKETİ REZULTAT OLARAK RENDERING ETMEK
   function renderMarketList(list) {
     const grid = document.getElementById("marketGrid");
     grid.innerHTML = "";
@@ -788,17 +979,16 @@
       `;
       grid.appendChild(div);
     });
-    document.getElementById("marketLog").innerText = "Market vitrini yeniləndi (Realtime).";
+    document.getElementById("marketLog").innerText = "Market vitrini yeniləndi.";
   }
 
-  // MƏNİM KARTLARIMI RENDERING ETMEK
   function renderMyCards(myCards) {
     const grid = document.getElementById("myCardsGrid");
     grid.innerHTML = "";
     const keys = Object.keys(myCards);
 
     if (keys.length === 0) {
-      grid.innerHTML = `<div class="empty">Sizin heç bir kartınız yoxdur. Rəsmi marketdən kart alın.</div>`;
+      grid.innerHTML = `<div class="empty">Sizin heç bir kartınız yoxdur.</div>`;
       return;
     }
 
@@ -827,7 +1017,6 @@
     });
   }
 
-  // P2P SATIŞA ÇIXARIŞ
   function listForSale(userCardId, templateId) {
     const priceInput = document.getElementById("price_" + userCardId);
     const price = Number(priceInput ? priceInput.value : 0);
@@ -836,8 +1025,8 @@
 
     rdb.ref(`users/${userId}/my_cards/${userCardId}`).once('value', (snapshot) => {
       const cardExists = snapshot.val();
-      if (!cardExists) { alert("Xəta: Sahib olmadığınız kartı sata bilməzsiniz!"); return; }
-      if (cardExists.is_listed) { alert("Bu kart artıq satışdadır."); return; }
+      if (!cardExists) return;
+      if (cardExists.is_listed) return;
 
       rdb.ref(`users/${userId}/my_cards/${userCardId}`).update({ is_listed: true });
       rdb.ref(`p2p_market`).push().set({
@@ -850,30 +1039,20 @@
     });
   }
 
-  // 🪙 KART SATIN ALMA MEXANİZMİ
   function buyCard(listingId) {
     rdb.ref(`p2p_market/${listingId}`).once('value', (snapshot) => {
       const listing = snapshot.val();
-      if (!listing) { alert("Bu elan artıq mövcud deyil!"); return; }
-      if (listing.seller_id === userId) { alert("Öz elanınızı ala bilməzsiniz."); return; }
+      if (!listing) return;
 
       const cost = listing.price_coin;
 
       rdb.ref(`users/${userId}/coins`).once('value', (coinSnap) => {
         const buyerBalance = coinSnap.val() || 0;
-        if (buyerBalance < cost) { alert("Balansınızda kifayət qədər Coin yoxdur!"); return; }
+        if (buyerBalance < cost) { alert("Balans kifayət deyil!"); return; }
 
-        // Coin çıxılması
         rdb.ref(`users/${userId}/coins`).set(buyerBalance - cost);
 
         if (listing.seller_id === "admin_system") {
-          // Pul admin gəlir qovluğuna köçür
-          rdb.ref(`system_profit/coins`).once('value', (sysProfit) => {
-            const oldProfit = sysProfit.val() || 0;
-            rdb.ref(`system_profit`).update({ coins: oldProfit + cost });
-          });
-
-          // 🔄 MODEL B TRİGGER: Qiymət artımı hesabatı
           rdb.ref(`system_card_prices/${listing.template_id}`).once('value', (pSnap) => {
             let pData = pSnap.val();
             if (pData) {
@@ -891,7 +1070,6 @@
             }
           });
         } else {
-          // Normal P2P
           rdb.ref(`users/${listing.seller_id}/coins`).once('value', (sCoinSnap) => {
             const oldCoins = sCoinSnap.val() || 0;
             rdb.ref(`users/${listing.seller_id}/coins`).set(oldCoins + cost);
@@ -899,19 +1077,16 @@
           rdb.ref(`users/${listing.seller_id}/my_cards/${listing.user_card_id}`).remove();
         }
 
-        // Kartın ötürülməsi
         rdb.ref(`users/${userId}/my_cards`).push().set({
           template_id: listing.template_id,
           is_listed: false,
           purchased_at: Date.now()
         });
 
-        // Klik Boost yenilənməsi
         setTimeout(() => { updateBestBoost(userId); }, 400);
 
-        // Elanın silinməsi
         rdb.ref(`p2p_market/${listingId}`).remove().then(() => {
-          alert("🎉 Təbriklər! Kart uğurla balansınıza əlavə olundu.");
+          alert("🎉 Kart uğurla alındı!");
         });
       });
     });
@@ -933,7 +1108,7 @@
     const link = document.getElementById("refLink").innerText;
     try {
       await navigator.clipboard.writeText(link);
-      document.getElementById("refLog").innerText = "Referral link kopyalandı! Dostlarınla paylaş.";
+      document.getElementById("refLog").innerText = "Referral link kopyalandı!";
     } catch(err) {
       alert(link);
     }
