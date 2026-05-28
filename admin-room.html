@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bearbee Arena | Real Admin Panel</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        :root {
+            --bg: #000000;
+            --panel: #0d0d0d;
+            --border: #222222;
+            --blue: #1597ff;
+            --gold: #ffd700;
+            --green: #22ff66;
+            --red: #ff2438;
+            --text: #ffffff;
+            --muted: #aaa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: var(--gold);
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--gold);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(255,215,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            background: #111;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 15px;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        .search-box:focus {
+            border-color: var(--gold);
+            outline: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .btn:active { transform: scale(0.95); }
+        .btn-green { background: var(--gold); color: black; }
+        .btn-green:hover { background: white; }
+        .btn-red { background: var(--red); color: white; }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .badge-waiting { background: #333; color: white; }
+        .badge-racing { background: var(--blue); color: white; }
+        .badge-finished { background: var(--green); color: black; }
+
+        .room-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .room-item:last-child { border-bottom: none; }
+
+        .access-denied {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+            text-align: center;
+            padding: 20px;
+        }
+        .access-denied h1 {
+            color: var(--red);
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="adminWrapper" style="display: none;">
+        <header>
+            <h1>BEARBEE ARENA // ADMIN PANEL</h1>
+            <div id="adminStatus" style="color: var(--green); font-weight: bold; font-size: 13px;">⚡ CANLI VERİLƏNLƏR BAZASI AKTİVDİR</div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Oyunçuların Siyahısı (<span id="userCount">0</span>)</h2>
+                <input type="text" id="userSearch" class="search-box" placeholder="Telegram ID və ya ad ilə axtar...">
+                
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>İstifadəçi (ID)</th>
+                                <th>Coin Balansı</th>
+                                <th>Yarış Qələbəsi</th>
+                                <th>Əməliyyat (Deposit)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: var(--muted);">Məlumatlar yüklənir...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Aktiv Yarış Otaqları</h2>
+                <div id="roomsList">
+                    <div style="text-align: center; color: var(--muted); padding: 15px;">Otaqlar yüklənir...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="access-denied" id="deniedScreen" style="display: none;">
+        <h1>GİRİŞ QADAĞANDIR!</h1>
+        <p style="color: var(--muted); font-size: 15px;">Bu gizli panelə daxil olmaq üçün admin hüququnuz yoxdur.</p>
+        <p id="yourIdText" style="margin-top: 20px; color: var(--gold); font-weight: bold; font-size: 14px;"></p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+    <script>
+        // Sənin Şəxsi Telegram ID-n və Firebase məlumatların tam yerləşdirilib
+        const ADMIN_TELEGRAM_ID = 8591374417; 
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
+            authDomain: "racegane.firebaseapp.com",
+            databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "racegane",
+            storageBucket: "racegane.firebasestorage.app",
+            messagingSenderId: "477893876737",
+            appId: "1:477893876737:web:1b561bb3224b0086c63400"
+        };
+
+        // Telegram WebApp mühitini başladırıq
+        const tg = window.Telegram?.WebApp;
+        if(tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        const currentUser = tg?.initDataUnsafe?.user;
+        const currentUserId = currentUser ? Number(currentUser.id) : null;
+
+        // GİRİŞ DOĞRULAMASI VƏ TƏHLÜKƏSİZLİK QALXANI
+        if (currentUserId === ADMIN_TELEGRAM_ID) {
+            document.getElementById("adminWrapper").style.display = "block";
+            initAdminPanel();
+        } else {
+            document.getElementById("deniedScreen").style.display = "flex";
+            if(currentUserId) {
+                document.getElementById("yourIdText").innerText = "Sizin Telegram ID: " + currentUserId;
+            } else {
+                document.getElementById("yourIdText").innerText = "Xəta: Zəhmət olmasa bu otağa yalnız Telegram Bot daxilindəki gizli keçidlə daxil olun.";
+            }
+        }
+
+        function initAdminPanel() {
+            // Firebase tətbiqini başladırıq
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            const rdb = firebase.database();
+            let allUsers = {};
+
+            // 1. OYUNÇULARI REAL-TIME OXUMAQ (DEPOSIT IDARƏSİ)
+            const usersRef = rdb.ref('users');
+            usersRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    allUsers = data;
+                    renderUsers(data);
+                } else {
+                    document.getElementById("userTableBody").innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--muted);">Heç bir istifadəçi tapılmadı.</td></tr>`;
+                }
+            });
+
+            function renderUsers(users, filter = "") {
+                const tbody = document.getElementById("userTableBody");
+                tbody.innerHTML = "";
+                let count = 0;
+
+                Object.keys(users).forEach(userId => {
+                    const u = users[userId];
+                    const name = u.name || "Bilinməyən Ayı";
+                    const coins = u.coins !== undefined ? u.coins : 0;
+                    const wins = u.wins !== undefined ? u.wins : 0;
+
+                    // Canlı axtarış filteri (ID və ya Ad üzrə)
+                    if (filter && !name.toLowerCase().includes(filter.toLowerCase()) && !userId.includes(filter)) {
+                        return;
+                    }
+
+                    count++;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>
+                            <strong>${escapeHtml(name)}</strong><br>
+                            <small style="color: var(--muted);">ID: ${userId}</small>
+                        </td>
+                        <td style="color: var(--gold); font-weight: bold;">🪙 ${coins}</td>
+                        <td>🏆 ${wins}</td>
+                        <td>
+                            <button class="btn btn-green" onclick="editCoins('${userId}', ${coins})">Coin Dəyiş</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById("userCount").innerText = count;
+            }
+
+            // Axtarış qutusunun dinlənilməsi
+            document.getElementById("userSearch").addEventListener("input", (e) => {
+                renderUsers(allUsers, e.target.value.trim());
+            });
+
+            // REAL-TIME DEPOZİT ETMƏ FUNKSİYASI
+            window.editCoins = function(userId, currentCoins) {
+                const amountStr = prompt(`İstifadəçinin YENİ COIN balansını təyin edin:\n(Cari balans: ${currentCoins})`, currentCoins);
+                if (amountStr === null) return;
+
+                const newAmount = parseInt(amountStr);
+                if (isNaN(newAmount) || newAmount < 0) {
+                    alert("Zəhmət olmasa düzgün məbləğ yazın!");
+                    return;
+                }
+
+                rdb.ref(`users/${userId}`).update({ coins: newAmount })
+                    .then(() => alert("Deposit uğurla tamamlandı! Oyunçunun balansı anında yeniləndi."))
+                    .catch((err) => alert("Xəta baş verdi: " + err.message));
+            };
+
+            // 2. AKTİV YARIŞ OTAQLARINI CANLI İZLƏMƏK VƏ SİLMƏK
+            const roomsRef = rdb.ref('rooms');
+            roomsRef.on('value', (snapshot) => {
+                const roomsDiv = document.getElementById("roomsList");
+                roomsDiv.innerHTML = "";
+                const data = snapshot.val();
+
+                if (!data) {
+                    roomsDiv.innerHTML = `<div style="text-align: center; color: var(--muted); padding: 15px;">Hal-hazırda aktiv yarış otağı yoxdur.</div>`;
+                    return;
+                }
+
+                Object.keys(data).forEach(roomCode => {
+                    const room = data[roomCode];
+                    const pCount = room.players ? Object.keys(room.players).length : 0;
+                    const status = room.status || "waiting";
+
+                    let statusBadge = `<span class="badge badge-waiting">Gözləyir</span>`;
+                    if (status === "racing") statusBadge = `<span class="badge badge-racing">Yarışır</span>`;
+                    if (status === "finished") statusBadge = `<span class="badge badge-finished">Bitdi</span>`;
+
+                    const item = document.createElement("div");
+                    item.className = "room-item";
+                    item.innerHTML = `
+                        <div>
+                            <strong style="color: white; font-size: 15px;">#${roomCode}</strong> 
+                            ${statusBadge}
+                            <br><small style="color: var(--muted);">Oyunçu: ${pCount}/3</small>
+                        </div>
+                        <button class="btn btn-red" onclick="closeRoom('${roomCode}')">Otağı Sil</button>
+                    `;
+                    roomsDiv.appendChild(item);
+                });
+            });
+
+            // Admin tərəfindən otağı vaxtından tez ləğv etmək
+            window.closeRoom = function(roomCode) {
+                if (confirm(`#${roomCode} nömrəli yarış otağını silmək və oyunu ləğv etmək istədiyinizə əminsiniz?`)) {
+                    rdb.ref('rooms/' + roomCode).remove()
+                        .then(() => alert("Otaq verilənlər bazasından təmizləndi."))
+                        .catch((err) => alert("Xəta: " + err.message));
+                }
+            };
+        }
+
+        // XSS təhlükəsizlik funksiyası
+        function escapeHtml(text){
+            return String(text)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+    </script>
+</body>
+</html>
+
