@@ -42,7 +42,7 @@ body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#02060d;color:#
   <div class="status-box">Ad Xal<br>⭐<span id="adPointText">0</span></div>
 </section>
 
-<!-- Click panel bütün bölmələr üçün -->
+<!-- Click panel -->
 <section class="click-panel" id="clickPanel">
   <div class="bear-ring" id="tapBear">🐻</div>
   <div class="energy-line"><div class="energy-fill" id="energyFill"></div></div>
@@ -123,7 +123,7 @@ async function loadUserData(){
 }
 
 // Klik effekti və dərhal Firebase-ə yaz
-function setupClickPanel(bearId, adBtnId, energyFillId, saveBtnId){
+function setupClickPanel(bearId, adBtnId, saveBtnId){
   const bear=document.getElementById(bearId);
   const adBtn=document.getElementById(adBtnId);
   const save=document.getElementById(saveBtnId);
@@ -138,7 +138,7 @@ function setupClickPanel(bearId, adBtnId, energyFillId, saveBtnId){
   });
 
   adBtn.addEventListener("click", async()=>{
-    const adController = window.RichAds?.init({blockId:"YOUR_BLOCK_ID"});
+    const adController = window.RichAds?.init({blockId:"1012853"});
     if(!adController) return alert("Reklam hazır deyil!");
     try{
       await adController.show();
@@ -158,7 +158,7 @@ async function saveProgress(){
   if(pendingClicks===0) return;
   try{
     const userRef=doc(db,"users",userId);
-    await updateDoc(userRef,{coins:userData.coins,energy:userData.energy});
+    await updateDoc(userRef,{coins:userData.coins,adPoints:userData.adPoints,energy:userData.energy});
     pendingClicks=0;
   }catch(e){console.log(e);}
 }
@@ -196,8 +196,8 @@ async function triggerBoxAd(m,reward){
 setInterval(()=>{if(userData.energy<100) userData.energy++; updateUI();},4000);
 setInterval(saveProgress,10000);
 
-// Setup Click panel (bütün bölmələr üçün, lazım olduqda ID-ləri dəyişin)
-setupClickPanel("tapBear","energyAdBtn","energyFill","saveBtn");
+// Setup Click panel
+setupClickPanel("tapBear","energyAdBtn","saveBtn");
 
 loadUserData();
 </script>
