@@ -3,136 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bearbee Admin Wallet</title>
+<title>Bearbee Wallet Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#111;color:#fff;}
+body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#01040a;color:#fff;}
 .page{max-width:1100px;margin:0 auto;padding:16px;}
-.panel{background:#222;border-radius:24px;padding:18px;margin-bottom:16px;box-shadow:0 0 20px rgba(0,0,0,0.4);}
-.panel-title{color:#ffd700;font-size:22px;margin-bottom:12px;text-align:center;}
+.panel{background:#111;border-radius:20px;padding:18px;margin-bottom:16px;border:1px solid #333;}
+.panel h2{color:#ffd700;margin-bottom:10px;text-align:center;}
 .request-list{display:grid;gap:12px;}
-.request-card{background:#030a13;border:1px solid #263f5d;border-radius:16px;padding:14px;color:#a8b4c4;}
+.request-card{background:#222;border:1px solid #444;border-radius:14px;padding:12px;}
 .request-card b{color:#ffd700;}
-.btn{padding:8px 12px;border-radius:8px;color:#fff;text-decoration:none;margin-top:6px;cursor:pointer;}
+.request-card .status{color:#0f0;font-weight:800;}
+.btn{cursor:pointer;padding:8px 12px;border:none;border-radius:8px;margin-top:6px;color:#fff;}
 .btn-green{background:#28a745;}
 .btn-red{background:#dc3545;}
-.btn-gold{background:#ffc107;color:#111;}
-.log{background:#111;padding:8px;border-radius:6px;color:#0f0;margin-top:6px;font-weight:800;text-align:center;}
+.log{background:#000;color:#0ff;padding:8px;border-radius:8px;margin-top:6px;text-align:center;}
+.empty{text-align:center;color:#888;padding:12px;}
 </style>
 </head>
 <body>
-<main class="page">
+<div class="page">
+<h1 style="text-align:center;color:#ffd700;">🛡 Bearbee Admin Wallet</h1>
 
 <section class="panel">
-<h2 class="panel-title">💎 Pending Deposits</h2>
-<div id="depositList" class="request-list"><div class="log">Depositlər yüklənir...</div></div>
+<h2>Pending Deposits</h2>
+<div id="depositList" class="request-list"><div class="empty">Yüklənir...</div></div>
+<div class="log" id="depositLog"></div>
 </section>
 
 <section class="panel">
-<h2 class="panel-title">💰 Pending Withdrawals</h2>
-<div id="withdrawList" class="request-list"><div class="log">Withdraw-lar yüklənir...</div></div>
+<h2>Pending Withdrawals</h2>
+<div id="withdrawList" class="request-list"><div class="empty">Yüklənir...</div></div>
+<div class="log" id="withdrawLog"></div>
 </section>
-
-<section class="panel">
-<h2 class="panel-title">📊 İstifadəçi Balansları</h2>
-<div id="userList" class="request-list"><div class="log">İstifadəçi balansları yüklənir...</div></div>
-</section>
-
-<button class="btn btn-dark" onclick="loadPending()">Yenilə</button>
-
-</main>
+</div>
 
 <script>
 const SUPABASE_URL = "https://tddvicvdndrckoiynbay.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
-const ADMIN_TELEGRAM_ID = 8591374417;
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZHZpY3ZkbmRyY2tvaXluYmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjU2MDgsImV4cCI6MjA5NTMwMTYwOH0.jOsCfq1dgFI7zv--B6xF_u7YrsSWHFamxrLFNFMc2mg";
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const tg = window.Telegram?.WebApp;
-tg?.ready();
-tg?.expand();
-const telegramUser = tg?.initDataUnsafe?.user || null;
 
-function isAdmin(){ return telegramUser && Number(telegramUser.id)===ADMIN_TELEGRAM_ID; }
-
-async function loadPending(){
-    if(!isAdmin()){ alert("Siz admin deyilsiniz!"); return; }
-
-    // Deposits
-    const { data: deposits } = await supabase.from('deposits').select('*').eq('status','Pending');
+// Render Deposits
+async function loadDeposits(){
+    const { data, error } = await supabase.from('deposits').select('*').eq('status','pending');
     const depositList = document.getElementById('depositList');
+    if(error){ depositList.innerHTML = `<div class="empty">Xəta: ${error.message}</div>`; return; }
     depositList.innerHTML = "";
-    if(deposits.length===0) depositList.innerHTML = "<div class='log'>Pending deposit yoxdur.</div>";
-    deposits.forEach(d=>{
+    if(!data.length){ depositList.innerHTML='<div class="empty">Pending deposit yoxdur</div>'; return; }
+    data.forEach(d=>{
         const div = document.createElement('div');
-        div.className = "request-card";
-        div.innerHTML = `
-            <b>#${d.id}</b> — ${d.ton_amount} TON, ${d.coin_amount} coin<br>Status: ${d.status}<br>TX: ${d.tx_hash||"-"}<br>
-            <button class="btn btn-green" onclick="approveDeposit(${d.id})">Approve</button>
-            <button class="btn btn-red" onclick="rejectDeposit(${d.id})">Reject</button>
-        `;
+        div.className = 'request-card';
+        div.innerHTML = `<b>Deposit #${d.id}</b> — ${d.amount} TON<br>Status: <span class="status">${d.status}</span><br>
+        <button class="btn btn-green" onclick="approveDeposit('${d.id}')">Approve</button>
+        <button class="btn btn-red" onclick="rejectDeposit('${d.id}')">Reject</button>`;
         depositList.appendChild(div);
     });
+}
 
-    // Withdraws
-    const { data: withdraws } = await supabase.from('withdrawals').select('*').eq('status','Pending');
+// Render Withdrawals
+async function loadWithdrawals(){
+    const { data, error } = await supabase.from('withdrawals').select('*').eq('status','pending');
     const withdrawList = document.getElementById('withdrawList');
+    if(error){ withdrawList.innerHTML = `<div class="empty">Xəta: ${error.message}</div>`; return; }
     withdrawList.innerHTML = "";
-    if(withdraws.length===0) withdrawList.innerHTML = "<div class='log'>Pending withdraw yoxdur.</div>";
-    withdraws.forEach(w=>{
+    if(!data.length){ withdrawList.innerHTML='<div class="empty">Pending withdraw yoxdur</div>'; return; }
+    data.forEach(w=>{
         const div = document.createElement('div');
-        div.className = "request-card";
-        div.innerHTML = `
-            <b>#${w.id}</b> — ${w.coin_amount} coin, ${w.ton_amount} TON<br>Status: ${w.status}<br>Wallet: ${w.wallet_address||"-"}<br>
-            <button class="btn btn-green" onclick="markPaid(${w.id})">Mark Paid</button>
-            <button class="btn btn-red" onclick="rejectWithdraw(${w.id})">Reject</button>
-        `;
+        div.className = 'request-card';
+        div.innerHTML = `<b>Withdraw #${w.id}</b> — ${w.amount} TON<br>Address: ${w.address}<br>Status: <span class="status">${w.status}</span><br>
+        <button class="btn btn-green" onclick="markPaid('${w.id}')">Mark Paid</button>
+        <button class="btn btn-red" onclick="rejectWithdraw('${w.id}')">Reject</button>`;
         withdrawList.appendChild(div);
     });
-
-    // User Balances
-    const { data: users } = await supabase.from('wallets').select('*');
-    const userList = document.getElementById('userList');
-    userList.innerHTML = "";
-    if(users.length===0) userList.innerHTML = "<div class='log'>İstifadəçi yoxdur.</div>";
-    users.forEach(u=>{
-        const div = document.createElement('div');
-        div.className = "request-card";
-        div.innerHTML = `
-            <b>Telegram ID: ${u.telegram_id}</b><br>
-            TON Balans: ${u.ton_balance}<br>
-            Coin Balans: ${u.coin_balance}
-        `;
-        userList.appendChild(div);
-    });
 }
 
-// Manual Approve/Reject
+// Deposit Actions
 async function approveDeposit(id){
-    const note = prompt("Admin qeyd:");
-    await supabase.rpc('admin_approve_deposit',{request_id:id,p_admin_note:note});
-    loadPending();
-}
-async function rejectDeposit(id){
-    const note = prompt("Reject səbəbini yaz:");
-    await supabase.rpc('admin_reject_deposit',{request_id:id,p_admin_note:note});
-    loadPending();
-}
-async function markPaid(id){
-    const note = prompt("TON göndərildi:");
-    await supabase.rpc('admin_mark_withdrawal_paid',{request_id:id,p_admin_note:note});
-    loadPending();
-}
-async function rejectWithdraw(id){
-    const note = prompt("Withdraw rədd edildi:");
-    await supabase.rpc('admin_reject_withdrawal',{request_id:id,p_admin_note:note});
-    loadPending();
+    const { error } = await supabase.from('deposits').update({status:'approved'}).eq('id',id);
+    if(error){ alert(error.message); return; }
+    loadDeposits();
 }
 
-// Init
-if(isAdmin()) loadPending();
-else alert("Siz admin deyilsiniz!");
+async function rejectDeposit(id){
+    const reason = prompt("Reject səbəbini yazın:");
+    const { error } = await supabase.from('deposits').update({status:'rejected', comment:reason}).eq('id',id);
+    if(error){ alert(error.message); return; }
+    loadDeposits();
+}
+
+// Withdraw Actions
+async function markPaid(id){
+    const { error } = await supabase.from('withdrawals').update({status:'paid'}).eq('id',id);
+    if(error){ alert(error.message); return; }
+    loadWithdrawals();
+}
+
+async function rejectWithdraw(id){
+    const reason = prompt("Reject səbəbini yazın:");
+    const { error } = await supabase.from('withdrawals').update({status:'rejected', comment:reason}).eq('id',id);
+    if(error){ alert(error.message); return; }
+    loadWithdrawals();
+}
+
+// Load both on start
+loadDeposits();
+loadWithdrawals();
 </script>
 </body>
 </html>
