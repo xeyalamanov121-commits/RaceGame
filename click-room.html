@@ -9,6 +9,7 @@
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
     <style>
+        /* --- Bütün əvvəlki CSS buradadır --- */
         :root{
             --bg:#02060d;
             --panel:#08111c;
@@ -22,331 +23,55 @@
             --text:#fff;
             --muted:#98a8ba;
         }
-
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            -webkit-tap-highlight-color:transparent;
-        }
-
-        body{
-            min-height:100vh;
-            background:
-                radial-gradient(circle at top, rgba(0,93,255,0.22), transparent 36%),
-                radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 32%),
-                linear-gradient(180deg, #01040a, #030812 60%, #000);
-            color:var(--text);
-            font-family:'Segoe UI', Arial, sans-serif;
-            padding-bottom:92px;
-            overflow-x:hidden;
-        }
-
-        body::before{
-            content:"";
-            position:fixed;
-            inset:0;
-            pointer-events:none;
-            background:
-                linear-gradient(90deg, transparent 0 95%, rgba(21,151,255,0.07) 96% 100%),
-                linear-gradient(0deg, transparent 0 95%, rgba(255,255,255,0.025) 96% 100%);
-            background-size:34px 34px;
-            opacity:0.42;
-            mask-image:linear-gradient(to bottom, #000, transparent 86%);
-        }
-
-        .page{
-            width:min(1050px, 100%);
-            margin:0 auto;
-            padding:16px 14px 0;
-        }
-
-        .top-bar{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:12px;
-            margin-bottom:16px;
-        }
-
-        .back{
-            color:var(--gold);
-            text-decoration:none;
-            font-weight:1000;
-            background:rgba(8,18,32,0.82);
-            border:1px solid rgba(60,91,128,0.65);
-            border-radius:14px;
-            padding:12px 14px;
-        }
-
-        .logo{
-            text-align:center;
-            line-height:0.9;
-            user-select:none;
-            filter:drop-shadow(0 0 12px rgba(255,215,0,0.25));
-        }
-
-        .logo .bearbee{
-            font-size:24px;
-            font-weight:1000;
-            font-style:italic;
-            letter-spacing:2px;
-            color:#f4f7ff;
-            text-shadow:0 3px 0 #29354a;
-        }
-
-        .logo .arena{
-            font-size:34px;
-            font-weight:1000;
-            font-style:italic;
-            letter-spacing:3px;
-            color:var(--gold);
-            text-shadow:0 4px 0 #6a3e00;
-        }
-
-        .status{
-            display:grid;
-            grid-template-columns:repeat(4, 1fr);
-            gap:12px;
-            margin-bottom:16px;
-        }
-
-        .status-box{
-            background:rgba(8,18,32,0.88);
-            border:1px solid rgba(60,91,128,0.65);
-            border-radius:18px;
-            padding:14px;
-            text-align:center;
-            box-shadow:0 0 24px rgba(21,151,255,0.08);
-        }
-
-        .status-box h3{
-            color:var(--muted);
-            font-size:13px;
-            margin-bottom:6px;
-            text-transform:uppercase;
-            letter-spacing:1px;
-        }
-
-        .status-box span{
-            color:var(--gold);
-            font-size:24px;
-            font-weight:1000;
-        }
-
-        .layout{
-            display:grid;
-            grid-template-columns:1fr;
-            gap:16px;
-        }
-
-        .panel{
-            background: linear-gradient(180deg, rgba(12,22,36,0.96), rgba(4,9,16,0.96));
-            border:1px solid rgba(71,101,136,0.62);
-            border-radius:22px;
-            box-shadow: inset 0 0 22px rgba(21,151,255,0.08), 0 0 26px rgba(21,151,255,0.08);
-            padding:16px;
-            margin-bottom:16px;
-            position:relative;
-            overflow:hidden;
-        }
-
-        .panel-title{
-            color:var(--gold);
-            text-align:center;
-            font-size:22px;
-            font-weight:1000;
-            letter-spacing:1px;
-            margin-bottom:10px;
-        }
-
-        .panel-sub{
-            color:var(--muted);
-            text-align:center;
-            font-size:14px;
-            line-height:1.5;
-            margin-bottom:14px;
-        }
-
-        .click-panel{
-            text-align:center;
-        }
-
-        .bear-ring{
-            width:270px;
-            height:270px;
-            margin:16px auto;
-            border-radius:50%;
-            padding:6px;
-            background: conic-gradient(from 120deg, #1597ff, #ffd700, #9b3dff, #1597ff);
-            box-shadow: 0 0 40px rgba(21,151,255,0.30), 0 0 35px rgba(255,215,0,0.18);
-            cursor:pointer;
-            user-select:none;
-            transition:0.08s;
-        }
-
-        .bear-ring:active{
-            transform:scale(0.95);
-        }
-
-        .bear-button{
-            width:100%;
-            height:100%;
-            border-radius:50%;
-            overflow:hidden;
-            background: radial-gradient(circle at 40% 25%, rgba(255,215,0,0.22), transparent 34%), linear-gradient(180deg, #07101b, #02060d);
-            border:4px solid rgba(0,0,0,0.76);
-            display:grid;
-            place-items:center;
-            position:relative;
-        }
-
-        .bear-button img{
-            width:100%;
-            height:100%;
-            object-fit:cover;
-            display:block;
-        }
-
-        .bear-fallback{
-            font-size:96px;
-            filter:drop-shadow(0 0 16px rgba(255,215,0,0.45));
-        }
-
-        .energy-line{
-            width:100%;
-            height:18px;
-            background:#111c2a;
-            border:1px solid #26476a;
-            border-radius:22px;
-            overflow:hidden;
-            margin:14px 0;
-        }
-
-        .energy-fill{
-            height:100%;
-            width:100%;
-            background:linear-gradient(90deg, #22ff66, #00d7ff);
-            transition:0.2s;
-        }
-
-        .btn{
-            width:100%;
-            border:none;
-            cursor:pointer;
-            border-radius:13px;
-            padding:13px 14px;
-            font-size:15px;
-            font-weight:1000;
-            letter-spacing:0.7px;
-            color:#fff;
-            text-decoration:none;
-            text-align:center;
-            transition:0.16s;
-            text-transform:uppercase;
-            display:block;
-            margin-bottom: 8px;
-        }
-
-        .btn:active{
-            transform:scale(0.97);
-        }
-
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        body{min-height:100vh;background:radial-gradient(circle at top, rgba(0,93,255,0.22), transparent 36%),radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 32%),linear-gradient(180deg, #01040a, #030812 60%, #000);color:var(--text);font-family:'Segoe UI', Arial, sans-serif;padding-bottom:92px;overflow-x:hidden;}
+        body::before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(90deg, transparent 0 95%, rgba(21,151,255,0.07) 96% 100%),linear-gradient(0deg, transparent 0 95%, rgba(255,255,255,0.025) 96% 100%);background-size:34px 34px;opacity:0.42;mask-image:linear-gradient(to bottom, #000, transparent 86%);}
+        .page{width:min(1050px, 100%);margin:0 auto;padding:16px 14px 0;}
+        .top-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;}
+        .back{color:var(--gold);text-decoration:none;font-weight:1000;background:rgba(8,18,32,0.82);border:1px solid rgba(60,91,128,0.65);border-radius:14px;padding:12px 14px;}
+        .logo{text-align:center;line-height:0.9;user-select:none;filter:drop-shadow(0 0 12px rgba(255,215,0,0.25));}
+        .logo .bearbee{font-size:24px;font-weight:1000;font-style:italic;letter-spacing:2px;color:#f4f7ff;text-shadow:0 3px 0 #29354a;}
+        .logo .arena{font-size:34px;font-weight:1000;font-style:italic;letter-spacing:3px;color:var(--gold);text-shadow:0 4px 0 #6a3e00;}
+        .status{display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-bottom:16px;}
+        .status-box{background:rgba(8,18,32,0.88);border:1px solid rgba(60,91,128,0.65);border-radius:18px;padding:14px;text-align:center;box-shadow:0 0 24px rgba(21,151,255,0.08);}
+        .status-box h3{color:var(--muted);font-size:13px;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;}
+        .status-box span{color:var(--gold);font-size:24px;font-weight:1000;}
+        .layout{display:grid;grid-template-columns:1fr;gap:16px;}
+        .panel{background: linear-gradient(180deg, rgba(12,22,36,0.96), rgba(4,9,16,0.96));border:1px solid rgba(71,101,136,0.62);border-radius:22px;box-shadow: inset 0 0 22px rgba(21,151,255,0.08), 0 0 26px rgba(21,151,255,0.08);padding:16px;margin-bottom:16px;position:relative;overflow:hidden;}
+        .panel-title{color:var(--gold);text-align:center;font-size:22px;font-weight:1000;letter-spacing:1px;margin-bottom:10px;}
+        .panel-sub{color:var(--muted);text-align:center;font-size:14px;line-height:1.5;margin-bottom:14px;}
+        .click-panel{text-align:center;}
+        .bear-ring{width:270px;height:270px;margin:16px auto;border-radius:50%;padding:6px;background: conic-gradient(from 120deg, #1597ff, #ffd700, #9b3dff, #1597ff);box-shadow: 0 0 40px rgba(21,151,255,0.30), 0 0 35px rgba(255,215,0,0.18);cursor:pointer;user-select:none;transition:0.08s;}
+        .bear-ring:active{transform:scale(0.95);}
+        .bear-button{width:100%;height:100%;border-radius:50%;overflow:hidden;background: radial-gradient(circle at 40% 25%, rgba(255,215,0,0.22), transparent 34%), linear-gradient(180deg, #07101b, #02060d);border:4px solid rgba(0,0,0,0.76);display:grid;place-items:center;position:relative;}
+        .bear-button img{width:100%;height:100%;object-fit:cover;display:block;}
+        .bear-fallback{font-size:96px;filter:drop-shadow(0 0 16px rgba(255,215,0,0.45));}
+        .energy-line{width:100%;height:18px;background:#111c2a;border:1px solid #26476a;border-radius:22px;overflow:hidden;margin:14px 0;}
+        .energy-fill{height:100%;width:100%;background:linear-gradient(90deg, #22ff66, #00d7ff);transition:0.2s;}
+        .btn{width:100%;border:none;cursor:pointer;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:1000;letter-spacing:0.7px;color:#fff;text-decoration:none;text-align:center;transition:0.16s;text-transform:uppercase;display:block;margin-bottom: 8px;}
+        .btn:active{transform:scale(0.97);}
         .btn-blue{ background:linear-gradient(180deg, #1678e8, #064fad); border:1px solid #58b9ff; box-shadow:0 0 18px rgba(21,151,255,0.20); }
         .btn-purple{ background:linear-gradient(180deg, #973dff, #5515a0); border:1px solid #c692ff; box-shadow:0 0 18px rgba(155,61,255,0.20); }
         .btn-gold{ background:linear-gradient(180deg, #ffd700, #a56b00); border:1px solid #ffef92; color:#111; }
         .btn-dark{ background:linear-gradient(180deg, #152339, #0a1220); border:1px solid #33557d; }
-
         .btn:disabled{ opacity:0.45; cursor:not-allowed; transform:none; }
-
-        .tap-effect{
-            position:absolute;
-            color:var(--gold);
-            font-size:30px;
-            font-weight:1000;
-            pointer-events:none;
-            animation:floatUp 0.9s forwards;
-            z-index:1000;
-            text-shadow:0 0 12px rgba(255,215,0,0.65);
-        }
-
-        @keyframes floatUp{
-            0%{ opacity:1; transform:translateY(0) scale(1); }
-            100%{ opacity:0; transform:translateY(-85px) scale(1.25); }
-        }
-
+        .tap-effect{position:absolute;color:var(--gold);font-size:30px;font-weight:1000;pointer-events:none;animation:floatUp 0.9s forwards;z-index:1000;text-shadow:0 0 12px rgba(255,215,0,0.65);}
+        @keyframes floatUp{0%{ opacity:1; transform:translateY(0) scale(1); }100%{ opacity:0; transform:translateY(-85px) scale(1.25); }}
         .grid-3{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
-
-        .box-card{
-            border:1px solid #31577d;
-            background:linear-gradient(180deg, #0d1928, #07101b);
-            border-radius:18px;
-            padding:14px;
-            text-align:center;
-            box-shadow:0 0 18px rgba(21,151,255,0.08);
-        }
-
+        .box-card{border:1px solid #31577d;background:linear-gradient(180deg, #0d1928, #07101b);border-radius:18px;padding:14px;text-align:center;box-shadow:0 0 18px rgba(21,151,255,0.08);}
         .box-icon{ font-size:42px; margin-bottom:8px; }
         .box-card h3{ color:var(--gold); font-size:16px; margin-bottom:6px; }
         .box-card p{ color:var(--muted); font-size:13px; line-height:1.4; margin-bottom:8px; }
         .timer{ color:#00ffcc; font-weight:1000; margin:8px 0; }
-
-        .log{
-            margin-top:12px;
-            background:#030a13;
-            border:1px solid #263f5d;
-            border-radius:14px;
-            padding:12px;
-            color:#00ffcc;
-            min-height:45px;
-            font-weight:800;
-            font-size:14px;
-            text-align:center;
-            line-height:1.45;
-        }
-
-        .nav{
-            position:fixed;
-            left:0;
-            bottom:0;
-            width:100%;
-            height:82px;
-            background:rgba(6,11,18,0.96);
-            border-top:1px solid rgba(70,100,132,0.55);
-            display:grid;
-            grid-template-columns:repeat(5, 1fr);
-            z-index:9999;
-            backdrop-filter:blur(12px);
-        }
-
-        .nav a{
-            color:#8793a3;
-            text-decoration:none;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            justify-content:center;
-            gap:5px;
-            font-weight:1000;
-            letter-spacing:0.5px;
-            font-size:11px;
-        }
-
-        .nav a.active{
-            color:var(--gold);
-            text-shadow:0 0 14px rgba(255,215,0,0.45);
-        }
-
+        .log{margin-top:12px;background:#030a13;border:1px solid #263f5d;border-radius:14px;padding:12px;color:#00ffcc;min-height:45px;font-weight:800;font-size:14px;text-align:center;line-height:1.45;}
+        .nav{position:fixed;left:0;bottom:0;width:100%;height:82px;background:rgba(6,11,18,0.96);border-top:1px solid rgba(70,100,132,0.55);display:grid;grid-template-columns:repeat(5, 1fr);z-index:9999;backdrop-filter:blur(12px);}
+        .nav a{color:#8793a3;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-weight:1000;letter-spacing:0.5px;font-size:11px;}
+        .nav a.active{color:var(--gold);text-shadow:0 0 14px rgba(255,215,0,0.45);}
         .nav .icon{ font-size:22px; }
-
-        @media(max-width:850px){
-            .grid-3{ grid-template-columns:1fr; }
-            .bear-ring{ width:230px; height:230px; }
-        }
+        @media(max-width:850px){.grid-3{ grid-template-columns:1fr; } .bear-ring{ width:230px; height:230px; }}
     </style>
 </head>
 <body>
-
     <main class="page">
         <div class="top-bar">
             <a href="./index.html" class="back">← Menyu</a>
@@ -392,9 +117,15 @@
                     <div class="energy-fill" id="energyFill"></div>
                 </div>
 
-                <button class="btn btn-purple" id="energyAdBtn">🎥 Reklama bax və Enerjini Full et</button>
-                <button class="btn btn-gold" id="saveBtn">🪙 Xalları Bazada Saxla</button>
                 <div class="log" id="clickLog">Yüklənir...</div>
+            </section>
+
+            <!-- Mərkəzi Reklam Paneli -->
+            <section class="panel" id="rewardAdPanel">
+                <h2 class="panel-title">Reklam Yeri</h2>
+                <p class="panel-sub">Bütün videolu reward reklamlar buradan izlənir və mükafatlar alınır.</p>
+                <button class="btn btn-purple" id="watchAdBtn">🎥 Reklama Bax</button>
+                <div class="log" id="adLog">Reklam gözlənilir...</div>
             </section>
 
             <section class="panel">
@@ -434,9 +165,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // BURANI ÖZ FIREBASE MƏLUMATLARINIZLA ƏVƏZ EDİN
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_AUTH_DOMAIN",
@@ -449,28 +179,14 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Telegram WebApp Təyini
         const tg = window.Telegram?.WebApp;
         if(tg) tg.expand();
-
-        // İstifadəçi ID-si (Ehtiyat olaraq Telegram yoxdursa "demo_user" istifadə edir)
         const tgUser = tg?.initDataUnsafe?.user;
         const userId = tgUser ? String(tgUser.id) : "demo_user";
 
-        // Lokal Oyun Dəyişənləri
-        let userData = {
-            coins: 0,
-            energy: 100,
-            boost: 1,
-            adPoints: 0,
-            lastBox2: 0,
-            lastBox5: 0,
-            lastBox10: 0
-        };
-
+        let userData = { coins:0, energy:100, boost:1, adPoints:0, lastBox2:0, lastBox5:0, lastBox10:0 };
         let pendingClicks = 0;
 
-        // UI Elementləri
         const coinText = document.getElementById("coinText");
         const energyText = document.getElementById("energyText");
         const boostText = document.getElementById("boostText");
@@ -478,7 +194,6 @@
         const energyFill = document.getElementById("energyFill");
         const clickLog = document.getElementById("clickLog");
 
-        // Elementlərin Yenilənməsi Funksiyası
         function updateUI() {
             coinText.innerText = userData.coins;
             energyText.innerText = userData.energy;
@@ -487,171 +202,23 @@
             energyFill.style.width = userData.energy + "%";
         }
 
-        // Məlumatları Firebase-dən Çəkmək (Init)
         async function loadUserData() {
             try {
-                const userRef = doc(db, "users", userId);
+                const userRef = doc(db,"users",userId);
                 const userSnap = await getDoc(userRef);
-
-                if (userSnap.exists()) {
-                    userData = { ...userData, ...userSnap.data() };
-                } else {
-                    // Yeni istifadəçi yaradılır
-                    await setDoc(userRef, userData);
-                }
+                if(userSnap.exists()) userData = {...userData, ...userSnap.data()};
+                else await setDoc(userRef, userData);
                 updateUI();
                 clickLog.innerText = "Məlumatlar uğurla yükləndi. Klikləyin!";
                 checkTimers();
-            } catch (err) {
-                clickLog.innerText = "Yükləmə xətası: " + err.message;
-            }
+            } catch(err){ clickLog.innerText = "Yükləmə xətası: "+err.message; }
         }
 
-        // Klikləmə Hadisəsi və Animasiya
-        document.getElementById("tapBear").addEventListener("click", (e) => {
-            if (userData.energy < userData.boost) {
-                clickLog.innerText = "Kifayət qədər enerji yoxdur!";
-                return;
-            }
-
-            // Enerji çıxılır, xal əlavə edilir
-            userData.energy -= userData.boost;
-            userData.coins += userData.boost;
-            pendingClicks += userData.boost;
+        document.getElementById("tapBear").addEventListener("click",(e)=>{
+            if(userData.energy<userData.boost){ clickLog.innerText="Kifayət qədər enerji yoxdur!"; return; }
+            userData.energy-=userData.boost;
+            userData.coins+=userData.boost;
+            pendingClicks+=userData.boost;
             updateUI();
-
-            // Uçan mətn effekti (+X)
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const effect = document.createElement("div");
-            effect.className = "tap-effect";
-            effect.style.left = x + "px";
-            effect.style.top = y + "px";
-            effect.innerText = "+" + userData.boost;
-            e.currentTarget.appendChild(effect);
-
-            setTimeout(() => effect.remove(), 900);
-        });
-
-        // Balansı Firebase-ə Sinxronizasiya Etmək
-        async function saveProgress() {
-            if (pendingClicks === 0) {
-                clickLog.innerText = "Yadda saxlanılacaq yeni klik yoxdur.";
-                return;
-            }
-            clickLog.innerText = "Xallar saxlanılır...";
-            try {
-                const userRef = doc(db, "users", userId);
-                await updateDoc(userRef, {
-                    coins: userData.coins,
-                    energy: userData.energy
-                });
-                pendingClicks = 0;
-                clickLog.innerText = "Tərəqqi Firebase-də qeydə alındı!";
-            } catch (err) {
-                clickLog.innerText = "Saxlama xətası: " + err.message;
-            }
-        }
-        document.getElementById("saveBtn").addEventListener("click", saveProgress);
-        document.getElementById("syncBtn").addEventListener("click", loadUserData);
-
-        // Reklamlı Enerji Bərpası (Adsgram)
-        window.watchEnergyAd = function() {
-            const AdController = window.Adsgram?.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
-            if (!AdController) {
-                // Test üçün birbaşa verir
-                userData.energy = 100;
-                updateUI();
-                clickLog.innerText = "[Demo] Reklam tamamlandı. Enerji 100%!";
-                return;
-            }
-
-            clickLog.innerText = "Reklam yüklənir...";
-            AdController.show().then(async (result) => {
-                userData.energy = 100;
-                updateUI();
-                const userRef = doc(db, "users", userId);
-                await updateDoc(userRef, { energy: 100 });
-                clickLog.innerText = "Təbrik edirik! Enerji tam bərpa olundu.";
-            }).catch((err) => {
-                clickLog.innerText = "Reklam tamamlanmadı və ya xəta baş verdi.";
-            });
-        };
-        document.getElementById("energyAdBtn").addEventListener("click", window.watchEnergyAd);
-
-        // Qutu İdarəetmə və Taymerlər (2, 5, 10 Dəqiqəlik)
-        function checkTimers() {
-            const now = Date.now();
-            setupBox(2, userData.lastBox2, 2 * 60 * 1000, 20);
-            setupBox(5, userData.lastBox5, 5 * 60 * 1000, 60);
-            setupBox(10, userData.lastBox10, 10 * 60 * 1000, 150);
-        }
-
-        function setupBox(minutes, lastTime, duration, reward) {
-            const btn = document.getElementById("boxBtn" + minutes);
-            const timerText = document.getElementById("timer" + minutes);
-            const nextTime = lastTime + duration;
-            const now = Date.now();
-
-            if (now >= nextTime) {
-                timerText.innerText = "Hazırdır";
-                btn.disabled = false;
-                
-                // Klik hadisəsini yenidən bağlayırıq (təkrarlanmasın deyə sıfırlayaraq)
-                btn.onclick = () => {
-                    triggerBoxAd(minutes, reward);
-                };
-            } else {
-                btn.disabled = true;
-                const diff = nextTime - now;
-                const mins = Math.floor(diff / 60000);
-                const secs = Math.floor((diff % 60000) / 1000);
-                timerText.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            }
-        }
-
-        function triggerBoxAd(minutes, reward) {
-            // Adsgram və ya simulyasiya
-            clickLog.innerText = minutes + " dəqiqəlik qutu üçün reklam başladılır...";
-            setTimeout(async () => {
-                const now = Date.now();
-                userData.coins += reward;
-                userData.adPoints += reward;
-                userData["lastBox" + minutes] = now;
-                updateUI();
-
-                const userRef = doc(db, "users", userId);
-                const updateFields = {
-                    coins: userData.coins,
-                    adPoints: userData.adPoints
-                };
-                updateFields["lastBox" + minutes] = now;
-                
-                await updateDoc(userRef, updateFields);
-                clickLog.innerText = `Qutu açıldı! +${reward} Coin və Ad Xal balansınıza əlavə edildi.`;
-                checkTimers();
-            }, 1000);
-        }
-
-        // Enerjinin avtomatik təbii bərpası (Hər 4 saniyədən bir +1 enerji)
-        setInterval(() => {
-            if (userData.energy < 100) {
-                userData.energy++;
-                updateUI();
-            }
-        }, 4000);
-
-        // Taymerlərin hər saniyə ekranda geriyə sayması
-        setInterval(checkTimers, 1000);
-
-        // Avtomatik datanı hər 10 saniyədən bir arxa planda bazaya yazmaq (İstifadəçi yaddan çıxarsa)
-        setInterval(saveProgress, 10000);
-
-        // Başlanğıcda yüklə
-        loadUserData();
-    </script>
-</body>
-</html>
-
+            const rect=e.currentTarget.getBoundingClientRect();
+            const x=e.clientX-rect.left, y=e
