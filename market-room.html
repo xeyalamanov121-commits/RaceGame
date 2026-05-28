@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bearbee Arena | Fast Market</title>
+  <title>Bearbee Arena | Admin Market Control</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -164,6 +164,13 @@
       font-size:14px;
       font-weight:900;
       text-align:center;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    select {
+      text-align-last: center;
+      cursor: pointer;
     }
 
     select option{background:#030a13;color:#fff}
@@ -350,56 +357,6 @@
       font-weight:900;
     }
 
-    .ref-panel{
-      background:#07101b;
-      border:1px solid rgba(71,101,136,.62);
-      border-radius:22px;
-      padding:14px;
-      margin-bottom:14px;
-      box-shadow:0 0 18px rgba(21,151,255,.07);
-    }
-
-    .ref-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-bottom:10px;
-    }
-
-    .ref-stat{
-      background:#030a13;
-      border:1px solid #263f5d;
-      border-radius:14px;
-      padding:12px;
-      text-align:center;
-    }
-
-    .ref-stat h3{
-      color:#98a8ba;
-      font-size:12px;
-      text-transform:uppercase;
-      margin-bottom:6px;
-    }
-
-    .ref-stat strong{
-      color:#ffd700;
-      font-size:22px;
-      font-weight:1000;
-    }
-
-    .ref-link{
-      background:#030a13;
-      border:1px solid #263f5d;
-      border-radius:14px;
-      padding:12px;
-      color:#00ffcc;
-      font-weight:900;
-      font-size:13px;
-      text-align:center;
-      overflow-wrap:anywhere;
-      margin-bottom:10px;
-    }
-
     .shop-layout{
       display:grid;
       grid-template-columns:260px 1fr;
@@ -524,9 +481,25 @@
       <button class="top-btn" onclick="refreshMarket()">Yenilə</button>
     </div>
 
-    <section class="hero">
-      <h1>🌍 P2P AI Card Market (Fee: 10%)</h1>
-      <p>Oyunçudan-oyunçuya təhlükəsiz bazar. Hər uğurlu satışdan satıcıdan 10% komissiya tutulur.</p>
+    <!-- 🛠️ ADMİN KART BURAXILIŞ PANELİ -->
+    <section class="panel" style="border: 2px solid var(--purple); background: linear-gradient(180deg, #100a26, #04020a); margin-bottom:14px;">
+      <h2 class="section-title" style="color: var(--purple); font-size:18px;">👑 Admin Central System Sales</h2>
+      <p style="font-size: 12px; text-align: center; color: var(--muted); margin-bottom: 12px;">
+        Buradan birbaşa Qlobal Marketa rəsmi sistem kartları buraxa bilərsən. Oyunçular alıb P2P satacaqlar.
+      </p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+        <select id="adminTemplateSelect">
+          <option value="1">Alpha Bear (Rare)</option>
+          <option value="2">Neon Mecha (Epic)</option>
+          <option value="3">Quantum Overlord (Legendary)</option>
+          <option value="4">Steampunk Rebel (Common)</option>
+        </select>
+        <input id="adminPriceInput" type="number" min="1000" placeholder="Satış Qiyməti (Coin)">
+      </div>
+      <button class="btn btn-blue" onclick="adminPublishToMarket()" style="margin: 0; background: linear-gradient(180deg, #9b3dff, #5700cc); border-color:#d7b3ff;">
+        🚀 Qlobal Marketa Kartı At!
+      </button>
+      <div id="adminLog" style="font-size: 12px; color: var(--green); text-align: center; margin-top: 6px; font-weight: 800;"></div>
     </section>
 
     <section class="stats">
@@ -539,17 +512,6 @@
       <button class="tab active" id="marketTab" onclick="showMarket()">🛒 Global Market</button>
       <button class="tab" id="myCardsTab" onclick="showMyCards()">🎴 My Cards</button>
     </div>
-
-    <section class="ref-panel">
-      <h2 class="section-title">🤝 Referral Bonus</h2>
-      <div class="ref-grid">
-        <div class="ref-stat"><h3>Dəvət Sayı</h3><strong id="refCount">0</strong></div>
-        <div class="ref-stat"><h3>Qazanc</h3><strong id="refEarned">0</strong></div>
-      </div>
-      <div class="ref-link" id="refLink">Referral link hazırlanır...</div>
-      <button class="btn btn-gold" onclick="copyReferralLink()">Referral Linki Kopyala</button>
-      <div class="log" id="refLog">Dostların linklə girəndə bonus qazana bilərsən.</div>
-    </section>
 
     <section class="shop-layout" id="shopLayout">
       <aside class="sidebar" id="filterBox">
@@ -583,7 +545,7 @@
 
     <section class="panel" id="myCardsPanel" style="display:none">
       <h2 class="section-title">Mənim Kartlarım</h2>
-      <div class="summary">Sahib olduğun süni zəka kiber-ayı kartları. Qiymət yazaraq P2P bazara çıxara bilərsən. (10% komissiya tutulacaq)</div>
+      <div class="summary">Sənin satın aldığın və ya digər oyunçulardan P2P ilə əldə etdiyin kartlar. İstədiyin qiymətə təkrar sata bilərsən.</div>
       <div class="grid" id="myCardsGrid">
         <div class="empty">Yüklənir...</div>
       </div>
@@ -613,9 +575,7 @@
     appId: "1:477893876737:web:1b561bb3224b0086c63400"
   };
 
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const rdb = firebase.database();
 
   let userId = "test_user_123";
@@ -638,9 +598,6 @@
   const myCardsGrid = document.getElementById("myCardsGrid");
   const marketLog = document.getElementById("marketLog");
   const cardsLog = document.getElementById("cardsLog");
-  const refLink = document.getElementById("refLink");
-  const refCount = document.getElementById("refCount");
-  const refEarned = document.getElementById("refEarned");
   const marketSummary = document.getElementById("marketSummary");
 
   function initTelegram(){
@@ -648,14 +605,8 @@
     if(tg){
       tg.ready();
       tg.expand();
-      if(tg.initDataUnsafe?.user?.id){
-        userId = String(tg.initDataUnsafe.user.id);
-      }
+      if(tg.initDataUnsafe?.user?.id) userId = String(tg.initDataUnsafe.user.id);
     }
-  }
-
-  function getMyReferralLink(){
-    return "https://t.me/Bearbeee_bot/GameR?startapp=ref_" + userId;
   }
 
   function loadDatabaseData(){
@@ -669,20 +620,11 @@
       }
     });
 
-    rdb.ref(`users/${userId}`).once('value', (snapshot) => {
-      const uData = snapshot.val();
-      refLink.innerText = getMyReferralLink();
-      refCount.innerText = uData?.referrals || 0;
-      refEarned.innerText = uData?.ref_earned || 0;
-    });
-
     rdb.ref(`users/${userId}/my_cards`).on('value', (snapshot) => {
       const data = snapshot.val();
       myCardsCache = [];
       if(data){
-        Object.keys(data).forEach(k => {
-          myCardsCache.push({ id: k, ...data[k] });
-        });
+        Object.keys(data).forEach(k => { myCardsCache.push({ id: k, ...data[k] }); });
       }
       cardsText.innerText = myCardsCache.length;
       renderMyCards();
@@ -692,11 +634,35 @@
       const data = snapshot.val();
       marketCache = [];
       if(data){
-        Object.keys(data).forEach(k => {
-          marketCache.push({ listing_id: k, ...data[k] });
-        });
+        Object.keys(data).forEach(k => { marketCache.push({ listing_id: k, ...data[k] }); });
       }
       applyFilters();
+    });
+  }
+
+  // BİRBAŞA ADMİN SİSTEMİNDƏN QLOBAL BAZARA KART ATMAQ 
+  function adminPublishToMarket() {
+    const templateId = Number(document.getElementById("adminTemplateSelect").value);
+    const price = Number(document.getElementById("adminPriceInput").value);
+    const logBox = document.getElementById("adminLog");
+
+    if(!price || price < 1000) {
+      alert("Zəhmət olmasa düzgün qiymət yazın (Min: 1000 Coin).");
+      return;
+    }
+
+    logBox.innerText = "Sistem kartı bazara göndərilir...";
+
+    rdb.ref(`p2p_market`).push().set({
+      seller_id: "admin_system", // Satıcı şəxs deyil, rəsmi admin sistemidir!
+      user_card_id: "system_generated_" + Date.now(),
+      template_id: templateId,
+      price_coin: price,
+      timestamp: Date.now()
+    }).then(() => {
+      logBox.innerText = "✅ Uğurlu! Kart admin adından Qlobal Bazara buraxıldı!";
+      document.getElementById("adminPriceInput").value = "";
+      setTimeout(() => { logBox.innerText = ""; }, 3000);
     });
   }
 
@@ -708,7 +674,6 @@
     document.getElementById("shopLayout").style.display = "grid";
   }
 
-  // FILTERS & RENDERS
   function showMyCards(){
     document.getElementById("marketPanel").style.display = "none";
     document.getElementById("myCardsPanel").style.display = "block";
@@ -724,19 +689,11 @@
     const sortValue = String(document.getElementById("sortFilter")?.value || "newest");
 
     if(search){
-      list = list.filter(item => {
-        const t = AI_TEMPLATES[item.template_id] || {};
-        return t.name.toLowerCase().includes(search);
-      });
+      list = list.filter(item => (AI_TEMPLATES[item.template_id] || {}).name.toLowerCase().includes(search));
     }
-
     if(rarityValue !== "all"){
-      list = list.filter(item => {
-        const t = AI_TEMPLATES[item.template_id] || {};
-        return t.rarity === rarityValue;
-      });
+      list = list.filter(item => (AI_TEMPLATES[item.template_id] || {}).rarity === rarityValue);
     }
-
     if(sortValue === "low_price") list.sort((a,b) => a.price_coin - b.price_coin);
     if(sortValue === "high_price") list.sort((a,b) => b.price_coin - a.price_coin);
     if(sortValue === "newest") list.reverse();
@@ -746,16 +703,17 @@
 
   function renderMarket(list){
     marketGrid.innerHTML = "";
-    marketSummary.innerText = "Aktiv satış: " + marketCache.length + " | Göstərilən: " + list.length;
+    marketSummary.innerText = "Aktiv elan: " + marketCache.length + " | Göstərilən: " + list.length;
 
     if(!list.length){
-      marketGrid.innerHTML = `<div class="empty">P2P marketdə satış elanı tapılmadı.</div>`;
+      marketGrid.innerHTML = `<div class="empty">Qlobal marketdə aktiv satış yoxdur.</div>`;
       return;
     }
 
     list.forEach(item => {
       const t = AI_TEMPLATES[item.template_id] || {};
       const isMine = item.seller_id === userId;
+      const isAdminCard = item.seller_id === "admin_system";
       const priceCoin = item.price_coin;
       const tonPrice = (priceCoin / 100000).toFixed(2);
 
@@ -769,7 +727,7 @@
         <div class="info">Power: ${t.power}</div>
         <div class="price">🪙 ${priceCoin} coin</div>
         <div class="info">💎 Manual TON: ${tonPrice} TON</div>
-        <div class="seller">Satıcı ID: ${escapeHtml(item.seller_id)}</div>
+        <div class="seller">${isAdminCard ? "⚡ RƏSMİ SİSTEM SATIŞI" : "Satıcı ID: " + escapeHtml(item.seller_id)}</div>
 
         <button class="btn ${isMine ? "btn-dark" : "btn-green"}" ${isMine ? "disabled" : ""} onclick="buyCardCoin('${item.listing_id}')">
           ${isMine ? "Sənin Elanındır" : "🪙 Coin ilə al"}
@@ -781,17 +739,15 @@
       `;
       marketGrid.appendChild(div);
     });
-    marketLog.innerText = "Market siyahısı yeniləndi.";
+    marketLog.innerText = "Bazar yeniləndi.";
   }
 
   function renderMyCards(){
     myCardsGrid.innerHTML = "";
-
     if(!myCardsCache.length){
-      myCardsGrid.innerHTML = `<div class="empty">Səndə hələ heç bir AI kartı yoxdur.</div>`;
+      myCardsGrid.innerHTML = `<div class="empty">Heç bir kartınız yoxdur. Marketdən satın alın.</div>`;
       return;
     }
-
     myCardsCache.forEach(item => {
       const t = AI_TEMPLATES[item.template_id] || {};
       const listedBadge = item.is_listed ? `<div class="badge">SATIŞDA</div>` : "";
@@ -805,183 +761,146 @@
         <span class="rarity ${t.rarity}">${t.rarity.toUpperCase()}</span>
         <div class="info">Boost: ${t.boost}x</div>
         <div class="info">Power: ${t.power}</div>
-        <div class="info">Level: ${item.level || 1}</div>
 
         <div class="sell-row">
-          <input id="price_${item.id}" type="number" min="1000" placeholder="Coin qiyməti yaz" ${item.is_listed ? "disabled" : ""}>
+          <input id="price_${item.id}" type="number" min="1000" placeholder="Yenidən satış qiyməti" ${item.is_listed ? "disabled" : ""}>
           ${item.is_listed ? 
             `<button class="btn btn-red" onclick="cancelListing('${item.id}')">Satışdan çıxar</button>` :
-            `<button class="btn btn-gold" onclick="listCardForSale('${item.id}', ${item.template_id})">P2P Satışa qoy</button>`
+            `<button class="btn btn-gold" onclick="listCardForSale('${item.id}', ${item.template_id})">P2P Yenidən Sat</button>`
           }
         </div>
       `;
       myCardsGrid.appendChild(div);
     });
-    cardsLog.innerText = "Kartların yükləndi.";
+    cardsLog.innerText = "Kartların siyahılandı.";
   }
 
   function listCardForSale(userCardId, templateId){
-    const priceInput = document.getElementById("price_" + userCardId);
-    const price = Number(priceInput ? priceInput.value : 0);
-
-    if(!price || price < 1000){
-      alert("Minimum satış qiyməti 1000 coindir.");
-      return;
-    }
+    const price = Number(document.getElementById("price_" + userCardId)?.value || 0);
+    if(price < 1000){ alert("Minimum P2P satış qiyməti 1000 coindir."); return; }
 
     rdb.ref(`users/${userId}/my_cards/${userCardId}`).update({ is_listed: true });
-
     rdb.ref(`p2p_market`).push().set({
       seller_id: userId,
       user_card_id: userCardId,
       template_id: templateId,
       price_coin: price,
       timestamp: Date.now()
-    }).then(() => {
-      alert("Kartınız P2P bazara uğurla yerləşdirildi!");
-    });
+    }).then(() => { alert("Kartınız digər oyunçular üçün satışa çıxarıldı!"); });
   }
 
   function cancelListing(userCardId){
     rdb.ref(`users/${userId}/my_cards/${userCardId}`).update({ is_listed: false });
-
     rdb.ref(`p2p_market`).once('value', (snapshot) => {
       const data = snapshot.val();
       if(data){
         Object.keys(data).forEach(k => {
-          if(data[k].user_card_id === userCardId && data[k].seller_id === userId){
-            rdb.ref(`p2p_market/${k}`).remove();
-          }
+          if(data[k].user_card_id === userCardId && data[k].seller_id === userId) rdb.ref(`p2p_market/${k}`).remove();
         });
       }
     });
   }
 
-  // 🪙 COIN İLƏ ALMAQLA (10% ADMIN FEE DAXİL EDİLDİ)
+  // 🪙 COIN İLƏ SATIN ALMA
   function buyCardCoin(listingId){
     rdb.ref(`p2p_market/${listingId}`).once('value', (snapshot) => {
       const listing = snapshot.val();
-      if(!listing){
-        alert("Bu elan artıq mövcud deyil.");
-        return;
-      }
+      if(!listing){ alert("Elan tapılmadı."); return; }
+      if(userCoins < listing.price_coin){ alert("Kifayət qədər Coininiz yoxdur!"); return; }
 
-      if(userCoins < listing.price_coin){
-        alert("Balansınızda kifayət qədər coin yoxdur!");
-        return;
-      }
-
-      const ok = confirm("Bu AI kartı " + listing.price_coin + " coinə almaq istəyirsiniz?");
+      const ok = confirm("Bu kartı satın almaq istəyirsiniz?");
       if(!ok) return;
 
-      // Hesablamalar (10% komissiya)
       const totalCost = listing.price_coin;
       const commission = Math.floor(totalCost * 0.10);
       const sellerNet = totalCost - commission;
 
-      // 1. Alıcının balansından tam məbləği çıxırıq
+      // Alıcıdan çıxış
       rdb.ref(`users/${userId}`).update({ coins: userCoins - totalCost });
 
-      // 2. Satıcının balansına təmiz məbləği (90%) əlavə edirik
-      rdb.ref(`users/${listing.seller_id}/coins`).once('value', (sCoin) => {
-        const oldCoins = sCoin.val() || 0;
-        rdb.ref(`users/${listing.seller_id}`).update({ coins: oldCoins + sellerNet });
-      });
+      if(listing.seller_id === "admin_system") {
+        // Əgər admindən alıbsa, 100% pul Admin Coin Profitə gedir
+        rdb.ref(`system_profit/coins`).once('value', (sysCoin) => {
+          const currentSys = sysCoin.val() || 0;
+          rdb.ref(`system_profit`).update({ coins: currentSys + totalCost });
+        });
+      } else {
+        // Oyunçudan oyunçuya (P2P) ticarətdirsə satıcıya 90% gedir, 10% admin komissiyası tutulur
+        rdb.ref(`users/${listing.seller_id}/coins`).once('value', (sCoin) => {
+          const oldCoins = sCoin.val() || 0;
+          rdb.ref(`users/${listing.seller_id}`).update({ coins: oldCoins + sellerNet });
+        });
+        rdb.ref(`system_profit/coins`).once('value', (sysCoin) => {
+          const currentSys = sysCoin.val() || 0;
+          rdb.ref(`system_profit`).update({ coins: currentSys + commission });
+        });
+        // Köhnə sahibindən silirik
+        rdb.ref(`users/${listing.seller_id}/my_cards/${listing.user_card_id}`).remove();
+      }
 
-      // 3. Sənin Admin Pul Qabına (System Profit) 10% komissiyanı qeyd edirik
-      rdb.ref(`system_profit/coins`).once('value', (sysCoin) => {
-        const currentSys = sysCoin.val() || 0;
-        rdb.ref(`system_profit`).update({ coins: currentSys + commission });
-      });
-
-      // 4. Kart transferi və elanın bazardan təmizlənməsi
-      rdb.ref(`users/${listing.seller_id}/my_cards/${listing.user_card_id}`).remove();
+      // Alıcıya kartı veririk
       rdb.ref(`users/${userId}/my_cards`).push().set({
         template_id: listing.template_id,
-        level: 1,
         is_listed: false
       });
 
-      rdb.ref(`p2p_market/${listingId}`).remove().then(() => {
-        alert("Təbriklər! Kart 10% komissiya ilə daxili bazardan satın alındı.");
-      });
+      rdb.ref(`p2p_market/${listingId}`).remove().then(() => { alert("Kart uğurla balansınıza əlavə edildi!"); });
     });
   }
 
-  // 💎 TON İLƏ ALMAQLA (10% ADMIN TON FEE DAXİL EDİLDİ)
+  // 💎 TON İLƏ SATIN ALMA
   function buyCardTon(listingId){
     rdb.ref(`p2p_market/${listingId}`).once('value', (snapshot) => {
       const listing = snapshot.val();
-      if(!listing){
-        alert("Bu elan tapılmadı.");
-        return;
-      }
-
+      if(!listing){ alert("Elan tapılmadı."); return; }
       const requiredTon = (listing.price_coin / 100000);
+      if(userTon < requiredTon){ alert("Daxili cüzdanınızda kifayət qədər TON yoxdur!"); return; }
 
-      if(userTon < requiredTon){
-        alert("Daxili cüzdanınızda kifayət qədər TON yoxdur! Öncə WALLET bölməsindən deposit edin.");
-        return;
-      }
-
-      const ok = confirm("Bu AI kartı daxili balansınızdan " + requiredTon.toFixed(2) + " TON ödəyərək almaq istəyirsiniz?");
+      const ok = confirm("Bu kartı " + requiredTon.toFixed(2) + " TON ilə almaq istəyirsiniz?");
       if(!ok) return;
 
-      // Hesablamalar (10% TON Komissiyası)
       const totalTonCost = requiredTon;
       const tonCommission = totalTonCost * 0.10;
       const sellerNetTon = totalTonCost - tonCommission;
 
-      // 1. Alıcının TON balansını tam azaldırıq
+      // Alıcı TON azaldılması
       rdb.ref(`users/${userId}`).update({ ton: userTon - totalTonCost });
 
-      // 2. Satıcının TON balansına 90% köçürürük
-      rdb.ref(`users/${listing.seller_id}/ton`).once('value', (sTon) => {
-        const oldTon = sTon.val() || 0;
-        rdb.ref(`users/${listing.seller_id}`).update({ ton: oldTon + sellerNetTon });
-      });
+      if(listing.seller_id === "admin_system") {
+        // Sistem satışıdırsa, 100% TON Adminə qazanclı gəlir!
+        rdb.ref(`system_profit/ton`).once('value', (sysTon) => {
+          const currentSysTon = sysTon.val() || 0;
+          rdb.ref(`system_profit`).update({ ton: currentSysTon + totalTonCost });
+        });
+      } else {
+        // Normal P2P satışdırsa satıcıya 90% TON gedir, sənə 10% TON komissiya qalır
+        rdb.ref(`users/${listing.seller_id}/ton`).once('value', (sTon) => {
+          const oldTon = sTon.val() || 0;
+          rdb.ref(`users/${listing.seller_id}`).update({ ton: oldTon + sellerNetTon });
+        });
+        rdb.ref(`system_profit/ton`).once('value', (sysTon) => {
+          const currentSysTon = sysTon.val() || 0;
+          rdb.ref(`system_profit`).update({ ton: currentSysTon + tonCommission });
+        });
+        rdb.ref(`users/${listing.seller_id}/my_cards/${listing.user_card_id}`).remove();
+      }
 
-      // 3. Sənin Admin Hesabına 10% HƏQİQİ TON xeyri əlavə edirik!
-      rdb.ref(`system_profit/ton`).once('value', (sysTon) => {
-        const currentSysTon = sysTon.val() || 0;
-        rdb.ref(`system_profit`).update({ ton: currentSysTon + tonCommission });
-      });
-
-      // 4. Kart transferi
-      rdb.ref(`users/${listing.seller_id}/my_cards/${listing.user_card_id}`).remove();
+      // Yeni karta sahiblik
       rdb.ref(`users/${userId}/my_cards`).push().set({
         template_id: listing.template_id,
-        level: 1,
         is_listed: false
       });
 
-      rdb.ref(`p2p_market/${listingId}`).remove().then(() => {
-        alert("Təbriklər! Kart TON ilə alındı və 10% TON komissiyası idarəçi hesabınıza köçdü.");
-      });
+      rdb.ref(`p2p_market/${listingId}`).remove().then(() => { alert("Təbriklər! Kart TON balansı ilə satın alındı."); });
     });
   }
 
-  async function copyReferralLink(){
-    try{
-      await navigator.clipboard.writeText(getMyReferralLink());
-      alert("Referral link kopyalandı!");
-    }catch(error){
-      alert(getMyReferralLink());
-    }
-  }
-
-  function refreshMarket(){
-    applyFilters();
-  }
-
-  function escapeHtml(text){
-    return String(text).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-  }
+  function refreshMarket(){ applyFilters(); }
+  function escapeHtml(text){ return String(text).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
 
   initTelegram();
   loadDatabaseData();
 </script>
-
 </body>
 </html>
 
