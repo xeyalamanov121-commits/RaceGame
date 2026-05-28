@@ -22,11 +22,14 @@
 
 <div id="adminWrapper">
     <div class="card">
-        <h2>Oyunçular və Maliyyə Sorğuları</h2>
+        <h2>Oyunçular</h2>
         <table id="userTable">
             <tbody id="userTableBody"></tbody>
         </table>
-        <h2 style="margin-top:20px; color:var(--green)">Dinamik Maliyyə Skaneri (Pending)</h2>
+    </div>
+
+    <div class="card">
+        <h2 style="color:var(--green)">Maliyyə Sorğuları (p2p_market)</h2>
         <div id="financeList"></div>
     </div>
     
@@ -50,36 +53,40 @@
     firebase.initializeApp(config);
     const rdb = firebase.database();
 
-    // Panelin əsas funksiyası
+    // 1. İSTİFADƏÇİLƏR
     rdb.ref('users').on('value', (s) => {
         const users = s.val() || {};
         const tbody = document.getElementById("userTableBody");
-        const finList = document.getElementById("financeList");
-        tbody.innerHTML = ""; finList.innerHTML = "";
-
+        tbody.innerHTML = "";
         Object.keys(users).forEach(uid => {
             const u = users[uid];
-            // 1. İstifadəçi siyahısı
             tbody.innerHTML += `<tr><td>${u.name || "Ayı"}<br><small>${uid}</small></td><td>🪙 ${u.coins || 0}</td><td><button class="btn btn-g" onclick="editCoins('${uid}', ${u.coins || 0})">Dəyiş</button></td></tr>`;
-            
-            // 2. Universal Maliyyə Skaneri (Hər hansı qovluqda olan sorğunu tapır)
-            const reqs = ['deposit', 'pending_deposit', 'deposit_request', 'withdraw_request'];
-            reqs.forEach(node => {
-                if(u[node]) {
-                    const amt = u[node].amount || u[node];
-                    finList.innerHTML += `<div class="item"><span>${node.replace('_',' ')} (${uid.slice(-4)}): <b>${amt}</b></span>
-                    <button class="btn btn-g" onclick="approve('${uid}', '${node}', ${amt})">Təsdiq</button></div>`;
-                }
-            });
         });
     });
 
-    // 3. Otaqlar və Loglar
+    // 2. MALIYYƏ SORĞULARI (p2p_market skaneri)
+    rdb.ref('p2p_market').on('value', (s) => {
+        const market = s.val() || {};
+        const finList = document.getElementById("financeList");
+        finList.innerHTML = "";
+        Object.keys(market).forEach(key => {
+            const item = market[key];
+            const amt = item.amount || "N/A";
+            const user = item.username || item.userId || "İstifadəçi";
+            finList.innerHTML += `<div class="item">
+                <span>Sorğu (${user}): <b>${amt} Coin</b></span>
+                <button class="btn btn-g" onclick="approveMarket('${key}', ${amt}, '${item.userId || ''}')">Təsdiq</button>
+            </div>`;
+        });
+    });
+
+    // 3. OTAQLAR
     rdb.ref('rooms').on('value', (s) => {
         const list = document.getElementById("roomsList"); list.innerHTML = "";
         Object.keys(s.val() || {}).forEach(k => list.innerHTML += `<div class="item">#${k} <button class="btn btn-r" onclick="rdb.ref('rooms/${k}').remove()">Sil</button></div>`);
     });
 
+    // 4. LOGLAR
     const twoHours = Date.now() - (2 * 60 * 60 * 1000);
     rdb.ref('logs').orderByChild('timestamp').startAt(twoHours).on('value', (s) => {
         const list = document.getElementById("logList"); list.innerHTML = "";
@@ -89,14 +96,18 @@
     // FUNKSİYALAR
     window.editCoins = (uid, cur) => { const v = prompt("Yeni balans:", cur); if(v) rdb.ref(`users/${uid}/coins`).set(Number(v)); };
     
-    window.approve = (uid, node, amt) => {
-        rdb.ref(`users/${uid}/coins`).once('value', s => {
-            rdb.ref(`users/${uid}`).update({ coins: (s.val()||0) + Number(amt) });
-            rdb.ref(`users/${uid}/${node}`).remove();
-            rdb.ref('logs').push({ action: `Təsdiq edildi: ${uid.slice(-4)} -> ${amt} Coin`, time: new Date().toLocaleTimeString(), timestamp: Date.now() });
-        });
+    window.approveMarket = (key, amt, userId) => {
+        if(confirm("Bu sorğunu təsdiq etmək istəyirsiniz?")) {
+            if(userId) {
+                rdb.ref(`users/${userId}/coins`).once('value', s => {
+                    const current = s.val() || 0;
+                    rdb.ref(`users/${userId}/coins`).set(current + Number(amt));
+                });
+            }
+            rdb.ref('p2p_market/' + key).remove();
+            rdb.ref('logs').push({ action: `Market sorğusu təsdiqləndi: ${amt} Coin`, time: new Date().toLocaleTimeString(), timestamp: Date.now() });
+        }
     };
 </script>
 </body>
 </html>
-
