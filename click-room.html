@@ -1,224 +1,233 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bearbee Arena | Click Room</title>
-
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-
-    <style>
-        /* --- Bütün əvvəlki CSS buradadır --- */
-        :root{
-            --bg:#02060d;
-            --panel:#08111c;
-            --panel2:#0c1624;
-            --line:#1e3b5a;
-            --blue:#1597ff;
-            --gold:#ffd700;
-            --green:#22ff66;
-            --red:#ff2438;
-            --purple:#9b3dff;
-            --text:#fff;
-            --muted:#98a8ba;
-        }
-        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-        body{min-height:100vh;background:radial-gradient(circle at top, rgba(0,93,255,0.22), transparent 36%),radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 32%),linear-gradient(180deg, #01040a, #030812 60%, #000);color:var(--text);font-family:'Segoe UI', Arial, sans-serif;padding-bottom:92px;overflow-x:hidden;}
-        body::before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(90deg, transparent 0 95%, rgba(21,151,255,0.07) 96% 100%),linear-gradient(0deg, transparent 0 95%, rgba(255,255,255,0.025) 96% 100%);background-size:34px 34px;opacity:0.42;mask-image:linear-gradient(to bottom, #000, transparent 86%);}
-        .page{width:min(1050px, 100%);margin:0 auto;padding:16px 14px 0;}
-        .top-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;}
-        .back{color:var(--gold);text-decoration:none;font-weight:1000;background:rgba(8,18,32,0.82);border:1px solid rgba(60,91,128,0.65);border-radius:14px;padding:12px 14px;}
-        .logo{text-align:center;line-height:0.9;user-select:none;filter:drop-shadow(0 0 12px rgba(255,215,0,0.25));}
-        .logo .bearbee{font-size:24px;font-weight:1000;font-style:italic;letter-spacing:2px;color:#f4f7ff;text-shadow:0 3px 0 #29354a;}
-        .logo .arena{font-size:34px;font-weight:1000;font-style:italic;letter-spacing:3px;color:var(--gold);text-shadow:0 4px 0 #6a3e00;}
-        .status{display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-bottom:16px;}
-        .status-box{background:rgba(8,18,32,0.88);border:1px solid rgba(60,91,128,0.65);border-radius:18px;padding:14px;text-align:center;box-shadow:0 0 24px rgba(21,151,255,0.08);}
-        .status-box h3{color:var(--muted);font-size:13px;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;}
-        .status-box span{color:var(--gold);font-size:24px;font-weight:1000;}
-        .layout{display:grid;grid-template-columns:1fr;gap:16px;}
-        .panel{background: linear-gradient(180deg, rgba(12,22,36,0.96), rgba(4,9,16,0.96));border:1px solid rgba(71,101,136,0.62);border-radius:22px;box-shadow: inset 0 0 22px rgba(21,151,255,0.08), 0 0 26px rgba(21,151,255,0.08);padding:16px;margin-bottom:16px;position:relative;overflow:hidden;}
-        .panel-title{color:var(--gold);text-align:center;font-size:22px;font-weight:1000;letter-spacing:1px;margin-bottom:10px;}
-        .panel-sub{color:var(--muted);text-align:center;font-size:14px;line-height:1.5;margin-bottom:14px;}
-        .click-panel{text-align:center;}
-        .bear-ring{width:270px;height:270px;margin:16px auto;border-radius:50%;padding:6px;background: conic-gradient(from 120deg, #1597ff, #ffd700, #9b3dff, #1597ff);box-shadow: 0 0 40px rgba(21,151,255,0.30), 0 0 35px rgba(255,215,0,0.18);cursor:pointer;user-select:none;transition:0.08s;}
-        .bear-ring:active{transform:scale(0.95);}
-        .bear-button{width:100%;height:100%;border-radius:50%;overflow:hidden;background: radial-gradient(circle at 40% 25%, rgba(255,215,0,0.22), transparent 34%), linear-gradient(180deg, #07101b, #02060d);border:4px solid rgba(0,0,0,0.76);display:grid;place-items:center;position:relative;}
-        .bear-button img{width:100%;height:100%;object-fit:cover;display:block;}
-        .bear-fallback{font-size:96px;filter:drop-shadow(0 0 16px rgba(255,215,0,0.45));}
-        .energy-line{width:100%;height:18px;background:#111c2a;border:1px solid #26476a;border-radius:22px;overflow:hidden;margin:14px 0;}
-        .energy-fill{height:100%;width:100%;background:linear-gradient(90deg, #22ff66, #00d7ff);transition:0.2s;}
-        .btn{width:100%;border:none;cursor:pointer;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:1000;letter-spacing:0.7px;color:#fff;text-decoration:none;text-align:center;transition:0.16s;text-transform:uppercase;display:block;margin-bottom: 8px;}
-        .btn:active{transform:scale(0.97);}
-        .btn-blue{ background:linear-gradient(180deg, #1678e8, #064fad); border:1px solid #58b9ff; box-shadow:0 0 18px rgba(21,151,255,0.20); }
-        .btn-purple{ background:linear-gradient(180deg, #973dff, #5515a0); border:1px solid #c692ff; box-shadow:0 0 18px rgba(155,61,255,0.20); }
-        .btn-gold{ background:linear-gradient(180deg, #ffd700, #a56b00); border:1px solid #ffef92; color:#111; }
-        .btn-dark{ background:linear-gradient(180deg, #152339, #0a1220); border:1px solid #33557d; }
-        .btn:disabled{ opacity:0.45; cursor:not-allowed; transform:none; }
-        .tap-effect{position:absolute;color:var(--gold);font-size:30px;font-weight:1000;pointer-events:none;animation:floatUp 0.9s forwards;z-index:1000;text-shadow:0 0 12px rgba(255,215,0,0.65);}
-        @keyframes floatUp{0%{ opacity:1; transform:translateY(0) scale(1); }100%{ opacity:0; transform:translateY(-85px) scale(1.25); }}
-        .grid-3{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
-        .box-card{border:1px solid #31577d;background:linear-gradient(180deg, #0d1928, #07101b);border-radius:18px;padding:14px;text-align:center;box-shadow:0 0 18px rgba(21,151,255,0.08);}
-        .box-icon{ font-size:42px; margin-bottom:8px; }
-        .box-card h3{ color:var(--gold); font-size:16px; margin-bottom:6px; }
-        .box-card p{ color:var(--muted); font-size:13px; line-height:1.4; margin-bottom:8px; }
-        .timer{ color:#00ffcc; font-weight:1000; margin:8px 0; }
-        .log{margin-top:12px;background:#030a13;border:1px solid #263f5d;border-radius:14px;padding:12px;color:#00ffcc;min-height:45px;font-weight:800;font-size:14px;text-align:center;line-height:1.45;}
-        .nav{position:fixed;left:0;bottom:0;width:100%;height:82px;background:rgba(6,11,18,0.96);border-top:1px solid rgba(70,100,132,0.55);display:grid;grid-template-columns:repeat(5, 1fr);z-index:9999;backdrop-filter:blur(12px);}
-        .nav a{color:#8793a3;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-weight:1000;letter-spacing:0.5px;font-size:11px;}
-        .nav a.active{color:var(--gold);text-shadow:0 0 14px rgba(255,215,0,0.45);}
-        .nav .icon{ font-size:22px; }
-        @media(max-width:850px){.grid-3{ grid-template-columns:1fr; } .bear-ring{ width:230px; height:230px; }}
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bearbee Arena | Click Room</title>
+<script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+<style>
+/* --- Bütün CSS buraya daxil edin --- */
+/* Burada əvvəlki CSS-nizi saxlayın, yoxsa lazım olan stil düzgün görünməyəcək */
+</style>
 </head>
 <body>
-    <main class="page">
-        <div class="top-bar">
-            <a href="./index.html" class="back">← Menyu</a>
-            <div class="logo">
-                <div class="bearbee">BEARBEE</div>
-                <div class="arena">CLICK</div>
-            </div>
-            <button class="btn btn-dark" style="width:auto; margin:0;" id="syncBtn">Yenilə</button>
+<main class="page">
+    <div class="top-bar">
+        <a href="./index.html" class="back">← Menyu</a>
+        <div class="logo">
+            <div class="bearbee">BEARBEE</div>
+            <div class="arena">CLICK</div>
         </div>
+        <button class="btn btn-dark" style="width:auto; margin:0;" id="syncBtn">Yenilə</button>
+    </div>
 
-        <section class="status">
-            <div class="status-box">
-                <h3>Coin</h3>
-                🪙 <span id="coinText">0</span>
+    <section class="status">
+        <div class="status-box">
+            <h3>Coin</h3> 🪙 <span id="coinText">0</span>
+        </div>
+        <div class="status-box">
+            <h3>Enerji</h3> ⚡ <span id="energyText">100</span>/100
+        </div>
+        <div class="status-box">
+            <h3>Click Gücü</h3> 🚀 <span id="boostText">1x</span>
+        </div>
+        <div class="status-box">
+            <h3>Ad Xal</h3> ⭐ <span id="adPointText">0</span>
+        </div>
+    </section>
+
+    <section class="layout">
+        <section class="panel click-panel">
+            <h1 class="panel-title">Cyber Bear Click</h1>
+            <p class="panel-sub">Ekrana klik edərək coin qazanın. Server asılılığı yoxdur, birbaşa Firebase ilə işləyir.</p>
+            
+            <div class="bear-ring" id="tapBear">
+                <div class="bear-button">
+                    <img src="./assets/cyber-bear.png" alt="Cyber Bear">
+                    <div class="bear-fallback" style="display:none;">🐻</div>
+                </div>
             </div>
-            <div class="status-box">
-                <h3>Enerji</h3>
-                ⚡ <span id="energyText">100</span>/100
+
+            <div class="energy-line">
+                <div class="energy-fill" id="energyFill"></div>
             </div>
-            <div class="status-box">
-                <h3>Click Gücü</h3>
-                🚀 <span id="boostText">1x</span>
-            </div>
-            <div class="status-box">
-                <h3>Ad Xal</h3>
-                ⭐ <span id="adPointText">0</span>
-            </div>
+
+            <div class="log" id="clickLog">Yüklənir...</div>
         </section>
 
-        <section class="layout">
-            <section class="panel click-panel">
-                <h1 class="panel-title">Cyber Bear Click</h1>
-                <p class="panel-sub">Ekrana klik edərək coin qazanın. Server asılılığı yoxdur, birbaşa Firebase ilə işləyir.</p>
-                
-                <div class="bear-ring" id="tapBear">
-                    <div class="bear-button">
-                        <img src="./assets/cyber-bear.png" alt="Cyber Bear" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <div class="bear-fallback" style="display:none;">🐻</div>
-                    </div>
-                </div>
-
-                <div class="energy-line">
-                    <div class="energy-fill" id="energyFill"></div>
-                </div>
-
-                <div class="log" id="clickLog">Yüklənir...</div>
-            </section>
-
-            <!-- Mərkəzi Reklam Paneli -->
-            <section class="panel" id="rewardAdPanel">
-                <h2 class="panel-title">Reklam Yeri</h2>
-                <p class="panel-sub">Bütün videolu reward reklamlar buradan izlənir və mükafatlar alınır.</p>
-                <button class="btn btn-purple" id="watchAdBtn">🎥 Reklama Bax</button>
-                <div class="log" id="adLog">Reklam gözlənilir...</div>
-            </section>
-
-            <section class="panel">
-                <h2 class="panel-title">Reklamlı Qutular</h2>
-                <p class="panel-sub">Hər qutunu açdıqdan sonra taymer aktivləşir.</p>
-                <div class="grid-3">
-                    <div class="box-card">
-                        <div class="box-icon">🎁</div>
-                        <h3>2 dəq qutu</h3>
-                        <div class="timer" id="timer2">Yüklənir</div>
-                        <button class="btn btn-blue" id="boxBtn2">Aç</button>
-                    </div>
-                    <div class="box-card">
-                        <div class="box-icon">📦</div>
-                        <h3>5 dəq qutu</h3>
-                        <div class="timer" id="timer5">Yüklənir</div>
-                        <button class="btn btn-blue" id="boxBtn5">Aç</button>
-                    </div>
-                    <div class="box-card">
-                        <div class="box-icon">💎</div>
-                        <h3>10 dəq qutu</h3>
-                        <div class="timer" id="timer10">Yüklənir</div>
-                        <button class="btn btn-blue" id="boxBtn10">Aç</button>
-                    </div>
-                </div>
-            </section>
+        <section class="panel" id="rewardAdPanel">
+            <h2 class="panel-title">Reklam Yeri</h2>
+            <p class="panel-sub">Bütün videolu reward reklamlar buradan izlənir və mükafatlar alınır.</p>
+            <button class="btn btn-purple" id="watchAdBtn">🎥 Reklama Bax</button>
+            <div class="log" id="adLog">Hazırdır</div>
         </section>
-    </main>
 
-    <nav class="nav">
-        <a href="./click-room.html" class="active"><span class="icon">🐻</span>Click</a>
-        <a href="./mining-room.html"><span class="icon">⛏️</span>Mining</a>
-        <a href="./market-room.html"><span class="icon">🛒</span>Market</a>
-        <a href="./race.html"><span class="icon">🏎️</span>Race</a>
-        <a href="./wallet-room.html"><span class="icon">💰</span>Wallet</a>
-    </nav>
+        <section class="panel">
+            <h2 class="panel-title">Reklamlı Qutular</h2>
+            <div class="grid-3">
+                <div class="box-card">
+                    <div class="box-icon">🎁</div>
+                    <h3>2 dəq qutu</h3>
+                    <div class="timer" id="timer2">Hazırdır</div>
+                    <button class="btn btn-blue" id="boxBtn2">Aç</button>
+                </div>
+                <div class="box-card">
+                    <div class="box-icon">📦</div>
+                    <h3>5 dəq qutu</h3>
+                    <div class="timer" id="timer5">Hazırdır</div>
+                    <button class="btn btn-blue" id="boxBtn5">Aç</button>
+                </div>
+                <div class="box-card">
+                    <div class="box-icon">💎</div>
+                    <h3>10 dəq qutu</h3>
+                    <div class="timer" id="timer10">Hazırdır</div>
+                    <button class="btn btn-blue" id="boxBtn10">Aç</button>
+                </div>
+            </div>
+        </section>
+    </section>
+</main>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<nav class="nav">
+    <a href="./click-room.html" class="active"><span class="icon">🐻</span>Click</a>
+    <a href="./mining-room.html"><span class="icon">⛏️</span>Mining</a>
+    <a href="./market-room.html"><span class="icon">🛒</span>Market</a>
+    <a href="./race.html"><span class="icon">🏎️</span>Race</a>
+    <a href="./wallet-room.html"><span class="icon">💰</span>Wallet</a>
+</nav>
 
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+// Firebase config
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
 
-        const tg = window.Telegram?.WebApp;
-        if(tg) tg.expand();
-        const tgUser = tg?.initDataUnsafe?.user;
-        const userId = tgUser ? String(tgUser.id) : "demo_user";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-        let userData = { coins:0, energy:100, boost:1, adPoints:0, lastBox2:0, lastBox5:0, lastBox10:0 };
-        let pendingClicks = 0;
+const tg = window.Telegram?.WebApp;
+if(tg) tg.expand();
+const tgUser = tg?.initDataUnsafe?.user;
+const userId = tgUser ? String(tgUser.id) : "demo_user";
 
-        const coinText = document.getElementById("coinText");
-        const energyText = document.getElementById("energyText");
-        const boostText = document.getElementById("boostText");
-        const adPointText = document.getElementById("adPointText");
-        const energyFill = document.getElementById("energyFill");
-        const clickLog = document.getElementById("clickLog");
+let userData = { coins:0, energy:100, boost:1, adPoints:0, lastBox2:0, lastBox5:0, lastBox10:0 };
+let pendingClicks = 0;
 
-        function updateUI() {
-            coinText.innerText = userData.coins;
-            energyText.innerText = userData.energy;
-            boostText.innerText = userData.boost + "x";
-            adPointText.innerText = userData.adPoints;
-            energyFill.style.width = userData.energy + "%";
-        }
+// UI elementləri
+const coinText = document.getElementById("coinText");
+const energyText = document.getElementById("energyText");
+const boostText = document.getElementById("boostText");
+const adPointText = document.getElementById("adPointText");
+const energyFill = document.getElementById("energyFill");
+const clickLog = document.getElementById("clickLog");
+const adLog = document.getElementById("adLog");
 
-        async function loadUserData() {
-            try {
-                const userRef = doc(db,"users",userId);
-                const userSnap = await getDoc(userRef);
-                if(userSnap.exists()) userData = {...userData, ...userSnap.data()};
-                else await setDoc(userRef, userData);
-                updateUI();
-                clickLog.innerText = "Məlumatlar uğurla yükləndi. Klikləyin!";
-                checkTimers();
-            } catch(err){ clickLog.innerText = "Yükləmə xətası: "+err.message; }
-        }
+function updateUI() {
+    coinText.innerText = userData.coins;
+    energyText.innerText = userData.energy;
+    boostText.innerText = userData.boost + "x";
+    adPointText.innerText = userData.adPoints;
+    energyFill.style.width = userData.energy + "%";
+}
 
-        document.getElementById("tapBear").addEventListener("click",(e)=>{
-            if(userData.energy<userData.boost){ clickLog.innerText="Kifayət qədər enerji yoxdur!"; return; }
-            userData.energy-=userData.boost;
-            userData.coins+=userData.boost;
-            pendingClicks+=userData.boost;
-            updateUI();
-            const rect=e.currentTarget.getBoundingClientRect();
-            const x=e.clientX-rect.left, y=e
+// Firebase-dən məlumat yükləmə
+async function loadUserData() {
+    try {
+        const userRef = doc(db,"users",userId);
+        const userSnap = await getDoc(userRef);
+        if(userSnap.exists()) userData = {...userData, ...userSnap.data()};
+        else await setDoc(userRef, userData);
+        updateUI();
+        clickLog.innerText = "Hazırdır! Klikləyin.";
+    } catch(err){ clickLog.innerText = "Xəta: "+err.message; }
+}
+
+async function saveProgress() {
+    try {
+        const userRef = doc(db,"users",userId);
+        await updateDoc(userRef,{
+            coins:userData.coins,
+            energy:userData.energy,
+            adPoints:userData.adPoints,
+            lastBox2:userData.lastBox2,
+            lastBox5:userData.lastBox5,
+            lastBox10:userData.lastBox10
+        });
+        pendingClicks = 0;
+        clickLog.innerText = "Tərəqqi yadda saxlanıldı!";
+    } catch(err){ clickLog.innerText = "Saxlama xətası: "+err.message; }
+}
+
+// Tap Bear klik
+document.getElementById("tapBear").addEventListener("click", (e)=>{
+    if(userData.energy<userData.boost){ clickLog.innerText="Kifayət qədər enerji yoxdur!"; return; }
+    userData.energy-=userData.boost;
+    userData.coins+=userData.boost;
+    pendingClicks+=userData.boost;
+    updateUI();
+
+    // Animasiya
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const effect = document.createElement("div");
+    effect.className = "tap-effect";
+    effect.style.left = x + "px";
+    effect.style.top = y + "px";
+    effect.innerText = "+"+userData.boost;
+    e.currentTarget.appendChild(effect);
+    setTimeout(()=>effect.remove(),900);
+});
+
+// Mərkəzi reward paneli (agent-agnostic)
+document.getElementById("watchAdBtn").addEventListener("click", ()=>{
+    // Burada hər agent üçün reklam tetiklenə bilər
+    // Demo: dərhal callback
+    userData.energy = 100;
+    userData.coins += 10;
+    userData.adPoints += 5;
+    updateUI();
+    saveProgress();
+    adLog.innerText = "Reward alındı!";
+});
+
+// Qutu düymələri
+const boxConfig = [
+    {id:"boxBtn2", minutes:2, reward:20},
+    {id:"boxBtn5", minutes:5, reward:60},
+    {id:"boxBtn10", minutes:10, reward:150}
+];
+
+boxConfig.forEach(box=>{
+    const btn = document.getElementById(box.id);
+    btn.disabled = false;
+    btn.onclick = ()=> {
+        userData.coins += box.reward;
+        userData.adPoints += box.reward;
+        userData["lastBox"+box.minutes] = Date.now();
+        updateUI();
+        saveProgress();
+        adLog.innerText = `${box.minutes} dəq qutu açıldı! +${box.reward} Coin və Ad Xal əlavə edildi.`;
+    }
+});
+
+// Sync düyməsi
+document.getElementById("syncBtn").addEventListener("click", loadUserData);
+
+// Avtomatik datanı hər 10 saniyədən bir yadda saxla
+setInterval(saveProgress,10000);
+
+// Başlanğıcda yüklə
+loadUserData();
+</script>
+</body>
+</html>
