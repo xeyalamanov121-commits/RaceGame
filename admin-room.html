@@ -19,22 +19,22 @@
 </head>
 <body>
 
-    <h1 style="text-align:center; color:var(--gold);">👑 BEARBEE ADMIN DASHBOARD</h1>
+    <h1 style="text-align:center; color:var(--gold);">👑 BEARBEE MASTER ADMIN</h1>
 
     <div class="container">
-        <!-- Depozit Bölməsi -->
+        <!-- Depozit -->
         <div class="card">
-            <h2 style="color:var(--gold)">📥 Gözləyən Depozitlər</h2>
+            <h2 style="color:var(--gold)">📥 Depozit Sorğuları</h2>
             <div id="depList"></div>
         </div>
 
-        <!-- Çıxarış Bölməsi -->
+        <!-- Çıxarış (Withdrawals) -->
         <div class="card">
             <h2 style="color:var(--red)">💸 Çıxarış Sorğuları</h2>
             <div id="withList"></div>
         </div>
 
-        <!-- Kart Satış/Market Bölməsi -->
+        <!-- P2P Market -->
         <div class="card">
             <h2 style="color:var(--green)">🛒 P2P Kart Bazarı</h2>
             <div id="marketList"></div>
@@ -46,7 +46,6 @@
         databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app" 
     }).database();
 
-    // REAL-TIME SINXRONİZASİYA
     rdb.ref().on('value', (s) => {
         const root = s.val() || {};
         const users = root.users || {};
@@ -58,11 +57,11 @@
 
         depList.innerHTML = withList.innerHTML = marketList.innerHTML = "";
 
-        // 1. Depozitləri və Withdraw-ları Skan Et
+        // İstifadəçiləri dövr et
         Object.keys(users).forEach(uid => {
             const u = users[uid];
             
-            // Depozit
+            // 1. Depozitləri tap
             if(u.deposits) {
                 Object.keys(u.deposits).forEach(k => {
                     if(u.deposits[k].status === "pending") {
@@ -74,16 +73,22 @@
                 });
             }
 
-            // Withdraw
-            if(u.withdraw_request && u.withdraw_request.status === "pending") {
-                withList.innerHTML += `<div class="item" style="border-left-color: var(--red);">
-                            <span>ID: ${uid}<br><b>${u.withdraw_request.amount} Coin</b><br>Ünvan: ${u.withdraw_request.wallet}</span>
-                            <button class="btn-yes" onclick="approveWith('${uid}')">Ödənildi</button>
+            // 2. Çıxarışları (Withdrawals) tap
+            if(u.withdrawals) {
+                Object.keys(u.withdrawals).forEach(wKey => {
+                    const wData = u.withdrawals[wKey];
+                    // statusu 'completed' olmayanları göstər
+                    if(wData.status !== "completed") {
+                        withList.innerHTML += `<div class="item" style="border-left-color: var(--red);">
+                            <span>ID: ${uid}<br>Məbləğ: <b>${wData.amount} Coin</b><br>Ünvan: ${wData.wallet}</span>
+                            <button class="btn-yes" onclick="approveWith('${uid}', '${wKey}')">Ödənildi</button>
                         </div>`;
+                    }
+                });
             }
         });
 
-        // 2. Market (Kart satışı)
+        // 3. Market elanları
         Object.keys(market).forEach(k => {
             marketList.innerHTML += `<div class="item" style="border-left-color: var(--green);">
                 <span>Kart: ${market[k].template_id}<br>Qiymət: <b>${market[k].price_coin}</b></span>
@@ -92,19 +97,17 @@
         });
     });
 
-    // FUNKSİYALAR
+    // Funksiyalar
     window.approveDep = (uid, key, amt) => {
         if(confirm("Bu depoziti təsdiqləyirsiniz?")) {
-            // Balansı artır
             rdb.ref(`users/${uid}/coins`).transaction(c => (c || 0) + Number(amt));
-            // Statusu yenilə
             rdb.ref(`users/${uid}/deposits/${key}/status`).set("completed");
         }
     };
 
-    window.approveWith = (uid) => {
-        if(confirm("Çıxarışı tamamlandı kimi qeyd edirsiniz?")) {
-            rdb.ref(`users/${uid}/withdraw_request/status`).set("completed");
+    window.approveWith = (uid, wKey) => {
+        if(confirm("Bu çıxarışı tamamlandı kimi qeyd edirsiniz?")) {
+            rdb.ref(`users/${uid}/withdrawals/${wKey}/status`).set("completed");
         }
     };
 
@@ -116,3 +119,4 @@
 </script>
 </body>
 </html>
+
