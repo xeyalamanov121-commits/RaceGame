@@ -16,6 +16,7 @@ h2 { border-bottom: 2px solid #333; padding-bottom: 10px; font-size: 18px; margi
 button { cursor: pointer; padding: 8px 12px; border: none; border-radius: 6px; font-weight: bold; transition: 0.3s; }
 .btn-yes { background: var(--green); color: #000; }
 .btn-no { background: var(--red); color: #fff; }
+.empty { color: #555; font-size: 13px; padding: 10px; }
 @media(max-width:768px){ .container { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -24,18 +25,18 @@ button { cursor: pointer; padding: 8px 12px; border: none; border-radius: 6px; f
 <h1>👑 BEARBEE MASTER ADMIN</h1>
 
 <div class="container">
-<div class="card">
-<h2 style="color:var(--gold)">📥 Depozit Sorğuları</h2>
-<div id="depList"></div>
-</div>
-<div class="card">
-<h2 style="color:var(--red)">💸 Çıxarış Sorğuları</h2>
-<div id="withList"></div>
-</div>
-<div class="card">
-<h2 style="color:var(--green)">🛒 P2P Kart Bazarı</h2>
-<div id="marketList"></div>
-</div>
+  <div class="card">
+    <h2 style="color:var(--gold)">📥 Depozit Sorğuları</h2>
+    <div id="depList"><span class="empty">Yüklənir...</span></div>
+  </div>
+  <div class="card">
+    <h2 style="color:var(--red)">💸 Çıxarış Sorğuları</h2>
+    <div id="withList"><span class="empty">Yüklənir...</span></div>
+  </div>
+  <div class="card">
+    <h2 style="color:var(--green)">🛒 P2P Kart Bazarı</h2>
+    <div id="marketList"><span class="empty">Yüklənir...</span></div>
+  </div>
 </div>
 
 <script>
@@ -46,73 +47,129 @@ const rdb = firebase.initializeApp({
 function renderPanel(snapshot){
     const root = snapshot.val() || {};
     const users = root.users || {};
-    const withdrawals = root.withdrawals || {};
     const market = root.p2p_market || {};
 
     const depList = document.getElementById("depList");
     const withList = document.getElementById("withList");
     const marketList = document.getElementById("marketList");
 
-    depList.innerHTML = withList.innerHTML = marketList.innerHTML = "";
+    depList.innerHTML = "";
+    withList.innerHTML = "";
+    marketList.innerHTML = "";
 
-    // Depozitləri göstər
-    Object.keys(users).forEach(uid=>{
+    let depCount = 0;
+    let withCount = 0;
+
+    // ── Depozitlər ──
+    Object.keys(users).forEach(uid => {
         const user = users[uid];
-        if(user.deposits){
-            Object.keys(user.deposits).forEach(depKey=>{
+
+        // Depozitlər: users/{uid}/deposits
+        if (user.deposits) {
+            Object.keys(user.deposits).forEach(depKey => {
                 const dep = user.deposits[depKey];
-                if(dep.status && dep.status.toLowerCase() === "pending"){
+                const st = (dep.status || "").toLowerCase();
+                if (st === "pending") {
+                    depCount++;
                     depList.innerHTML += `<div class="item">
-                        <span>ID: ${dep.user_tg_id || 'N/A'}<br><b>${dep.coin_amount || 0} Coin</b></span>
+                        <span>ID: ${dep.user_tg_id || uid}<br>
+                        <b>${dep.coin_amount || 0} Coin</b></span>
                         <button class="btn-yes" onclick="approveDep('${uid}','${depKey}',${dep.coin_amount || 0})">Təsdiq</button>
+                    </div>`;
+                }
+            });
+        }
+
+        // ── Çıxarışlar: users/{uid}/withdrawals ──
+        if (user.withdrawals) {
+            Object.keys(user.withdrawals).forEach(wKey => {
+                const w = user.withdrawals[wKey];
+                const st = (w.status || "").toLowerCase();
+                if (st === "pending") {
+                    withCount++;
+                    const shortAddr = w.wallet_address
+                        ? w.wallet_address.substring(0, 16) + "..."
+                        : "Təyin olunmayıb";
+                    withList.innerHTML += `<div class="item" style="border-left-color:var(--red); flex-direction:column; align-items:flex-start; gap:8px;">
+                        <span>
+                          👤 ID: <b>${w.user_tg_id || uid}</b><br>
+                          💰 Coin: <b>${w.coin_amount || 0}</b>
+                          &nbsp;|&nbsp; Komissiya: ${w.fee_coin_amount || 0}<br>
+                          💎 TON: <b>${w.ton_amount || "?"}</b><br>
+                          📬 Ünvan: <small style="word-break:break-all;">${w.wallet_address || "Yoxdur"}</small>
+                        </span>
+                        <button class="btn-yes" onclick="approveWith('${uid}','${wKey}')">✅ Ödənildi</button>
                     </div>`;
                 }
             });
         }
     });
 
-    // Çıxarışları göstər
-    Object.keys(withdrawals).forEach(wKey=>{
-        const wData = withdrawals[wKey];
-        if(wData && wData.status && wData.status.toLowerCase() === "pending"){
-            withList.innerHTML += `<div class="item" style="border-left-color: var(--red);">
-                <span>ID: ${wData.user_tg_id || 'N/A'}<br>
-                Məbləğ: <b>${wData.coin_amount || 0} Coin</b><br>
-                Ünvan: <small style="word-break:break-all;">${wData.wallet_address || 'Təyin olunmayıb'}</small></span>
-                <button class="btn-yes" onclick="approveWith('${wKey}')">Ödənildi</button>
-            </div>`;
-        }
-    });
+    // ── Kök səviyyəsindəki withdrawals (köhnə struktur üçün ehtiyat) ──
+    if (root.withdrawals) {
+        Object.keys(root.withdrawals).forEach(wKey => {
+            const w = root.withdrawals[wKey];
+            const st = (w.status || "").toLowerCase();
+            if (st === "pending") {
+                withCount++;
+                withList.innerHTML += `<div class="item" style="border-left-color:var(--red); flex-direction:column; align-items:flex-start; gap:8px;">
+                    <span>
+                      👤 ID: <b>${w.user_tg_id || "N/A"}</b><br>
+                      💰 Coin: <b>${w.coin_amount || 0}</b>
+                      &nbsp;|&nbsp; Komissiya: ${w.fee_coin_amount || 0}<br>
+                      💎 TON: <b>${w.ton_amount || "?"}</b><br>
+                      📬 Ünvan: <small style="word-break:break-all;">${w.wallet_address || "Yoxdur"}</small>
+                    </span>
+                    <button class="btn-yes" onclick="approveWithRoot('${wKey}')">✅ Ödənildi</button>
+                </div>`;
+            }
+        });
+    }
 
-    // Market elanları
-    Object.keys(market).forEach(mKey=>{
-        const m = market[mKey];
-        marketList.innerHTML += `<div class="item" style="border-left-color: var(--green);">
-            <span>Kart: ${m.template_id}<br>Qiymət: <b>${m.price_coin}</b></span>
-            <button class="btn-no" onclick="removeMarket('${mKey}')">Sil</button>
-        </div>`;
-    });
+    if (depCount === 0) depList.innerHTML = '<span class="empty">Gözləyən depozit yoxdur</span>';
+    if (withCount === 0) withList.innerHTML = '<span class="empty">Gözləyən çıxarış yoxdur</span>';
+
+    // ── P2P Market ──
+    const mKeys = Object.keys(market);
+    if (mKeys.length === 0) {
+        marketList.innerHTML = '<span class="empty">Bazar boşdur</span>';
+    } else {
+        mKeys.forEach(mKey => {
+            const m = market[mKey];
+            marketList.innerHTML += `<div class="item" style="border-left-color:var(--green);">
+                <span>Kart: ${m.template_id}<br>Qiymət: <b>${m.price_coin}</b></span>
+                <button class="btn-no" onclick="removeMarket('${mKey}')">Sil</button>
+            </div>`;
+        });
+    }
 }
 
-// Firebase realtime listener
 rdb.ref().on('value', renderPanel);
 
-// Funksiyalar
-window.approveDep = (uid, depKey, amount)=>{
-    if(confirm("Bu depoziti təsdiqləyirsiniz?")){
-        rdb.ref(`users/${uid}/coins`).transaction(c => (c||0) + Number(amount));
+// Depozit təsdiqi
+window.approveDep = (uid, depKey, amount) => {
+    if (confirm("Bu depoziti təsdiqləyirsiniz?")) {
+        rdb.ref(`users/${uid}/coins`).transaction(c => (c || 0) + Number(amount));
         rdb.ref(`users/${uid}/deposits/${depKey}/status`).set("completed");
     }
 };
 
-window.approveWith = (wKey)=>{
-    if(confirm("Bu çıxarışı tamamlandı kimi qeyd edirsiniz?")){
+// users/{uid}/withdrawals altındakı çıxarış
+window.approveWith = (uid, wKey) => {
+    if (confirm("Bu çıxarışı tamamlandı kimi qeyd edirsiniz?")) {
+        rdb.ref(`users/${uid}/withdrawals/${wKey}/status`).set("completed");
+    }
+};
+
+// Kök səviyyəsindəki köhnə withdrawals
+window.approveWithRoot = (wKey) => {
+    if (confirm("Bu çıxarışı tamamlandı kimi qeyd edirsiniz?")) {
         rdb.ref(`withdrawals/${wKey}/status`).set("completed");
     }
 };
 
-window.removeMarket = (mKey)=>{
-    if(confirm("Silmək istəyirsiniz?")){
+window.removeMarket = (mKey) => {
+    if (confirm("Silmək istəyirsiniz?")) {
         rdb.ref(`p2p_market/${mKey}`).remove();
     }
 };
