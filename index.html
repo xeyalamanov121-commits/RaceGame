@@ -301,6 +301,7 @@
 <body>
 
     <div class="topbar">
+        <!-- Keçid üçün lazım olan klas mövcuddur -->
         <div class="brand-mini">BEARBEE</div>
 
         <div class="lang-box">
@@ -351,7 +352,7 @@
             <div class="img-wrap">
                 <img
                 src="./assets/race-cyber.png"
-                data-fallback="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723754017.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM3NTQwMTcucG5nIiwiaWF0IjoxNzc5NzI0MTgyLCJleHAiOjE4MTEyNjAxODJ9.PaD8Zr_1u1N1eTBaINp4yAAmoE_IXiZSz1hr-9_PFss"
+                data-fallback="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723754017.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM3NTQwMTcucG5nIiwiaWF0IjoxNzc5NzI0MTgyLCJleHAiOjE4MTEyNjAxYTIfQ.PaD8Zr_1u1N1eTBaINp4yAAmoE_IXiZSz1hr-9_PFss"
                 alt="Real Race Room"
                 onerror="imageFallback(this, '🏁', 'RACE ROOM')">
 
@@ -378,7 +379,7 @@
             <div class="img-wrap">
                 <img
                 src="./assets/ads-cyber.png"
-                data-fallback="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723620752.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM2MjA3NTIucG5nIiwiaWF0IjoxNzc5NzI0MTc1LCJleHAiOjE4MTEyNjAxNzV9.QSPFYOQiLBI1835eW9WHxUy1v8-W-VOobAmGzeAkMxM"
+                data-fallback="https://ywpqvvriakbbhvrtpvso.supabase.co/storage/v1/object/sign/profile/1779723620752.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wMTE0NGRjYS1iY2IwLTRiYTAtYTVhMC1lYjRmMGNhNGE3NjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9maWxlLzE3Nzk3MjM2MjA3NTIucG5nIiwiaWF0IjoxNzk5NzI0MTc1LCJleHAiOjE4MTEyNjAxNzV9.QSPFYOQiLBI1835eW9WHxUy1v8-W-VOobAmGzeAkMxM"
                 alt="Ads Reward"
                 onerror="imageFallback(this, '🎥', 'ADS REWARD')">
 
@@ -437,108 +438,106 @@
         <a href="./ads.html" data-i18n="navAds">ADS</a>
     </div>
 
+    <!-- FIREBASE COMPAT SDK LIBRARIES -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
     <script>
         const ADMIN_TELEGRAM_ID = 8591374417;
+
+        // Firebase Konfiqurasiyası[span_2](start_span)[span_2](end_span)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
+            authDomain: "racegane.firebaseapp.com",
+            databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "racegane",
+            storageBucket: "racegane.firebasestorage.app",
+            messagingSenderId: "477893876737",
+            appId: "1:477893876737:web:1b561bb3224b0086c63400"
+        };
+
+        // Firebase-i başladırıq
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const rdb = firebase.database();
 
         const translations = {
             az:{
                 heroTitle:"BEARBEE ARENA",
                 heroText:"Click otağına gir, real oyunçularla yarış və reklam izləyərək əlavə coin/xal qazan.",
-
                 clickTitle:"CLICK ROOM",
                 clickText:"Ayıya klik et, 100 enerji ilə coin qazan və reklamlı qutuları aç.",
                 clickBtn:"🐻 CLICK OTAĞINA GİR",
-
                 raceTitle:"REAL RACE ROOM",
                 raceText:"Real oyunçularla 2-3 nəfərlik maşın yarış otağına qoşul.",
                 raceBtn:"🏁 YARIŞ OTAĞINA GİR",
-
                 adsTitle:"ADS REWARD",
                 adsText:"Reklam izlə, izləmə tamamlanandan sonra coin/xal qazan.",
                 adsBtn:"🎥 REKLAM OTAĞINA GİR",
-
                 bonusTitle:"BONUS",
                 bonusText:"Gündəlik bonuslar və xüsusi mükafatlar əldə et.",
                 bonusBtn:"KEÇİD",
-
                 navArena:"ARENA",
                 navClick:"CLICK",
                 navRace:"RACE",
                 navAds:"ADS"
             },
-
             en:{
                 heroTitle:"BEARBEE ARENA",
                 heroText:"Enter the click room, race with real players, watch ads and earn extra coins/points.",
-
                 clickTitle:"CLICK ROOM",
                 clickText:"Click the bear, use 100 energy, earn coins and open reward boxes.",
                 clickBtn:"🐻 ENTER CLICK ROOM",
-
                 raceTitle:"REAL RACE ROOM",
                 raceText:"Join 2-3 player car race rooms with real players.",
                 raceBtn:"🏁 ENTER RACE ROOM",
-
                 adsTitle:"ADS REWARD",
                 adsText:"Watch ads and earn coins/points after the ad is completed.",
                 adsBtn:"🎥 ENTER ADS ROOM",
-
                 bonusTitle:"BONUS",
                 bonusText:"Get daily bonuses and special rewards.",
                 bonusBtn:"OPEN",
-
                 navArena:"ARENA",
                 navClick:"CLICK",
                 navRace:"RACE",
                 navAds:"ADS"
             },
-
             tr:{
                 heroTitle:"BEARBEE ARENA",
                 heroText:"Click odasına gir, gerçek oyuncularla yarış ve reklam izleyerek ekstra coin/puan kazan.",
-
                 clickTitle:"CLICK ROOM",
                 clickText:"Ayıya tıkla, 100 enerjiyle coin kazan ve reklamlı kutuları aç.",
                 clickBtn:"🐻 CLICK ODASINA GİR",
-
                 raceTitle:"REAL RACE ROOM",
                 raceText:"Gerçek oyuncularla 2-3 kişilik araba yarış odasına katıl.",
                 raceBtn:"🏁 YARIŞ ODASINA GİR",
-
                 adsTitle:"ADS REWARD",
                 adsText:"Reklam izle, izleme tamamlanınca coin/puan kazan.",
                 adsBtn:"🎥 REKLAM ODASINA GİR",
-
                 bonusTitle:"BONUS",
                 bonusText:"Günlük bonuslar ve özel ödüller elde et.",
                 bonusBtn:"AÇ",
-
                 navArena:"ARENA",
                 navClick:"CLICK",
                 navRace:"RACE",
                 navAds:"ADS"
             },
-
             ru:{
                 heroTitle:"BEARBEE ARENA",
                 heroText:"Заходи в click room, соревнуйся с реальными игроками, смотри рекламу и получай coins/points.",
-
                 clickTitle:"CLICK ROOM",
                 clickText:"Кликай по медведю, используй 100 энергии, зарабатывай coins и открывай reward boxes.",
                 clickBtn:"🐻 ВОЙТИ В CLICK",
-
                 raceTitle:"REAL RACE ROOM",
                 raceText:"Заходи в гоночную комнату на 2-3 игроков и соревнуйся с реальными игроками.",
                 raceBtn:"🏁 ВОЙТИ В RACE",
-
                 adsTitle:"ADS REWARD",
                 adsText:"Смотри рекламу и получай coins/points после завершения просмотра.",
                 adsBtn:"🎥 ВОЙТИ В ADS",
-
                 bonusTitle:"BONUS",
                 bonusText:"Получай ежедневные бонусы и специальные награды.",
                 bonusBtn:"ОТКРЫТЬ",
-
                 navArena:"ARENA",
                 navClick:"CLICK",
                 navRace:"RACE",
@@ -558,6 +557,32 @@
             return window.Telegram?.WebApp?.initDataUnsafe?.user?.id || null;
         }
 
+        function getTelegramUserName(){
+            const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            if(user){
+                return user.first_name + (user.last_name ? " " + user.last_name : "");
+            }
+            return "Test Oyuncu";
+        }
+
+        // OTOMATİK FİREBASE QEYDİYYAT FUNKSİYASI[span_3](start_span)[span_3](end_span)
+        function handleUserFirebaseRegistration() {
+            const userId = getTelegramUserId() ? String(getTelegramUserId()) : "test_user_123";
+            const userName = getTelegramUserName();
+            const userRef = rdb.ref('users/' + userId);
+
+            // İstifadəçi yoxdursa yaradır, varsa toxunmur
+            userRef.once('value').then((snapshot) => {
+                if (!snapshot.exists()) {
+                    userRef.set({
+                        name: userName,
+                        coins: 0, 
+                        wins: 0
+                    });
+                }
+            });
+        }
+
         let adminTapCount = 0;
         let adminTapTimer = null;
 
@@ -570,7 +595,6 @@
             }
 
             adminTapCount++;
-
             clearTimeout(adminTapTimer);
 
             adminTapTimer = setTimeout(() => {
@@ -598,77 +622,45 @@
 
         function imageFallback(img, icon, text){
             const fallback = img.getAttribute("data-fallback");
-
             if(fallback && img.src !== fallback){
                 img.removeAttribute("data-fallback");
                 img.src = fallback;
                 return;
             }
-
             const wrap = img.closest(".img-wrap");
-
             if(wrap){
                 wrap.classList.add("failed");
                 const iconEl = wrap.querySelector(".img-fallback .icon");
                 const txtEl = wrap.querySelector(".img-fallback .txt");
-
-                if(iconEl){
-                    iconEl.innerText = icon;
-                }
-
-                if(txtEl){
-                    txtEl.innerText = text;
-                }
+                if(iconEl) iconEl.innerText = icon;
+                if(txtEl) txtEl.innerText = text;
             }
         }
 
         function normalizeLang(lang){
             const code = String(lang || "").toLowerCase();
-
-            if(code.startsWith("az")){
-                return "az";
-            }
-
-            if(code.startsWith("tr")){
-                return "tr";
-            }
-
-            if(code.startsWith("ru")){
-                return "ru";
-            }
-
-            if(code.startsWith("en")){
-                return "en";
-            }
-
+            if(code.startsWith("az")) return "az";
+            if(code.startsWith("tr")) return "tr";
+            if(code.startsWith("ru")) return "ru";
+            if(code.startsWith("en")) return "en";
             return "az";
         }
 
         function getInitialLang(){
             const saved = localStorage.getItem("bearbee_lang");
-
-            if(saved && translations[saved]){
-                return saved;
-            }
-
+            if(saved && translations[saved]) return saved;
             const tgLang = window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code;
-
-            if(tgLang){
-                return normalizeLang(tgLang);
-            }
-
+            if(tgLang) return normalizeLang(tgLang);
             return normalizeLang(navigator.language);
         }
 
         function setLang(lang){
             const selected = translations[lang] ? lang : "az";
-
             localStorage.setItem("bearbee_lang", selected);
             document.documentElement.lang = selected;
 
             document.querySelectorAll("[data-i18n]").forEach(el => {
                 const key = el.getAttribute("data-i18n");
-
                 if(translations[selected][key]){
                     el.innerText = translations[selected][key];
                 }
@@ -679,16 +671,15 @@
             });
 
             const active = document.getElementById("lang_" + selected);
-
-            if(active){
-                active.classList.add("active");
-            }
+            if(active) active.classList.add("active");
         }
 
+        // Başlatma əmrləri
         initTelegramMiniApp();
         setLang(getInitialLang());
         initSecretAdmin();
+        handleUserFirebaseRegistration(); // İstifadəçini verilənlər bazasına göndərir[span_4](start_span)[span_4](end_span)
     </script>
-
 </body>
 </html>
+
