@@ -64,18 +64,20 @@
         });
     });
 
-    // 2. MALIYYƏ SORĞULARI (p2p_market skaneri)
+    // 2. MALIYYƏ SORĞULARI (p2p_market üçün xüsusi skaner)
     rdb.ref('p2p_market').on('value', (s) => {
         const market = s.val() || {};
         const finList = document.getElementById("financeList");
         finList.innerHTML = "";
         Object.keys(market).forEach(key => {
             const item = market[key];
-            const amt = item.amount || "N/A";
-            const user = item.username || item.userId || "İstifadəçi";
+            // Firebase-də gördüyümüz real açar adları: price_coin və seller_id
+            const amt = item.price_coin || "0";
+            const seller = item.seller_id || "Naməlum";
+            
             finList.innerHTML += `<div class="item">
-                <span>Sorğu (${user}): <b>${amt} Coin</b></span>
-                <button class="btn btn-g" onclick="approveMarket('${key}', ${amt}, '${item.userId || ''}')">Təsdiq</button>
+                <span>İstifadəçi: <b>${seller}</b><br>Məbləğ: <b>${amt} Coin</b></span>
+                <button class="btn btn-g" onclick="approveMarket('${key}', ${amt}, '${seller}')">Təsdiq</button>
             </div>`;
         });
     });
@@ -96,16 +98,23 @@
     // FUNKSİYALAR
     window.editCoins = (uid, cur) => { const v = prompt("Yeni balans:", cur); if(v) rdb.ref(`users/${uid}/coins`).set(Number(v)); };
     
-    window.approveMarket = (key, amt, userId) => {
-        if(confirm("Bu sorğunu təsdiq etmək istəyirsiniz?")) {
-            if(userId) {
-                rdb.ref(`users/${userId}/coins`).once('value', s => {
-                    const current = s.val() || 0;
-                    rdb.ref(`users/${userId}/coins`).set(current + Number(amt));
+    window.approveMarket = (key, amt, sellerId) => {
+        if(confirm(`Bu sorğunu təsdiq edib ${amt} Coin balansına əlavə edirsiniz?`)) {
+            // İstifadəçinin balansını tapıb artırırıq
+            rdb.ref(`users/${sellerId}/coins`).once('value', s => {
+                const current = s.val() || 0;
+                rdb.ref(`users/${sellerId}/coins`).set(current + Number(amt));
+                
+                // Sorğunu silirik
+                rdb.ref('p2p_market/' + key).remove();
+                
+                // Loga yazırıq
+                rdb.ref('logs').push({ 
+                    action: `Təsdiq edildi: ${sellerId} -> ${amt} Coin`, 
+                    time: new Date().toLocaleTimeString(), 
+                    timestamp: Date.now() 
                 });
-            }
-            rdb.ref('p2p_market/' + key).remove();
-            rdb.ref('logs').push({ action: `Market sorğusu təsdiqləndi: ${amt} Coin`, time: new Date().toLocaleTimeString(), timestamp: Date.now() });
+            });
         }
     };
 </script>
