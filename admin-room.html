@@ -37,6 +37,7 @@
     </div>
 
 <script>
+    // Firebase konfiqurasiyası
     const rdb = firebase.initializeApp({ 
         databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app" 
     }).database();
@@ -44,7 +45,7 @@
     rdb.ref().on('value', (s) => {
         const root = s.val() || {};
         const users = root.users || {};
-        const withdrawals = root.withdrawals || {}; // Kök qovluğu oxuyur
+        const withdrawals = root.withdrawals || {}; // Kök qovluğu (Dəqiq yol)
         const market = root.p2p_market || {};
         
         const depList = document.getElementById("depList");
@@ -53,7 +54,7 @@
 
         depList.innerHTML = withList.innerHTML = marketList.innerHTML = "";
 
-        // 1. Depozitləri skan et (İstifadəçilərin içindən)
+        // 1. Depozitləri skan et
         Object.keys(users).forEach(uid => {
             if(users[uid].deposits) {
                 Object.keys(users[uid].deposits).forEach(k => {
@@ -67,14 +68,15 @@
             }
         });
 
-        // 2. Çıxarışları (Withdrawals) skan et (Root-dan oxuyur)
+        // 2. Çıxarışları (Withdrawals) skan et (Kökdən oxuyur!)
         Object.keys(withdrawals).forEach(wKey => {
             const wData = withdrawals[wKey];
-            if(wData.status === "pending") {
+            // Yalnız 'pending' (gözləyən) sorğuları göstəririk
+            if(wData && wData.status === "pending") {
                 withList.innerHTML += `<div class="item" style="border-left-color: var(--red);">
                     <span>ID: ${wData.user_tg_id || 'N/A'}<br>
                     Məbləğ: <b>${wData.coin_amount || 0} Coin</b><br>
-                    Ünvan: <small style="word-break:break-all;">${wData.wallet_address || 'Yoxdur'}</small></span>
+                    Ünvan: <small style="word-break:break-all;">${wData.wallet_address || 'Təyin olunmayıb'}</small></span>
                     <button class="btn-yes" onclick="approveWith('${wKey}')">Ödənildi</button>
                 </div>`;
             }
@@ -89,8 +91,9 @@
         });
     });
 
+    // Funksiyalar
     window.approveDep = (uid, key, amt) => {
-        if(confirm("Təsdiqləyirsiniz?")) {
+        if(confirm("Bu depoziti təsdiqləyirsiniz?")) {
             rdb.ref(`users/${uid}/coins`).transaction(c => (c || 0) + Number(amt));
             rdb.ref(`users/${uid}/deposits/${key}/status`).set("completed");
         }
@@ -98,6 +101,7 @@
 
     window.approveWith = (wKey) => {
         if(confirm("Bu çıxarışı tamamlandı kimi qeyd edirsiniz?")) {
+            // Məlumat kökdə olduğu üçün yolu birbaşa 'withdrawals' olaraq yazırıq
             rdb.ref(`withdrawals/${wKey}/status`).set("completed");
         }
     };
