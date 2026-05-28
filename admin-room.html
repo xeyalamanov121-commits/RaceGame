@@ -12,8 +12,8 @@ h1 { margin-bottom: 30px; text-align:center; color: var(--gold); }
 .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
 .card { background: var(--card); border: 1px solid #333; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); max-height: 500px; overflow-y: auto; }
 h2 { border-bottom: 2px solid #333; padding-bottom: 10px; font-size: 18px; margin-bottom:10px; }
-.item { background: #1a1a1a; padding: 12px; margin: 10px 0; border-radius: 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--gold); gap: 8px; }
-.item-info { flex: 1; line-height: 1.7; }
+.item { background: #1a1a1a; padding: 12px; margin: 10px 0; border-radius: 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--gold); gap: 8px; flex-wrap: wrap; }
+.item-info { flex: 1; line-height: 1.8; }
 button { cursor: pointer; padding: 8px 14px; border: none; border-radius: 6px; font-weight: bold; transition: 0.3s; white-space: nowrap; }
 .btn-yes { background: var(--green); color: #000; }
 .btn-no { background: var(--red); color: #fff; }
@@ -45,74 +45,74 @@ const rdb = firebase.initializeApp({
     databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app"
 }).database();
 
-// ══════════════════════════════════════
-// 1) DEPOZİTLƏR — users/{uid}/deposits
-// ══════════════════════════════════════
+// ══════════════════════════════════════════════════
+// users altındakı deposits VƏ withdrawals oxu
+// ══════════════════════════════════════════════════
 rdb.ref("users").on("value", snapshot => {
     const users = snapshot.val() || {};
-    const depList = document.getElementById("depList");
-    depList.innerHTML = "";
-    let count = 0;
+
+    const depList  = document.getElementById("depList");
+    const withList = document.getElementById("withList");
+    depList.innerHTML  = "";
+    withList.innerHTML = "";
+
+    let depCount  = 0;
+    let withCount = 0;
 
     Object.keys(users).forEach(uid => {
         const user = users[uid];
-        if (!user.deposits) return;
 
-        Object.keys(user.deposits).forEach(depKey => {
-            const dep = user.deposits[depKey];
-            if ((dep.status || "").toLowerCase() !== "pending") return;
-            count++;
-            depList.innerHTML += `
-            <div class="item">
-                <div class="item-info">
-                    👤 ID: <b>${dep.user_tg_id || uid}</b><br>
-                    💰 <b>${dep.coin_amount || 0} Coin</b>
-                </div>
-                <button class="btn-yes"
-                    onclick="approveDep('${uid}','${depKey}',${dep.coin_amount || 0})">
-                    ✅ Təsdiq
-                </button>
-            </div>`;
-        });
+        // ── DEPOZİTLƏR ──
+        if (user.deposits) {
+            Object.keys(user.deposits).forEach(depKey => {
+                const dep = user.deposits[depKey];
+                if ((dep.status || "").toLowerCase() !== "pending") return;
+                depCount++;
+                depList.innerHTML += `
+                <div class="item" style="border-left-color:var(--gold);">
+                    <div class="item-info">
+                        👤 ID: <b>${dep.user_tg_id || uid}</b><br>
+                        💰 <b>${dep.coin_amount || 0} Coin</b>
+                    </div>
+                    <button class="btn-yes"
+                        onclick="approveDep('${uid}','${depKey}',${dep.coin_amount || 0})">
+                        ✅ Təsdiq
+                    </button>
+                </div>`;
+            });
+        }
+
+        // ── ÇIXARIŞLAR — users/{uid}/withdrawals ──
+        if (user.withdrawals) {
+            Object.keys(user.withdrawals).forEach(wKey => {
+                const w = user.withdrawals[wKey];
+                if (!w || (w.status || "").toLowerCase() !== "pending") return;
+                withCount++;
+                withList.innerHTML += `
+                <div class="item" style="border-left-color:var(--red);">
+                    <div class="item-info">
+                        👤 ID: <b>${w.user_tg_id || uid}</b><br>
+                        💰 Coin: <b>${w.coin_amount || 0}</b>
+                        &nbsp;·&nbsp; Komissiya: <b>${w.fee_coin_amount || 0}</b><br>
+                        💎 TON: <b>${w.ton_amount || "?"}</b><br>
+                        📬 <small style="word-break:break-all;">${w.wallet_address || "Ünvan yoxdur"}</small>
+                    </div>
+                    <button class="btn-yes"
+                        onclick="approveWith('${uid}','${wKey}',${w.coin_amount || 0})">
+                        ✅ Ödənildi
+                    </button>
+                </div>`;
+            });
+        }
     });
 
-    if (count === 0) depList.innerHTML = '<div class="empty">Gözləyən depozit yoxdur</div>';
+    if (depCount  === 0) depList.innerHTML  = '<div class="empty">Gözləyən depozit yoxdur</div>';
+    if (withCount === 0) withList.innerHTML = '<div class="empty">Gözləyən çıxarış yoxdur</div>';
 });
 
-// ══════════════════════════════════════
-// 2) ÇIXARIŞLAR — withdrawals (kök)
-// ══════════════════════════════════════
-rdb.ref("withdrawals").on("value", snapshot => {
-    const data = snapshot.val() || {};
-    const withList = document.getElementById("withList");
-    withList.innerHTML = "";
-    let count = 0;
-
-    Object.keys(data).forEach(wKey => {
-        const w = data[wKey];
-        if (!w || (w.status || "").toLowerCase() !== "pending") return;
-        count++;
-
-        withList.innerHTML += `
-        <div class="item" style="border-left-color:var(--red); flex-wrap:wrap;">
-            <div class="item-info">
-                👤 ID: <b>${w.user_tg_id || "N/A"}</b><br>
-                💰 Coin: <b>${w.coin_amount || 0}</b>
-                &nbsp;·&nbsp; Komissiya: ${w.fee_coin_amount || 0}<br>
-                💎 TON: <b>${w.ton_amount || "?"}</b><br>
-                🔑 ID: <small>${w.id || wKey}</small><br>
-                📬 <small style="word-break:break-all;">${w.wallet_address || "Ünvan yoxdur"}</small>
-            </div>
-            <button class="btn-yes" onclick="approveWith('${wKey}')">✅ Ödənildi</button>
-        </div>`;
-    });
-
-    if (count === 0) withList.innerHTML = '<div class="empty">Gözləyən çıxarış yoxdur</div>';
-});
-
-// ══════════════════════════════════════
-// 3) P2P MARKET — p2p_market (kök)
-// ══════════════════════════════════════
+// ══════════════════════════════════════════════════
+// P2P MARKET
+// ══════════════════════════════════════════════════
 rdb.ref("p2p_market").on("value", snapshot => {
     const data = snapshot.val() || {};
     const marketList = document.getElementById("marketList");
@@ -123,7 +123,6 @@ rdb.ref("p2p_market").on("value", snapshot => {
         marketList.innerHTML = '<div class="empty">Bazar boşdur</div>';
         return;
     }
-
     keys.forEach(mKey => {
         const m = data[mKey];
         marketList.innerHTML += `
@@ -137,18 +136,21 @@ rdb.ref("p2p_market").on("value", snapshot => {
     });
 });
 
-// ══════════════════════════════════════
+// ══════════════════════════════════════════════════
 // FUNKSİYALAR
-// ══════════════════════════════════════
+// ══════════════════════════════════════════════════
+
+// Depozit təsdiq et → coin əlavə et
 window.approveDep = (uid, depKey, amount) => {
     if (!confirm("Bu depoziti təsdiqləyirsiniz?")) return;
     rdb.ref(`users/${uid}/coins`).transaction(c => (c || 0) + Number(amount));
     rdb.ref(`users/${uid}/deposits/${depKey}/status`).set("completed");
 };
 
-window.approveWith = (wKey) => {
+// Çıxarış tamamla → coin çıxılmır (artıq çıxılıb), sadəcə status dəyiş
+window.approveWith = (uid, wKey, amount) => {
     if (!confirm("Bu çıxarışı tamamlandı kimi qeyd edirsiniz?")) return;
-    rdb.ref(`withdrawals/${wKey}/status`).set("completed");
+    rdb.ref(`users/${uid}/withdrawals/${wKey}/status`).set("completed");
 };
 
 window.removeMarket = (mKey) => {
