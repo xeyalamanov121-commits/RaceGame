@@ -2,65 +2,115 @@
 <html lang="az">
 <head>
     <meta charset="UTF-8">
-    <title>Bearbee Arena | Admin Panel</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Bearbee Arena | Master Admin Panel</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; padding: 15px; }
-        .card { background: #111; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .item { border-bottom: 1px solid #222; padding: 10px 0; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-g { background: #ffd700; color: #000; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        :root { --bg: #050505; --card: #121212; --gold: #ffd700; --red: #ff3333; --green: #00ff66; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: var(--card); border: 1px solid #333; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h2 { border-bottom: 2px solid #333; padding-bottom: 10px; font-size: 18px; }
+        .item { background: #1a1a1a; padding: 12px; margin: 10px 0; border-radius: 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--gold); }
+        button { cursor: pointer; padding: 8px 12px; border: none; border-radius: 6px; font-weight: bold; transition: 0.3s; }
+        .btn-yes { background: var(--green); color: #000; }
+        .btn-no { background: var(--red); color: #fff; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2 style="color:#ffd700">Real İstifadəçi Depozitləri</h2>
-    <div id="userDeposits"></div>
-</div>
+    <h1 style="text-align:center; color:var(--gold);">👑 BEARBEE ADMIN DASHBOARD</h1>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <div class="container">
+        <!-- Depozit Bölməsi -->
+        <div class="card">
+            <h2 style="color:var(--gold)">📥 Gözləyən Depozitlər</h2>
+            <div id="depList"></div>
+        </div>
+
+        <!-- Çıxarış Bölməsi -->
+        <div class="card">
+            <h2 style="color:var(--red)">💸 Çıxarış Sorğuları</h2>
+            <div id="withList"></div>
+        </div>
+
+        <!-- Kart Satış/Market Bölməsi -->
+        <div class="card">
+            <h2 style="color:var(--green)">🛒 P2P Kart Bazarı</h2>
+            <div id="marketList"></div>
+        </div>
+    </div>
 
 <script>
-    const config = { databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app" };
-    firebase.initializeApp(config);
-    const rdb = firebase.database();
+    const rdb = firebase.initializeApp({ 
+        databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app" 
+    }).database();
 
-    // 1. İSTİFADƏÇİLƏRİN 'deposits' QOVLUĞUNU SKAN ET
-    rdb.ref('users').on('value', (s) => {
-        const users = s.val() || {};
-        const container = document.getElementById("userDeposits");
-        container.innerHTML = "";
+    // REAL-TIME SINXRONİZASİYA
+    rdb.ref().on('value', (s) => {
+        const root = s.val() || {};
+        const users = root.users || {};
+        const market = root.p2p_market || {};
         
+        const depList = document.getElementById("depList");
+        const withList = document.getElementById("withList");
+        const marketList = document.getElementById("marketList");
+
+        depList.innerHTML = withList.innerHTML = marketList.innerHTML = "";
+
+        // 1. Depozitləri və Withdraw-ları Skan Et
         Object.keys(users).forEach(uid => {
-            const user = users[uid];
-            if (user.deposits) {
-                Object.keys(user.deposits).forEach(depKey => {
-                    const dep = user.deposits[depKey];
-                    // Yalnız 'pending' (gözləyən) sorğuları çıxar
-                    if(dep.status === "pending") {
-                        container.innerHTML += `
-                        <div class="item">
-                            <span>ID: <b>${dep.user_tg_id}</b><br>Məbləğ: <b>${dep.coin_amount} Coin</b></span>
-                            <button class="btn-g" onclick="approveDep('${uid}', '${depKey}', ${dep.coin_amount})">Təsdiq Et</button>
+            const u = users[uid];
+            
+            // Depozit
+            if(u.deposits) {
+                Object.keys(u.deposits).forEach(k => {
+                    if(u.deposits[k].status === "pending") {
+                        depList.innerHTML += `<div class="item">
+                            <span>ID: ${u.deposits[k].user_tg_id}<br><b>${u.deposits[k].coin_amount} Coin</b></span>
+                            <button class="btn-yes" onclick="approveDep('${uid}', '${k}', ${u.deposits[k].coin_amount})">Təsdiq</button>
                         </div>`;
                     }
                 });
             }
+
+            // Withdraw
+            if(u.withdraw_request && u.withdraw_request.status === "pending") {
+                withList.innerHTML += `<div class="item" style="border-left-color: var(--red);">
+                            <span>ID: ${uid}<br><b>${u.withdraw_request.amount} Coin</b><br>Ünvan: ${u.withdraw_request.wallet}</span>
+                            <button class="btn-yes" onclick="approveWith('${uid}')">Ödənildi</button>
+                        </div>`;
+            }
+        });
+
+        // 2. Market (Kart satışı)
+        Object.keys(market).forEach(k => {
+            marketList.innerHTML += `<div class="item" style="border-left-color: var(--green);">
+                <span>Kart: ${market[k].template_id}<br>Qiymət: <b>${market[k].price_coin}</b></span>
+                <button class="btn-no" onclick="removeMarket('${k}')">Sil</button>
+            </div>`;
         });
     });
 
-    // 2. TƏSDİQ FUNKSİYASI
-    window.approveDep = (uid, depKey, amt) => {
+    // FUNKSİYALAR
+    window.approveDep = (uid, key, amt) => {
         if(confirm("Bu depoziti təsdiqləyirsiniz?")) {
-            const userCoinsRef = rdb.ref(`users/${uid}/coins`);
-            userCoinsRef.once('value', s => {
-                const current = s.val() || 0;
-                userCoinsRef.set(current + Number(amt));
-                // Statusu 'completed' et və ya sadəcə sil
-                rdb.ref(`users/${uid}/deposits/${depKey}/status`).set("completed");
-                alert("Balans artırıldı!");
-            });
+            // Balansı artır
+            rdb.ref(`users/${uid}/coins`).transaction(c => (c || 0) + Number(amt));
+            // Statusu yenilə
+            rdb.ref(`users/${uid}/deposits/${key}/status`).set("completed");
+        }
+    };
+
+    window.approveWith = (uid) => {
+        if(confirm("Çıxarışı tamamlandı kimi qeyd edirsiniz?")) {
+            rdb.ref(`users/${uid}/withdraw_request/status`).set("completed");
+        }
+    };
+
+    window.removeMarket = (key) => {
+        if(confirm("Bu elanı bazardan silmək istəyirsiniz?")) {
+            rdb.ref(`p2p_market/${key}`).remove();
         }
     };
 </script>
