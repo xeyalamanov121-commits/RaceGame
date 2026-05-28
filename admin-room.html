@@ -2,111 +2,57 @@
 <html lang="az">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bearbee Arena | Admin Panel</title>
+    <title>Admin Panel | Bearbee Arena</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg: #000; --panel: #0d0d0d; --gold: #ffd700; --green: #22ff66; --red: #ff2438; --text: #fff; --border: #222; }
-        body { background: var(--bg); color: var(--text); padding: 20px; font-family: sans-serif; }
-        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
-        h2 { color: var(--gold); font-size: 16px; margin-bottom: 15px; }
-        .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-        .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .btn-g { background: var(--gold); color: #000; }
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 10px; border-bottom: 1px solid var(--border); }
+        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; }
+        .card { background: #111; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .item { border-bottom: 1px solid #222; padding: 10px 0; font-size: 12px; }
+        .btn-g { background: #ffd700; color: #000; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="adminWrapper">
-    <div id="content" style="display:none;">
-        <div class="card">
-            <h2>İstifadəçilər</h2>
-            <table id="userTable">
-                <tbody id="userTableBody"></tbody>
-            </table>
-        </div>
-
-        <div class="card">
-            <h2 style="color:var(--green)">Maliyyə Sorğuları (p2p_market)</h2>
-            <div id="financeList"></div>
-        </div>
-    </div>
-    
-    <div id="accessDenied" style="text-align:center; margin-top:50px; color:var(--red);">
-        <h2>Giriş Qadağandır!</h2>
-        <p>Siz admin panelinə giriş icazəsi olmayan birisiniz.</p>
-    </div>
+<div class="card">
+    <h2 style="color:#ffd700">Maliyyə Sorğuları (Debug Mod)</h2>
+    <div id="financeList"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
-    // --- KONFİQURASİYA ---
-    const ADMIN_TELEGRAM_ID = 8591374417; // Öz ID-ni bura yaz!
-    const config = { apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ", databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "racegane" };
+    const config = { databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app" };
     firebase.initializeApp(config);
     const rdb = firebase.database();
 
-    // 1. GİRİŞ YOXLANILIŞI (Telegram ID)
-    const tg = window.Telegram.WebApp;
-    const user = tg.initDataUnsafe.user;
-
-    if (user && user.id == ADMIN_TELEGRAM_ID) {
-        document.getElementById('content').style.display = 'block';
-        document.getElementById('accessDenied').style.display = 'none';
-        startPanel();
-    } else {
-        document.getElementById('content').style.display = 'none';
-        document.getElementById('accessDenied').style.display = 'block';
-    }
-
-    function startPanel() {
-        // İSTİFADƏÇİLƏRİ YÜKLƏ
-        rdb.ref('users').on('value', (s) => {
-            const users = s.val() || {};
-            const tbody = document.getElementById("userTableBody");
-            tbody.innerHTML = "";
-            Object.keys(users).forEach(uid => {
-                const u = users[uid];
-                tbody.innerHTML += `<tr><td>${u.name || "Ayı"}<br><small>ID: ${uid}</small></td><td>🪙 ${u.coins || 0}</td><td><button class="btn btn-g" onclick="editCoins('${uid}', ${u.coins || 0})">Dəyiş</button></td></tr>`;
-            });
-        });
-
-        // MARKET SORĞULARINI YÜKLƏ
-        rdb.ref('p2p_market').on('value', (s) => {
-            const market = s.val() || {};
-            const finList = document.getElementById("financeList");
-            finList.innerHTML = "";
-            Object.keys(market).forEach(key => {
-                const item = market[key];
-                const amt = item.price_coin || 0;
-                const userId = item.seller_id || "Naməlum";
-                
-                finList.innerHTML += `<div class="item">
-                    <span>ID: <b>${userId}</b><br>Məbləğ: <b>${amt} Coin</b></span>
-                    <button class="btn btn-g" onclick="approveMarket('${key}', ${amt}, '${userId}')">Təsdiq Et</button>
-                </div>`;
-            });
-        });
-    }
-
-    // BALANS DƏYİŞMƏ FUNKSİYASI
-    window.editCoins = (uid, cur) => { const v = prompt("Yeni balans:", cur); if(v) rdb.ref(`users/${uid}/coins`).set(Number(v)); };
-    
-    // TƏSDİQ FUNKSİYASI
-    window.approveMarket = (key, amt, userId) => {
-        if(userId === "admin_system") { alert("Bu sistem sorğusudur, təsdiq edilə bilməz!"); return; }
+    rdb.ref('p2p_market').on('value', (s) => {
+        const market = s.val() || {};
+        const finList = document.getElementById("financeList");
+        finList.innerHTML = "";
         
-        if(confirm(`ID: ${userId} üçün ${amt} Coin balansına əlavə edilsin?`)) {
-            const userRef = rdb.ref(`users/${userId}/coins`);
-            userRef.once('value', s => {
+        Object.keys(market).forEach(key => {
+            const item = market[key];
+            
+            // SORĞUNUN İÇİNDƏKİ HƏR ŞEYİ EKRANA ÇIXARIR
+            // Əgər istifadəçinin ID-si varsa, burada "seller_id", "user_id" və ya başqa adla görünəcək
+            const rawData = JSON.stringify(item, null, 2); 
+            
+            finList.innerHTML += `<div class="item">
+                <pre style="font-size: 10px; color: #888;">${rawData}</pre>
+                <button class="btn-g" onclick="processPayment('${key}', ${item.price_coin || 0})">Təsdiq Et</button>
+            </div>`;
+        });
+    });
+
+    window.processPayment = (key, amt) => {
+        const userId = prompt("Bu sorğu hansı ID-yə aiddir? (Yuxarıdakı məlumatdan bax və bura yaz):");
+        if(userId) {
+            rdb.ref(`users/${userId}/coins`).once('value', s => {
                 const current = s.val() || 0;
-                userRef.set(current + Number(amt));
+                rdb.ref(`users/${userId}/coins`).set(current + Number(amt));
                 rdb.ref('p2p_market/' + key).remove();
-                alert("Balans uğurla artırıldı!");
+                alert("Balans artırıldı!");
             });
         }
     };
