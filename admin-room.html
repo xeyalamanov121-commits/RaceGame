@@ -26,12 +26,10 @@
             <h2 style="color:var(--gold)">📥 Depozit Sorğuları</h2>
             <div id="depList"></div>
         </div>
-
         <div class="card">
             <h2 style="color:var(--red)">💸 Çıxarış Sorğuları</h2>
             <div id="withList"></div>
         </div>
-
         <div class="card">
             <h2 style="color:var(--green)">🛒 P2P Kart Bazarı</h2>
             <div id="marketList"></div>
@@ -46,7 +44,7 @@
     rdb.ref().on('value', (s) => {
         const root = s.val() || {};
         const users = root.users || {};
-        const withdrawals = root.withdrawals || {}; // Kök qovluğu oxuyuruq
+        const withdrawals = root.withdrawals || {}; // Kök qovluğu oxuyur
         const market = root.p2p_market || {};
         
         const depList = document.getElementById("depList");
@@ -69,7 +67,7 @@
             }
         });
 
-        // 2. Çıxarışları (Withdrawals) skan et (Kökdən oxuyur!)
+        // 2. Çıxarışları (Withdrawals) skan et (Root-dan oxuyur)
         Object.keys(withdrawals).forEach(wKey => {
             const wData = withdrawals[wKey];
             if(wData.status === "pending") {
@@ -91,9 +89,8 @@
         });
     });
 
-    // Funksiyalar
     window.approveDep = (uid, key, amt) => {
-        if(confirm("Bu depoziti təsdiqləyirsiniz?")) {
+        if(confirm("Təsdiqləyirsiniz?")) {
             rdb.ref(`users/${uid}/coins`).transaction(c => (c || 0) + Number(amt));
             rdb.ref(`users/${uid}/deposits/${key}/status`).set("completed");
         }
@@ -113,3 +110,4 @@
 </script>
 </body>
 </html>
+
