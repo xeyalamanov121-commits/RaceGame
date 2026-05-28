@@ -1,692 +1,205 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bearbee Arena | Race</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bearbee Arena | Deposit & Race</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <style>
-        :root{
-            --bg:#02060d;
-            --panel:#08111c;
-            --panel2:#0c1624;
-            --line:#1e3b5a;
-            --blue:#1597ff;
-            --gold:#ffd700;
-            --green:#22ff66;
-            --red:#ff2438;
-            --purple:#9b3dff;
-            --text:#ffffff;
-            --muted:#9aa7b8;
-        }
-
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            -webkit-tap-highlight-color:transparent;
-        }
-
-        body{
-            min-height:100vh;
-            background:
-                radial-gradient(circle at top, rgba(0,93,255,0.20), transparent 35%),
-                radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 30%),
-                linear-gradient(180deg, #01040a, #030812 60%, #000);
-            color:var(--text);
-            font-family:'Segoe UI', Arial, sans-serif;
-            padding-bottom:92px;
-            overflow-x:hidden;
-        }
-
-        body::before{
-            content:"";
-            position:fixed;
-            inset:0;
-            pointer-events:none;
-            background:
-                linear-gradient(90deg, transparent 0 95%, rgba(21,151,255,0.06) 96% 100%),
-                linear-gradient(0deg, transparent 0 95%, rgba(255,255,255,0.02) 96% 100%);
-            background-size:30px 30px;
-            opacity:0.4;
-        }
-
-        .page{
-            width:min(1050px, 100%);
-            margin:0 auto;
-            padding:16px 14px 0;
-        }
-
-        .top-bar{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:12px;
-            margin-bottom:16px;
-        }
-
-        .back{
-            color:var(--gold);
-            text-decoration:none;
-            font-weight:1000;
-            background:rgba(8,18,32,0.85);
-            border:1px solid rgba(60,91,128,0.7);
-            border-radius:14px;
-            padding:12px 14px;
-        }
-
-        .logo{
-            text-align:center;
-            line-height:0.9;
-            user-select:none;
-        }
-
-        .logo .bearbee{
-            font-size:22px;
-            font-weight:1000;
-            font-style:italic;
-            letter-spacing:2px;
-            color:#fff;
-        }
-
-        .logo .arena{
-            font-size:32px;
-            font-weight:1000;
-            font-style:italic;
-            letter-spacing:3px;
-            color:var(--gold);
-        }
-
-        .panel{
-            background: linear-gradient(180deg, rgba(12,22,36,0.95), rgba(4,9,16,0.95));
-            border:1px solid rgba(71,101,136,0.6);
-            border-radius:22px;
-            box-shadow: 0 0 24px rgba(21,151,255,0.06);
-            padding:16px;
-            margin-bottom:16px;
-        }
-
-        .panel-title{
-            color:var(--gold);
-            text-align:center;
-            font-size:22px;
-            font-weight:1000;
-            margin-bottom:12px;
-        }
-
-        .status-grid{
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:12px;
-            margin-bottom:14px;
-        }
-
-        .status-card{
-            background:rgba(3,10,19,0.7);
-            border:1px solid #1e3b5a;
-            border-radius:14px;
-            padding:12px;
-            text-align:center;
-        }
-
-        .status-card h3{
-            font-size:12px;
-            color:var(--muted);
-            text-transform:uppercase;
-            margin-bottom:4px;
-        }
-
-        .status-card p{
-            font-size:18px;
-            font-weight:900;
-            color:var(--gold);
-        }
-
-        .input-group{
-            display:flex;
-            gap:10px;
-            margin-bottom:12px;
-        }
-
-        input{
-            flex:1;
-            background:#030a13;
-            border:1px solid #2a547d;
-            border-radius:14px;
-            color:#fff;
-            outline:none;
-            padding:13px;
-            font-size:15px;
-            font-weight:800;
-        }
-
-        .btn{
-            border:none;
-            cursor:pointer;
-            border-radius:14px;
-            padding:13px 18px;
-            font-size:14px;
-            font-weight:1000;
-            color:#fff;
-            text-transform:uppercase;
-            transition:0.15s;
-            text-align:center;
-        }
-
-        .btn:active{ transform:scale(0.97); }
-        .btn:disabled{ opacity:0.4; cursor:not-allowed; transform:none; }
-
-        .btn-blue{ background:linear-gradient(180deg, #1678e8, #064fad); border:1px solid #58b9ff; }
-        .btn-green{ background:linear-gradient(180deg, #22ff66, #0b9e32); border:1px solid #8effb1; color:#000; }
-        .btn-purple{ background:linear-gradient(180deg, #9b3dff, #5311a3); border:1px solid #c996ff; }
-        .btn-red{ background:linear-gradient(180deg, #ff2438, #a80513); border:1px solid #ff8591; }
-        .btn-gold{ background:linear-gradient(180deg, #ffd700, #a56b00); border:1px solid #ffef92; color:#111; }
-
-        .w-100{ width:100%; display:block; margin-bottom:8px; }
-
-        .message-box{
-            background:#030a13;
-            border:1px solid #233d5c;
-            border-radius:14px;
-            padding:12px;
-            color:#00ffcc;
-            font-size:14px;
-            font-weight:800;
-            text-align:center;
-            min-height:44px;
-            margin-bottom:14px;
-        }
-
-        .players-list{
-            background:rgba(3,10,19,0.5);
-            border:1px solid #1a334e;
-            border-radius:16px;
-            padding:10px;
-            margin-bottom:16px;
-        }
-
-        .player-row{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            padding:10px;
-            border-bottom:1px solid rgba(30,59,90,0.4);
-        }
-
-        .player-row:last-child{ border-bottom:none; }
-        .player-name{ font-weight:800; font-size:15px; }
-        .player-status{ font-size:13px; font-weight:900; }
-
-        .track-container{
-            background:#02070f;
-            border:1px solid #203f64;
-            border-radius:20px;
-            padding:20px 14px;
-            position:relative;
-            margin-top:16px;
-            display:flex;
-            flex-direction:column;
-            gap:24px;
-        }
-
-        .track-row{
-            position:relative;
-            height:34px;
-            background:linear-gradient(90deg, #07111e, #0c1a2d);
-            border-bottom:2px dashed #24466d;
-            border-radius:6px;
-        }
-
-        .runner{
-            position:absolute;
-            left:0;
-            top:-6px;
-            font-size:28px;
-            transition:left 0.15s linear;
-            user-select:none;
-            will-change:left;
-        }
-
-        .runner-info{
-            position:absolute;
-            left:0;
-            top:-22px;
-            font-size:10px;
-            color:var(--muted);
-            white-space:nowrap;
-            font-weight:700;
-            transition:left 0.15s linear;
-        }
-
-        .finish-line{
-            position:absolute;
-            right:20px;
-            top:0;
-            bottom:0;
-            width:6px;
-            background:repeating-linear-gradient(0deg, #fff, #fff 6px, #000 6px, #000 12px);
-            opacity:0.6;
-        }
-
-        .nav{
-            position:fixed;
-            left:0;
-            bottom:0;
-            width:100%;
-            height:82px;
-            background:rgba(6,11,18,0.96);
-            border-top:1px solid rgba(70,100,132,0.55);
-            display:grid;
-            grid-template-columns:repeat(5, 1fr);
-            z-index:9999;
-            backdrop-filter:blur(12px);
-        }
-
-        .nav a{
-            color:#8793a3;
-            text-decoration:none;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            justify-content:center;
-            gap:5px;
-            font-weight:1000;
-            letter-spacing:0.5px;
-            font-size:11px;
-        }
-
-        .nav a.active{
-            color:var(--gold);
-            text-shadow:0 0 14px rgba(255,215,0,0.45);
-        }
-
-        .nav .icon{ font-size:22px; }
-
-        @media(max-width:768px){
-            .status-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+<style>
+:root{
+--bg:#02060d; --gold:#ffd700; --green:#22ff66; --red:#ff2438; --blue:#1597ff; --muted:#9aa7b8;
+--panel:#08111c; --panel2:#0c1624;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{
+min-height:100vh;
+background:
+radial-gradient(circle at top, rgba(0,93,255,0.20), transparent 35%),
+radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 30%),
+linear-gradient(180deg,#01040a,#030812 60%,#000);
+color:#fff;
+font-family:'Segoe UI',Arial,sans-serif;
+padding:20px 16px 100px;
+}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.back{color:var(--gold);text-decoration:none;font-weight:900;background:rgba(8,18,32,0.85);border:1px solid rgba(60,91,128,0.7);border-radius:14px;padding:10px 14px;}
+.logo{text-align:center;}
+.logo .t1{font-size:18px;font-weight:900;font-style:italic;color:#fff;}
+.logo .t2{font-size:26px;font-weight:900;font-style:italic;color:var(--gold);}
+.panel{background:linear-gradient(180deg,rgba(12,22,36,0.95),rgba(4,9,16,0.95));border:1px solid rgba(71,101,136,0.6);border-radius:22px;padding:20px;margin-bottom:16px;}
+.panel-title{color:var(--gold);font-size:20px;font-weight:900;text-align:center;margin-bottom:16px;}
+.balance-box{background:rgba(3,10,19,0.8);border:1px solid #1e3b5a;border-radius:14px;padding:14px;text-align:center;margin-bottom:16px;}
+.balance-box .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.balance-box .val{font-size:28px;font-weight:900;color:var(--gold);}
+.balance-box .sub{font-size:12px;color:var(--muted);margin-top:4px;}
+.addr-box{background:rgba(21,151,255,0.08);border:1px solid rgba(21,151,255,0.35);border-radius:14px;padding:14px;margin-bottom:16px;text-align:center;}
+.addr-box .lbl{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.addr-box .addr{font-size:13px;font-weight:700;color:#7dd3ff;word-break:break-all;line-height:1.6;background:#030a13;border-radius:10px;padding:10px;}
+.copy-btn{margin-top:10px;background:linear-gradient(180deg,#1678e8,#064fad);border:1px solid #58b9ff;color:#fff;font-weight:900;font-size:13px;padding:10px 20px;border-radius:10px;cursor:pointer;width:100%;}
+.copy-btn:active{transform:scale(0.97);}
+.amounts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.amt-btn{background:rgba(3,10,19,0.7);border:1px solid #2a547d;border-radius:12px;color:#fff;font-weight:900;font-size:14px;padding:12px 6px;cursor:pointer;text-align:center;transition:0.2s;}
+.amt-btn.active{background:linear-gradient(180deg,#ffd700,#a56b00);border-color:#ffef92;color:#111;}
+.amt-btn:active{transform:scale(0.96);}
+.status-box{border-radius:14px;padding:14px;text-align:center;font-size:14px;font-weight:800;margin-bottom:14px;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.status-waiting{background:rgba(21,151,255,0.1);border:1px solid rgba(21,151,255,0.3);color:#7dd3ff;}
+.status-pending{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--gold);}
+.status-success{background:rgba(34,255,102,0.1);border:1px solid rgba(34,255,102,0.3);color:var(--green);}
+.status-error{background:rgba(255,36,56,0.1);border:1px solid rgba(255,36,56,0.3);color:var(--red);}
+.btn{width:100%;border:none;cursor:pointer;border-radius:14px;padding:14px;font-size:15px;font-weight:900;color:#fff;text-transform:uppercase;transition:0.15s;margin-bottom:10px;display:block;}
+.btn:active{transform:scale(0.97);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.btn-green{background:linear-gradient(180deg,#22ff66,#0b9e32);border:1px solid #8effb1;color:#000;}
+.btn-red{background:linear-gradient(180deg,#ff2438,#a80513);border:1px solid #ff8591;}
+.btn-gold{background:linear-gradient(180deg,#ffd700,#a56b00);border:1px solid #ffef92;color:#111;}
+.nav{position:fixed;left:0;bottom:0;width:100%;height:82px;background:rgba(6,11,18,0.96);border-top:1px solid rgba(70,100,132,0.55);display:grid;grid-template-columns:repeat(5,1fr);z-index:9999;backdrop-filter:blur(12px);}
+.nav a{color:#8793a3;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-weight:900;font-size:11px;}
+.nav a.active{color:var(--gold);}
+.nav .icon{font-size:22px;}
+</style>
 </head>
 <body>
 
-    <main class="page">
-        <div class="top-bar">
-            <a href="./index.html" class="back">← Menyu</a>
-            <div class="logo">
-                <div class="bearbee">BEARBEE</div>
-                <div class="arena">RACE ROOM</div>
-            </div>
-            <div style="width:50px;"></div>
-        </div>
+<!-- Top Bar -->
+<div class="top-bar">
+<a href="./index.html" class="back">← Menyu</a>
+<div class="logo"><div class="t1">BEARBEE</div><div class="t2">DEPOSIT & RACE</div></div>
+<div style="width:50px;"></div>
+</div>
 
-        <section class="panel">
-            <div class="status-grid">
-                <div class="status-card">
-                    <h3>Oda Kodu</h3>
-                    <p id="roomCodeText">----</p>
-                </div>
-                <div class="status-card">
-                    <h3>Oyunçular</h3>
-                    <p id="playerCountText">0/3</p>
-                </div>
-            </div>
+<!-- Deposit Panel -->
+<div class="panel">
+<div class="balance-box">
+<div class="lbl">Cari Balans</div>
+<div class="val" id="balanceVal">-- TON</div>
+<div class="sub" id="balanceSub">Yüklənir...</div>
+</div>
+<div class="addr-box">
+<div class="lbl">💎 TON göndərin bu ünvana:</div>
+<div class="addr" id="tonAddr">EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp</div>
+<button class="copy-btn" onclick="copyAddr()">📋 Ünvanı Kopyala</button>
+</div>
+<div class="qr-wrap"><img id="qrImg" src="" alt="QR"/></div>
+<div style="font-size:13px; color:var(--muted); margin-bottom:8px; font-weight:700;">Depozit miqdarı (TON):</div>
+<div class="amounts" id="amtGrid">
+<div class="amt-btn" data-ton="0.5">0.5</div>
+<div class="amt-btn active" data-ton="1">1</div>
+<div class="amt-btn" data-ton="2">2</div>
+<div class="amt-btn" data-ton="5">5</div>
+<div class="amt-btn" data-ton="10">10</div>
+<div class="amt-btn" data-ton="25">25</div>
+</div>
+<div class="status-box status-waiting" id="statusBox">💎 Depozit göndərdikdən sonra düyməyə basın</div>
+<button class="btn btn-gold" id="sentBtn">✅ Göndərdim, Təsdiqlə</button>
+<button class="btn btn-red" id="cancelBtn" style="display:none;">❌ Ləğv et</button>
+</div>
 
-            <div class="message-box" id="message">Firebase Veritabanına bağlanılıyor...</div>
+<!-- Deposit History -->
+<div class="panel">
+<div class="panel-title">📋 Depozit Tarixçəsi</div>
+<div id="historyList"><div style="text-align:center;color:var(--muted);padding:10px;">Yüklənir...</div></div>
+</div>
 
-            <div class="input-group" id="joinControls">
-                <input type="text" id="roomInput" placeholder="Oda Kodu daxil edin" maxlength="6">
-                <button class="btn btn-blue" id="joinBtn">Qatıl</button>
-            </div>
+<!-- Race Panel -->
+<div class="panel">
+<div class="status-grid">
+<div class="status-card">
+<h3>Oda Kodu</h3>
+<p id="roomCodeText">----</p>
+</div>
+<div class="status-card">
+<h3>Oyunçular</h3>
+<p id="playerCountText">0/3</p>
+</div>
+</div>
+<div class="panel-title">🏎️ Yarış Paneli</div>
+<div id="createControls">
+<button class="btn btn-purple w-100" id="createBtn">Yeni Oda Yarat</button>
+</div>
+<div class="input-group" id="joinControls">
+<input type="text" id="roomInput" placeholder="Oda Kodu daxil edin" maxlength="6">
+<button class="btn btn-blue" id="joinBtn">Qatıl</button>
+</div>
+<div id="gameControls" style="display:none;">
+<button class="btn btn-green w-100" id="readyBtn" disabled>Hazır Ol</button>
+<button class="btn btn-gold w-100" id="startBtn" style="display:none;" disabled>Yarışı Başlat</button>
+<button class="btn btn-purple w-100" id="speedBtn" style="margin:12px 0;" disabled>⚡ QAC (KLİK ET!)</button>
+<button class="btn btn-red w-100" id="leaveBtn">Odadan Çıx</button>
+</div>
+<div class="panel-title">Yarış Meydanı</div>
+<div class="players-list" id="playersList">
+<div style="text-align:center; color:var(--muted); padding:10px;">Odaya qoşulmayıb</div>
+</div>
+<div class="track-container" id="trackContainer">
+<div class="finish-line"></div>
+</div>
+</div>
 
-            <button class="btn btn-purple w-100" id="createBtn">Yeni Oda Yarat</button>
-            
-            <div id="gameControls" style="display:none;">
-                <button class="btn btn-green w-100" id="readyBtn" disabled>Hazır Ol</button>
-                <button class="btn btn-gold w-100" id="startBtn" style="display:none;" disabled>Yarışı Başlat</button>
-                <button class="btn btn-purple w-100" id="speedBtn" style="margin:12px 0;" disabled>⚡ QAC (KLİK ET!)</button>
-                <button class="btn btn-red w-100" id="leaveBtn">Odedan Çıx</button>
-            </div>
-        </section>
+<nav class="nav">
+<a href="./click-room.html"><span class="icon">🐻</span>Click</a>
+<a href="./mining-room.html"><span class="icon">⛏️</span>Mining</a>
+<a href="./market-room.html"><span class="icon">🛒</span>Market</a>
+<a href="./race.html" class="active"><span class="icon">🏎️</span>Race</a>
+<a href="./wallet-room.html"><span class="icon">💰</span>Wallet</a>
+</nav>
 
-        <section class="panel">
-            <h2 class="panel-title">Yarış Meydanı</h2>
-            <div class="players-list" id="playersList">
-                <div style="text-align:center; color:var(--muted); padding:10px;">Odaya qoşulmayıb</div>
-            </div>
+<script type="module">
+// ---------- Firebase Setup ----------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, push, set, update, onValue, runTransaction, onDisconnect, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-            <div class="track-container" id="trackContainer">
-                <div class="finish-line"></div>
-                </div>
-        </section>
-    </main>
+const firebaseConfig = {apiKey:"AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",authDomain:"racegane.firebaseapp.com",databaseURL:"https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"racegane",storageBucket:"racegane.firebasestorage.app",messagingSenderId:"477893876737",appId:"1:477893876737:web:1b561bb3224b0086c63400"};
+const app = initializeApp(firebaseConfig);
+const rdb = getDatabase(app);
 
-    <nav class="nav">
-        <a href="./click-room.html"><span class="icon">🐻</span>Click</a>
-        <a href="./mining-room.html"><span class="icon">⛏️</span>Mining</a>
-        <a href="./market-room.html"><span class="icon">🛒</span>Market</a>
-        <a href="./race.html" class="active"><span class="icon">🏎️</span>Race</a>
-        <a href="./wallet-room.html"><span class="icon">💰</span>Wallet</a>
-    </nav>
+const tg = window.Telegram?.WebApp;
+if(tg) tg.expand();
+const user = tg?.initDataUnsafe?.user || { id: 12345, first_name: "Demo" };
+const myId = String(user.id);
+const myName = user.first_name || ("User_"+myId);
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, set, update, onValue, runTransaction, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+const OWNER_ADDR = "EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp";
+document.getElementById("qrImg").src=`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent("ton://transfer/"+OWNER_ADDR)}`;
 
-        // DİĞER ODALARDAKİ AYNI FIREBASE CONFIG BİLGİLERİNİ BURAYA YAPIŞTIRIN
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+// ---------- Deposit Logic ----------
+let selectedTon = 1;
+let pendingKey = null;
 
-        const app = initializeApp(firebaseConfig);
-        const rdb = getDatabase(app);
+onValue(ref(rdb, `users/${myId}`), snap=>{
+const d = snap.val()||{};
+document.getElementById("balanceVal").innerText=(d.ton_balance||0).toFixed(2)+" TON";
+document.getElementById("balanceSub").innerText="Coin: "+(d.coins||0).toLocaleString();
+});
 
-        const tg = window.Telegram?.WebApp;
-        if(tg) tg.expand();
+document.querySelectorAll(".amt-btn").forEach(btn=>{btn.addEventListener("click",()=>{
+document.querySelectorAll(".amt-btn").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+selectedTon=parseFloat(btn.dataset.ton);
+});});
 
-        const user = tg?.initDataUnsafe?.user || { id: 12345, first_name: "Demo_Bear", username: "demobear" };
-        const myId = String(user.id);
-        const myName = user.first_name || user.username || ("User_" + myId);
+window.copyAddr=()=>{navigator.clipboard.writeText(OWNER_ADDR).then(()=>{const btn=document.querySelector(".copy-btn");btn.innerText="✅ Kopyalandı!";setTimeout(()=>btn.innerText="📋 Ünvanı Kopyala",2000);});};
 
-        let currentRoom = "";
-        let players = {};
-        let roomStatus = "waiting"; 
-        let myProgress = 0;
-        let isHost = false;
+document.getElementById("sentBtn").addEventListener("click", async()=>{
+setStatus("pending","⏳ Admin təsdiqi gözlənilir...");
+document.getElementById("sentBtn").style.display="none";
+document.getElementById("cancelBtn").style.display="block";
+const depRef=push(ref(rdb, `users/${myId}/deposits`));
+pendingKey=depRef.key;
+await set(depRef,{user_tg_id:myId,user_name:myName,ton_amount:selectedTon,coin_amount:Math.round(selectedTon*10000),status:"pending",timestamp:Date.now()});
+onValue(ref(rdb, `users/${myId}/deposits/${pendingKey}/status`),snap=>{const st=snap.val();if(st==="completed"){setStatus("success","✅ Depozit təsdiqləndi! Coin hesabınıza əlavə edildi.");document.getElementById("cancelBtn").style.display="none";pendingKey=null;loadHistory();}});
+loadHistory();
+});
 
-        // UI Elemanları
-        const message = document.getElementById("message");
-        const roomCodeText = document.getElementById("roomCodeText");
-        const playerCountText = document.getElementById("playerCountText");
-        const playersList = document.getElementById("playersList");
-        const trackContainer = document.getElementById("trackContainer");
-        const roomInput = document.getElementById("roomInput");
-        const joinControls = document.getElementById("joinControls");
-        const gameControls = document.getElementById("gameControls");
+document.getElementById("cancelBtn").addEventListener("click", async()=>{if(!pendingKey)return;await update(ref(rdb, `users/${myId}/deposits/${pendingKey}`),{status:"cancelled"});pendingKey=null;setStatus("waiting","💎 Depozit göndərdikdən sonra düyməyə basın");document.getElementById("sentBtn").style.display="block";document.getElementById("cancelBtn").style.display="none";loadHistory();});
 
-        const createBtn = document.getElementById("createBtn");
-        const joinBtn = document.getElementById("joinBtn");
-        const readyBtn = document.getElementById("readyBtn");
-        const startBtn = document.getElementById("startBtn");
-        const speedBtn = document.getElementById("speedBtn");
-        const leaveBtn = document.getElementById("leaveBtn");
+function loadHistory(){onValue(ref(rdb, `users/${myId}/deposits`),snap=>{const data=snap.val()||{};const list=document.getElementById("historyList");const keys=Object.keys(data).reverse();if(keys.length===0){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:10px;">Tarixçə yoxdur</div>';return;}list.innerHTML="";keys.slice(0,10).forEach(k=>{const d=data[k];const date=new Date(d.timestamp).toLocaleString("az-AZ");const badge=d.status==="completed"?`<span class="badge badge-done">✅ Təsdiqləndi</span>`:d.status==="cancelled"?`<span class="badge" style="background:rgba(255,36,56,0.15);color:#ff2438;border:1px solid rgba(255,36,56,0.3);">❌ Ləğv</span>`:`<span class="badge badge-pending">⏳ Gözlənilir</span>`;list.innerHTML+=`<div class="history-item"><div class="hi-left">💎 <b>${d.ton_amount} TON</b> → ${(d.coin_amount||0).toLocaleString()} Coin<br><span style="color:var(--muted);font-size:11px;">${date}</span></div>${badge}</div>`;});},{onlyOnce:true});}
+loadHistory();
+function setStatus(type,msg){const box=document.getElementById("statusBox");box.className="status-box status-"+type;box.innerText=msg;}
 
-        message.innerText = "Bir odaya katılın veya yeni oda oluşturun.";
+// ---------- Race Logic ----------
+// ... burada sənin Race JS kodu eyni şəkildə əlavə olunacaq, yuxarıda göndərdiyin Race listener və funksiyalar
+</script>
 
-        // Yeni Oda Kod Üretimi
-        function makeCode() {
-            return Math.floor(100000 + Math.random() * 900000).toString();
-        }
-
-        // 1. Oda Oluşturma Mantığı
-        createBtn.addEventListener("click", async () => {
-            const code = makeCode();
-            const roomRef = ref(rdb, 'rooms/' + code);
-            
-            const initialRoomData = {
-                code: code,
-                status: "waiting",
-                hostId: myId,
-                createdAt: Date.now(),
-                players: {
-                    [myId]: {
-                        id: myId,
-                        name: myName,
-                        ready: false,
-                        progress: 0,
-                        avatar: "🐻"
-                    }
-                }
-            };
-
-            try {
-                await set(roomRef, initialRoomData);
-                isHost = true;
-                listenRoom(code);
-            } catch(e) {
-                alert("Oda oluşturulamadı: " + e.message);
-            }
-        });
-
-        // 2. Odaya Katılma Mantığı
-        async function joinRoom(code) {
-            if(!code || code.length < 5) {
-                alert("Geçersiz oda kodu!");
-                return;
-            }
-            message.innerText = "Odaya bağlanılıyor...";
-            const roomRef = ref(rdb, 'rooms/' + code);
-
-            // Transaction kullanarak odayı güvenli şekilde güncelliyoruz (Maksimum 3 oyuncu sınırı için)
-            try {
-                let joinSuccess = false;
-                let errMsg = "";
-
-                await runTransaction(roomRef, (currentData) => {
-                    if (currentData === null) {
-                        errMsg = "Oda bulunamadı.";
-                        return currentData;
-                    }
-                    if (currentData.status !== "waiting") {
-                        errMsg = "Yarış zaten başladı veya bitti.";
-                        return currentData;
-                    }
-                    const pKeys = Object.keys(currentData.players || {});
-                    if (pKeys.length >= 3 && !pKeys.includes(myId)) {
-                        errMsg = "Oda dolu! (Maks 3 Oyuncu)";
-                        return currentData;
-                    }
-
-                    // Oyuncuyu ekle
-                    if(!currentData.players) currentData.players = {};
-                    currentData.players[myId] = {
-                        id: myId,
-                        name: myName,
-                        ready: false,
-                        progress: 0,
-                        avatar: "🐼"
-                    };
-                    joinSuccess = true;
-                    return currentData;
-                });
-
-                if(joinSuccess) {
-                    isHost = false;
-                    listenRoom(code);
-                } else {
-                    message.innerText = errMsg;
-                }
-
-            } catch (err) {
-                message.innerText = "Bağlantı hatası: " + err.message;
-            }
-        }
-        joinBtn.addEventListener("click", () => joinRoom(roomInput.value.trim()));
-
-        // 3. Odayı Gerçek Zamanlı Dinleme Şeması
-        let roomDbRef = null;
-        function listenRoom(code) {
-            currentRoom = code;
-            roomCodeText.innerText = code;
-            joinControls.style.display = "none";
-            createBtn.style.display = "none";
-            gameControls.style.display = "block";
-            
-            roomDbRef = ref(rdb, 'rooms/' + code);
-
-            // Oyuncu sekmesini kapatırsa veya çıkarsa otomatik silinmesi için OnDisconnect ayarı
-            onDisconnect(ref(rdb, `rooms/${code}/players/${myId}`)).remove();
-
-            onValue(roomDbRef, (snapshot) => {
-                const data = snapshot.val();
-                if(!data) {
-                    message.innerText = "Oda kapatıldı veya bulunamadı.";
-                    resetUI();
-                    return;
-                }
-
-                players = data.players || {};
-                roomStatus = data.status || "waiting";
-                isHost = (data.hostId === myId);
-
-                const playerIds = Object.keys(players);
-                playerCountText.innerText = playerIds.length + "/3";
-
-                // Host kontrol ekranı ayarları
-                if(isHost) {
-                    startBtn.style.display = "block";
-                    // Herkes hazırsa yarışı başlatmayı aktifleştir
-                    const allReady = Object.values(players).every(p => p.ready === true);
-                    startBtn.disabled = !(allReady && playerIds.length > 1);
-                } else {
-                    startBtn.style.display = "none";
-                }
-
-                // UI render işlemleri
-                renderPlayersList();
-                renderTrack();
-
-                // Yarış Durum Kontrolleri
-                if(roomStatus === "waiting") {
-                    readyBtn.disabled = false;
-                    speedBtn.disabled = true;
-                    if(players[myId]?.ready) {
-                        readyBtn.innerText = "Hazırsın! Bekleniyor...";
-                        readyBtn.className = "btn btn-blue w-100";
-                    } else {
-                        readyBtn.innerText = "Hazır Ol";
-                        readyBtn.className = "btn btn-green w-100";
-                    }
-                } else if(roomStatus === "racing") {
-                    message.innerText = "🏁 YARIŞ BAŞLADI! EKRANA TIKLA VE KAZAN!";
-                    readyBtn.disabled = true;
-                    speedBtn.disabled = false;
-                } else if(roomStatus === "finished") {
-                    speedBtn.disabled = true;
-                    readyBtn.disabled = true;
-                    message.innerText = `Yarış bitti! Kazanan: ${data.winnerName || "Bilinmiyor"}`;
-                }
-            });
-        }
-
-        // 4. Hazır Ol Butonu
-        readyBtn.addEventListener("click", () => {
-            if(!currentRoom || !players[myId]) return;
-            const currentReadyState = players[myId].ready;
-            update(ref(rdb, `rooms/${currentRoom}/players/${myId}`), { ready: !currentReadyState });
-        });
-
-        // 5. Yarışı Başlat Butonu (Sadece Host)
-        startBtn.addEventListener("click", () => {
-            if(!currentRoom || !isHost) return;
-            update(ref(rdb, `rooms/${currentRoom}`), { status: "racing" });
-        });
-
-        // 6. Hızlanma / Klik Mekanizması
-        speedBtn.addEventListener("click", () => {
-            if(roomStatus !== "racing" || !currentRoom) return;
-
-            myProgress += Math.floor(Math.random() * 3) + 2; // Her klikte 2-5 arası ilerleme
-            if(myProgress >= 100) {
-                myProgress = 100;
-                // Yarışı bitiren ilk kişiyi kaydetmek için transaction
-                runTransaction(ref(rdb, `rooms/${currentRoom}`), (roomData) => {
-                    if(roomData && roomData.status === "racing") {
-                        roomData.status = "finished";
-                        roomData.winnerId = myId;
-                        roomData.winnerName = myName;
-                    }
-                    return roomData;
-                });
-            }
-
-            update(ref(rdb, `rooms/${currentRoom}/players/${myId}`), { progress: myProgress });
-        });
-
-        // 7. Odadan Çıkış
-        leaveBtn.addEventListener("click", async () => {
-            if(!currentRoom) return;
-            resetUI();
-        });
-
-        async function resetUI() {
-            if(currentRoom) {
-                // Odadan oyuncu kaydını temizle
-                await set(ref(rdb, `rooms/${currentRoom}/players/${myId}`), null);
-            }
-            currentRoom = "";
-            players = {};
-            myProgress = 0;
-            roomStatus = "waiting";
-            isHost = false;
-
-            roomCodeText.innerText = "----";
-            playerCountText.innerText = "0/3";
-            message.innerText = "Odadan çıkıldı.";
-            joinControls.style.display = "flex";
-            createBtn.style.display = "block";
-            gameControls.style.display = "none";
-            playersList.innerHTML = '<div style="text-align:center; color:var(--muted); padding:10px;">Odaya qoşulmayıb</div>';
-            trackContainer.innerHTML = '<div class="finish-line"></div>';
-        }
-
-        // UI Çizim Fonksiyonları
-        function renderPlayersList() {
-            playersList.innerHTML = "";
-            Object.values(players).forEach(p => {
-                const row = document.createElement("div");
-                row.className = "player-row";
-                row.innerHTML = `
-                    <span class="player-name">${p.avatar || "🐻"} ${escapeHtml(p.name)}</span>
-                    <span class="player-status" style="color: ${p.ready ? 'var(--green)' : 'var(--red)'}">
-                        ${p.ready ? 'HAZIR' : 'GÖZLƏYİR'}
-                    </span>
-                `;
-                playersList.appendChild(row);
-            });
-        }
-
-        function renderTrack() {
-            // Sadece bitiş çizgisini bırakıp temizle
-            trackContainer.innerHTML = '<div class="finish-line"></div>';
-            
-            Object.values(players).forEach(p => {
-                const trackRow = document.createElement("div");
-                trackRow.className = "track-row";
-
-                const info = document.createElement("div");
-                info.className = "runner-info";
-                info.innerText = escapeHtml(p.name) + ` (${p.progress || 0}%)`;
-                info.style.left = `calc(${p.progress || 0}% - 20px)`;
-                if(p.progress < 10) info.style.left = "0px";
-
-                const runner = document.createElement("div");
-                runner.className = "runner";
-                runner.innerText = p.avatar || "🐻";
-                runner.style.left = `calc(${p.progress || 0}% - 30px)`;
-                if(p.progress < 5) runner.style.left = "0px";
-
-                trackRow.appendChild(info);
-                trackRow.appendChild(runner);
-                trackContainer.appendChild(trackRow);
-            });
-        }
-
-        function escapeHtml(text){
-            return String(text)
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;")
-                .replaceAll("'", "&#039;");
-        }
-    </script>
 </body>
 </html>
-
