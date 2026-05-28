@@ -221,11 +221,9 @@
     }
 
     .art{
-      height:120px;
+      height:140px;
       border-radius:15px;
-      background:
-        radial-gradient(circle at center, rgba(255,215,0,.2), transparent 45%),
-        linear-gradient(135deg,#183a61,#1b1540 55%,#2a103d);
+      background:#02060d;
       display:grid;
       place-items:center;
       overflow:hidden;
@@ -352,21 +350,6 @@
       font-weight:900;
     }
 
-    .miniapp-open{
-      margin-top:12px;
-      background:linear-gradient(180deg,#20c235,#087816);
-      border:1px solid #66ff7e;
-      color:#fff;
-      border-radius:13px;
-      padding:13px;
-      font-weight:1000;
-      cursor:pointer;
-      width:100%;
-      text-transform:uppercase;
-    }
-
-
-    /* WORDPRESS-STYLE LIGHT MARKET + REFERRAL */
     .ref-panel{
       background:#07101b;
       border:1px solid rgba(71,101,136,.62);
@@ -482,17 +465,6 @@
       padding:11px;
     }
 
-    @media(max-width:760px){
-      .shop-layout{
-        grid-template-columns:1fr;
-      }
-
-      .sidebar{
-        position:relative;
-        top:0;
-      }
-    }
-
     .nav{
       position:fixed;
       left:0;
@@ -524,6 +496,8 @@
     .nav .icon{font-size:22px}
 
     @media(max-width:760px){
+      .shop-layout{grid-template-columns:1fr}
+      .sidebar{position:relative;top:0}
       .stats{grid-template-columns:1fr 1fr}
       .filters{grid-template-columns:1fr}
       .grid{grid-template-columns:1fr 1fr}
@@ -551,13 +525,13 @@
     </div>
 
     <section class="hero">
-      <h1>🌍 Fast Card Market</h1>
-      <p>WordPress mağaza tərzində yüngül market: əvvəl bazar açılır, kartlar sonra yüklənir. Coin və manual TON order dəstəyi var.</p>
+      <h1>🌍 P2P AI Card Market (Fee: 10%)</h1>
+      <p>Oyunçudan-oyunçuya təhlükəsiz bazar. Hər uğurlu satışdan satıcıdan 10% komissiya tutulur.</p>
     </section>
 
     <section class="stats">
       <div class="stat"><h3>Coin</h3><strong id="coinText">0</strong></div>
-      <div class="stat"><h3>Boost</h3><strong id="boostText">1x</strong></div>
+      <div class="stat"><h3>TON Balans</h3><strong id="tonText">0.00</strong></div>
       <div class="stat"><h3>Cards</h3><strong id="cardsText">0</strong></div>
     </section>
 
@@ -593,27 +567,25 @@
             <option value="newest">Ən yeni</option>
             <option value="low_price">Ucuzdan bahaya</option>
             <option value="high_price">Bahadan ucuza</option>
-            <option value="high_power">Power yüksək</option>
-            <option value="high_boost">Boost yüksək</option>
           </select>
         </section>
       </aside>
 
       <section class="panel" id="marketPanel">
-      <h2 class="section-title">Global Card Listings</h2>
-      <div class="summary" id="marketSummary">Market hazırlanır...</div>
-      <div class="grid" id="marketGrid">
-        <div class="empty">Yüklənir...</div>
-      </div>
-      <div class="log" id="marketLog">Market açılır...</div>
+        <h2 class="section-title">Global Card Listings</h2>
+        <div class="summary" id="marketSummary">Market hazırlanır...</div>
+        <div class="grid" id="marketGrid">
+          <div class="empty">Yüklənir...</div>
+        </div>
+        <div class="log" id="marketLog">Market açılır...</div>
       </section>
     </section>
 
     <section class="panel" id="myCardsPanel" style="display:none">
       <h2 class="section-title">Mənim Kartlarım</h2>
-      <div class="summary">Kartı seçəndə boost dəyişir. Satış üçün coin qiyməti yaz.</div>
+      <div class="summary">Sahib olduğun süni zəka kiber-ayı kartları. Qiymət yazaraq P2P bazara çıxara bilərsən. (10% komissiya tutulacaq)</div>
       <div class="grid" id="myCardsGrid">
-        <div class="empty">My Cards düyməsinə basanda yüklənəcək.</div>
+        <div class="empty">Yüklənir...</div>
       </div>
       <div class="log" id="cardsLog">Kartlar hələ yüklənməyib.</div>
     </section>
@@ -627,23 +599,40 @@
     <a href="./wallet-room.html"><span class="icon">💎</span>WALLET</a>
   </nav>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
 <script>
-  const TG_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-api-ref";
-  const TON_ORDER_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-card-orders";
-  const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
+    authDomain: "racegane.firebaseapp.com",
+    databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "racegane",
+    storageBucket: "racegane.firebasestorage.app",
+    messagingSenderId: "477893876737",
+    appId: "1:477893876737:web:1b561bb3224b0086c63400"
+  };
 
-  let telegramUser = null;
-  let profile = null;
-  let coins = 0;
-  let selectedCard = null;
-  let selectedBoost = 1;
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const rdb = firebase.database();
 
+  let userId = "test_user_123";
+  let userCoins = 0;
+  let userTon = 0;
   let marketCache = [];
   let myCardsCache = [];
-  let myCardsLoaded = false;
+
+  const AI_TEMPLATES = {
+    1: { id: 1, name: "AI Cyber Bear - Alpha", rarity: "rare", boost: 2, power: 15, img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=300&auto=format&fit=crop" },
+    2: { id: 2, name: "AI Neon Mecha Bear", rarity: "epic", boost: 4, power: 45, img: "https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=300&auto=format&fit=crop" },
+    3: { id: 3, name: "AI Quantum Overlord Ayı", rarity: "legendary", boost: 8, power: 120, img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=300&auto=format&fit=crop" },
+    4: { id: 4, name: "AI Steampunk Rebel", rarity: "common", boost: 1.5, power: 5, img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=300&auto=format&fit=crop" }
+  };
 
   const coinText = document.getElementById("coinText");
-  const boostText = document.getElementById("boostText");
+  const tonText = document.getElementById("tonText");
   const cardsText = document.getElementById("cardsText");
   const marketGrid = document.getElementById("marketGrid");
   const myCardsGrid = document.getElementById("myCardsGrid");
@@ -652,216 +641,63 @@
   const refLink = document.getElementById("refLink");
   const refCount = document.getElementById("refCount");
   const refEarned = document.getElementById("refEarned");
-  const refLog = document.getElementById("refLog");
   const marketSummary = document.getElementById("marketSummary");
 
-  function initTelegramMiniApp(){
-    if(window.Telegram && window.Telegram.WebApp){
-      const tg = window.Telegram.WebApp;
+  function initTelegram(){
+    const tg = window.Telegram?.WebApp;
+    if(tg){
       tg.ready();
       tg.expand();
-
-      const liveInitData = tg.initData;
-      if(liveInitData && liveInitData.length > 10){
-        sessionStorage.setItem("bearbee_initData", liveInitData);
-        localStorage.setItem("bearbee_initData_backup", liveInitData);
+      if(tg.initDataUnsafe?.user?.id){
+        userId = String(tg.initDataUnsafe.user.id);
       }
     }
-  }
-
-  function getInitData(){
-    const live = window.Telegram?.WebApp?.initData;
-    const session = sessionStorage.getItem("bearbee_initData");
-    const backup = localStorage.getItem("bearbee_initData_backup");
-
-    if(live && live.length > 10) return live;
-    if(session && session.length > 10) return session;
-    if(backup && backup.length > 10) return backup;
-
-    return "";
-  }
-
-  function hasInitData(){
-    return getInitData().length > 10;
-  }
-
-  function showMiniAppOpenScreen(){
-    marketGrid.innerHTML = `
-      <div class="empty">
-        Bu səhifəni Telegram botdakı PLAY düyməsindən açmaq lazımdır.
-        <button class="miniapp-open" onclick="location.href=MINI_APP_URL">🎮 PLAY ilə aç</button>
-      </div>
-    `;
-    marketLog.innerText = "Telegram initData yoxdur.";
-  }
-
-  async function api(action, payload = {}){
-    const initData = getInitData();
-
-    if(!initData){
-      showMiniAppOpenScreen();
-      throw new Error("Telegram initData yoxdur.");
-    }
-
-    const response = await fetch(TG_API_URL, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ initData, action, payload })
-    });
-
-    const data = await response.json();
-
-    if(!response.ok || !data.ok){
-      throw new Error(data.error || "API xətası");
-    }
-
-    return data;
-  }
-
-  async function tonOrderApi(action, payload = {}){
-    const initData = getInitData();
-
-    if(!initData){
-      showMiniAppOpenScreen();
-      throw new Error("Telegram initData yoxdur.");
-    }
-
-    const response = await fetch(TON_ORDER_API_URL, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ initData, action, payload })
-    });
-
-    const data = await response.json();
-
-    if(!response.ok || !data.ok){
-      throw new Error(data.error || "TON order API xətası");
-    }
-
-    return data;
-  }
-
-
-  function getStartParam(){
-    const tgParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
-
-    if(tgParam){
-      return String(tgParam);
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get("startapp") || urlParams.get("ref") || "";
-  }
-
-  function getReferrerIdFromStartParam(){
-    const startParam = getStartParam();
-
-    if(!startParam){
-      return null;
-    }
-
-    const match = String(startParam).match(/ref[_-]?(\d+)/i);
-
-    if(match && match[1]){
-      return Number(match[1]);
-    }
-
-    if(/^\d+$/.test(String(startParam))){
-      return Number(startParam);
-    }
-
-    return null;
   }
 
   function getMyReferralLink(){
-    if(!telegramUser){
-      return "";
-    }
-
-    return "https://t.me/Bearbeee_bot/GameR?startapp=ref_" + telegramUser.id;
+    return "https://t.me/Bearbeee_bot/GameR?startapp=ref_" + userId;
   }
 
-  function renderReferralStats(stats){
-    if(!telegramUser){
-      return;
-    }
-
-    const link = getMyReferralLink();
-
-    if(refLink){
-      refLink.innerText = link;
-    }
-
-    if(refCount){
-      refCount.innerText = stats?.referral_count || 0;
-    }
-
-    if(refEarned){
-      refEarned.innerText = stats?.referral_earned_coins || 0;
-    }
-
-    if(refLog){
-      refLog.innerText = "Referral hazırdır. Linki paylaş, dostların daxil olanda bonus qazan.";
-    }
-  }
-
-  async function copyReferralLink(){
-    const link = getMyReferralLink();
-
-    if(!link){
-      alert("Telegram ID yüklənməyib.");
-      return;
-    }
-
-    try{
-      await navigator.clipboard.writeText(link);
-      if(refLog){
-        refLog.innerText = "Referral link kopyalandı.";
+  function loadDatabaseData(){
+    rdb.ref(`users/${userId}`).on('value', (snapshot) => {
+      const uData = snapshot.val();
+      if(uData){
+        userCoins = uData.coins || 0;
+        userTon = uData.ton || 0;
+        coinText.innerText = userCoins;
+        tonText.innerText = Number(userTon).toFixed(2);
       }
-    }catch(error){
-      alert(link);
-    }
-  }
+    });
 
-  async function init(){
-    initTelegramMiniApp();
+    rdb.ref(`users/${userId}`).once('value', (snapshot) => {
+      const uData = snapshot.val();
+      refLink.innerText = getMyReferralLink();
+      refCount.innerText = uData?.referrals || 0;
+      refEarned.innerText = uData?.ref_earned || 0;
+    });
 
-    if(!hasInitData()){
-      showMiniAppOpenScreen();
-      return;
-    }
+    rdb.ref(`users/${userId}/my_cards`).on('value', (snapshot) => {
+      const data = snapshot.val();
+      myCardsCache = [];
+      if(data){
+        Object.keys(data).forEach(k => {
+          myCardsCache.push({ id: k, ...data[k] });
+        });
+      }
+      cardsText.innerText = myCardsCache.length;
+      renderMyCards();
+    });
 
-    try{
-      marketLog.innerText = "Profil və market yüklənir...";
-      const data = await api("init", { referrer_id: getReferrerIdFromStartParam() });
-
-      telegramUser = data.user;
-      profile = data.profile || {};
-      coins = Number(profile.coins || 0);
-
-      coinText.innerText = coins;
-      marketCache = data.marketplace || [];
-      renderReferralStats(data.referralStats);
+    rdb.ref(`p2p_market`).on('value', (snapshot) => {
+      const data = snapshot.val();
+      marketCache = [];
+      if(data){
+        Object.keys(data).forEach(k => {
+          marketCache.push({ listing_id: k, ...data[k] });
+        });
+      }
       applyFilters();
-
-      marketLog.innerText = "Market hazırdır.";
-    }catch(error){
-      marketLog.innerText = "Market xətası: " + error.message;
-      marketGrid.innerHTML = `<div class="empty">Xəta: ${escapeHtml(error.message)}</div>`;
-    }
-  }
-
-  async function refreshMarket(){
-    try{
-      marketLog.innerText = "Market yenilənir...";
-      const data = await api("load_marketplace");
-      marketCache = data.marketplace || [];
-      renderReferralStats(data.referralStats);
-      applyFilters();
-      marketLog.innerText = "Market yeniləndi.";
-    }catch(error){
-      marketLog.innerText = "Yeniləmə xətası: " + error.message;
-    }
+    });
   }
 
   function showMarket(){
@@ -872,71 +708,38 @@
     document.getElementById("shopLayout").style.display = "grid";
   }
 
-  async function showMyCards(){
+  // FILTERS & RENDERS
+  function showMyCards(){
     document.getElementById("marketPanel").style.display = "none";
     document.getElementById("myCardsPanel").style.display = "block";
     document.getElementById("marketTab").classList.remove("active");
     document.getElementById("myCardsTab").classList.add("active");
     document.getElementById("shopLayout").style.display = "none";
-
-    if(!myCardsLoaded){
-      await loadMyCards();
-    }
-  }
-
-  async function loadMyCards(){
-    try{
-      cardsLog.innerText = "Kartlar yüklənir...";
-      const data = await api("load_my_cards");
-      myCardsCache = data.myCards || [];
-      myCardsLoaded = true;
-      renderMyCards();
-      cardsText.innerText = myCardsCache.length;
-      cardsLog.innerText = "Kartlar yükləndi.";
-    }catch(error){
-      myCardsGrid.innerHTML = `<div class="empty">Kart yükləmə xətası: ${escapeHtml(error.message)}</div>`;
-      cardsLog.innerText = "Kart yükləmə xətası.";
-    }
-  }
-
-  function getTemplateFromListing(listing){
-    const card = listing.tg_user_cards || {};
-    return card.tg_card_templates || {};
   }
 
   function applyFilters(){
     let list = [...marketCache];
-
     const search = String(document.getElementById("searchInput")?.value || "").toLowerCase().trim();
     const rarityValue = String(document.getElementById("rarityFilter")?.value || "all").toLowerCase();
     const sortValue = String(document.getElementById("sortFilter")?.value || "newest");
 
     if(search){
       list = list.filter(item => {
-        const t = getTemplateFromListing(item);
-        return String(t.name || "").toLowerCase().includes(search) ||
-               String(t.rarity || "").toLowerCase().includes(search);
+        const t = AI_TEMPLATES[item.template_id] || {};
+        return t.name.toLowerCase().includes(search);
       });
     }
 
     if(rarityValue !== "all"){
       list = list.filter(item => {
-        const t = getTemplateFromListing(item);
-        return String(t.rarity || "").toLowerCase() === rarityValue;
+        const t = AI_TEMPLATES[item.template_id] || {};
+        return t.rarity === rarityValue;
       });
     }
 
-    list.sort((a,b) => {
-      const ta = getTemplateFromListing(a);
-      const tb = getTemplateFromListing(b);
-
-      if(sortValue === "low_price") return Number(a.price || 0) - Number(b.price || 0);
-      if(sortValue === "high_price") return Number(b.price || 0) - Number(a.price || 0);
-      if(sortValue === "high_power") return Number(tb.mining_power || 0) - Number(ta.mining_power || 0);
-      if(sortValue === "high_boost") return Number(tb.click_boost || 0) - Number(ta.click_boost || 0);
-
-      return Number(b.id || 0) - Number(a.id || 0);
-    });
+    if(sortValue === "low_price") list.sort((a,b) => a.price_coin - b.price_coin);
+    if(sortValue === "high_price") list.sort((a,b) => b.price_coin - a.price_coin);
+    if(sortValue === "newest") list.reverse();
 
     renderMarket(list);
   }
@@ -946,191 +749,239 @@
     marketSummary.innerText = "Aktiv satış: " + marketCache.length + " | Göstərilən: " + list.length;
 
     if(!list.length){
-      marketGrid.innerHTML = `<div class="empty">Axtarışa uyğun kart tapılmadı.</div>`;
+      marketGrid.innerHTML = `<div class="empty">P2P marketdə satış elanı tapılmadı.</div>`;
       return;
     }
 
-    list.forEach(listing => {
-      const card = listing.tg_user_cards || {};
-      const t = card.tg_card_templates || {};
-      const rarity = String(t.rarity || "rare").toLowerCase();
-      const isMine = telegramUser && Number(listing.seller_telegram_id) === Number(telegramUser.id);
-      const priceCoin = Number(listing.price || listing.price_coin || 0);
-      const tonPrice = coinToTon(priceCoin);
-      const userCardId = card.id || listing.user_card_id || listing.card_id || null;
-      const img = t.image_url ? `<img loading="lazy" src="${escapeHtml(t.image_url)}" alt="${escapeHtml(t.name || "Card")}">` : "🎴";
+    list.forEach(item => {
+      const t = AI_TEMPLATES[item.template_id] || {};
+      const isMine = item.seller_id === userId;
+      const priceCoin = item.price_coin;
+      const tonPrice = (priceCoin / 100000).toFixed(2);
 
       const div = document.createElement("div");
       div.className = "card product-card";
       div.innerHTML = `
-        <div class="art">${img}</div>
-        <h3>${escapeHtml(t.name || "Cyber Card")}</h3>
-        <span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span>
-        <div class="info">Boost: ${Number(t.click_boost) || 1}x</div>
-        <div class="info">Power: ${Number(t.mining_power) || 0}</div>
+        <div class="art"><img src="${t.img}" alt="AI Card"></div>
+        <h3>${escapeHtml(t.name)}</h3>
+        <span class="rarity ${t.rarity}">${t.rarity.toUpperCase()}</span>
+        <div class="info">Boost: ${t.boost}x</div>
+        <div class="info">Power: ${t.power}</div>
         <div class="price">🪙 ${priceCoin} coin</div>
-        <div class="info">💎 Manual TON: ${tonPrice}</div>
-        <div class="seller">Seller: ${escapeHtml(listing.seller_telegram_id || "-")}</div>
+        <div class="info">💎 Manual TON: ${tonPrice} TON</div>
+        <div class="seller">Satıcı ID: ${escapeHtml(item.seller_id)}</div>
 
-        <button class="btn ${isMine ? "btn-dark" : "btn-green"}" ${isMine ? "disabled" : ""} onclick="buyCardCoin(${Number(listing.id)})">
-          ${isMine ? "Sənin satışındır" : "🪙 Coin ilə al"}
+        <button class="btn ${isMine ? "btn-dark" : "btn-green"}" ${isMine ? "disabled" : ""} onclick="buyCardCoin('${item.listing_id}')">
+          ${isMine ? "Sənin Elanındır" : "🪙 Coin ilə al"}
         </button>
 
-        <button class="btn ${isMine ? "btn-dark" : "btn-gold"}" ${isMine ? "disabled" : ""} onclick="buyCardTon(${Number(listing.id)}, '${escapeForJs(t.name || "Cyber Card")}', ${Number(tonPrice)}, '${escapeForJs(listing.seller_telegram_id || "")}', '${escapeForJs(userCardId || "")}')">
-          ${isMine ? "Sənin satışındır" : "💎 TON ilə al"}
+        <button class="btn ${isMine ? "btn-dark" : "btn-gold"}" ${isMine ? "disabled" : ""} onclick="buyCardTon('${item.listing_id}')">
+          ${isMine ? "Sənin Elanındır" : "💎 TON ilə al"}
         </button>
       `;
       marketGrid.appendChild(div);
     });
+    marketLog.innerText = "Market siyahısı yeniləndi.";
   }
 
   function renderMyCards(){
     myCardsGrid.innerHTML = "";
 
     if(!myCardsCache.length){
-      myCardsGrid.innerHTML = `<div class="empty">Səndə kart yoxdur.</div>`;
+      myCardsGrid.innerHTML = `<div class="empty">Səndə hələ heç bir AI kartı yoxdur.</div>`;
       return;
     }
 
     myCardsCache.forEach(item => {
-      const t = item.tg_card_templates || {};
-      const rarity = String(t.rarity || "rare").toLowerCase();
-      const listed = item.is_listed ? `<div class="badge">SATIŞDA</div>` : "";
-      const img = t.image_url ? `<img loading="lazy" src="${escapeHtml(t.image_url)}" alt="${escapeHtml(t.name || "Card")}">` : "🎴";
+      const t = AI_TEMPLATES[item.template_id] || {};
+      const listedBadge = item.is_listed ? `<div class="badge">SATIŞDA</div>` : "";
+
       const div = document.createElement("div");
       div.className = "card";
-
       div.innerHTML = `
-        ${listed}
-        <div class="art">${img}</div>
-        <h3>${escapeHtml(t.name || "Cyber Card")}</h3>
-        <span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span>
-        <div class="info">Boost: ${Number(t.click_boost) || 1}x</div>
-        <div class="info">Power: ${Number(t.mining_power) || 0}</div>
-        <div class="info">Level: ${Number(item.level) || 1}</div>
+        ${listedBadge}
+        <div class="art"><img src="${t.img}" alt="AI Card"></div>
+        <h3>${escapeHtml(t.name)}</h3>
+        <span class="rarity ${t.rarity}">${t.rarity.toUpperCase()}</span>
+        <div class="info">Boost: ${t.boost}x</div>
+        <div class="info">Power: ${t.power}</div>
+        <div class="info">Level: ${item.level || 1}</div>
 
         <div class="sell-row">
-          <input id="price_${String(item.id).replaceAll("_","")}" type="number" min="1" placeholder="Coin qiyməti">
-          <button class="btn btn-gold" onclick="listCardForSale('${item.id}')">Satışa qoy</button>
-          <button class="btn btn-blue" onclick="selectCard('${item.id}', ${Number(t.click_boost) || 1}, '${escapeForJs(t.name || "Cyber Card")}')">Boost seç</button>
+          <input id="price_${item.id}" type="number" min="1000" placeholder="Coin qiyməti yaz" ${item.is_listed ? "disabled" : ""}>
+          ${item.is_listed ? 
+            `<button class="btn btn-red" onclick="cancelListing('${item.id}')">Satışdan çıxar</button>` :
+            `<button class="btn btn-gold" onclick="listCardForSale('${item.id}', ${item.template_id})">P2P Satışa qoy</button>`
+          }
         </div>
       `;
-
       myCardsGrid.appendChild(div);
     });
+    cardsLog.innerText = "Kartların yükləndi.";
   }
 
-  function selectCard(id, boost, name){
-    selectedCard = { id, boost, name };
-    selectedBoost = Number(boost) || 1;
-    boostText.innerText = selectedBoost + "x";
-    cardsLog.innerText = "Seçildi: " + name + " / Boost: " + selectedBoost + "x";
-  }
+  function listCardForSale(userCardId, templateId){
+    const priceInput = document.getElementById("price_" + userCardId);
+    const price = Number(priceInput ? priceInput.value : 0);
 
-  async function listCardForSale(userCardId){
-    const safeId = String(userCardId).replaceAll("_","");
-    const input = document.getElementById("price_" + safeId);
-    const price = Number(input ? input.value : 0);
-
-    if(!price || price <= 0){
-      alert("Düzgün qiymət yaz.");
+    if(!price || price < 1000){
+      alert("Minimum satış qiyməti 1000 coindir.");
       return;
     }
 
-    try{
-      cardsLog.innerText = "Kart satışa qoyulur...";
-      const data = await api("list_card_for_sale", {
-        user_card_id:Number(userCardId),
-        price
+    rdb.ref(`users/${userId}/my_cards/${userCardId}`).update({ is_listed: true });
+
+    rdb.ref(`p2p_market`).push().set({
+      seller_id: userId,
+      user_card_id: userCardId,
+      template_id: templateId,
+      price_coin: price,
+      timestamp: Date.now()
+    }).then(() => {
+      alert("Kartınız P2P bazara uğurla yerləşdirildi!");
+    });
+  }
+
+  function cancelListing(userCardId){
+    rdb.ref(`users/${userId}/my_cards/${userCardId}`).update({ is_listed: false });
+
+    rdb.ref(`p2p_market`).once('value', (snapshot) => {
+      const data = snapshot.val();
+      if(data){
+        Object.keys(data).forEach(k => {
+          if(data[k].user_card_id === userCardId && data[k].seller_id === userId){
+            rdb.ref(`p2p_market/${k}`).remove();
+          }
+        });
+      }
+    });
+  }
+
+  // 🪙 COIN İLƏ ALMAQLA (10% ADMIN FEE DAXİL EDİLDİ)
+  function buyCardCoin(listingId){
+    rdb.ref(`p2p_market/${listingId}`).once('value', (snapshot) => {
+      const listing = snapshot.val();
+      if(!listing){
+        alert("Bu elan artıq mövcud deyil.");
+        return;
+      }
+
+      if(userCoins < listing.price_coin){
+        alert("Balansınızda kifayət qədər coin yoxdur!");
+        return;
+      }
+
+      const ok = confirm("Bu AI kartı " + listing.price_coin + " coinə almaq istəyirsiniz?");
+      if(!ok) return;
+
+      // Hesablamalar (10% komissiya)
+      const totalCost = listing.price_coin;
+      const commission = Math.floor(totalCost * 0.10);
+      const sellerNet = totalCost - commission;
+
+      // 1. Alıcının balansından tam məbləği çıxırıq
+      rdb.ref(`users/${userId}`).update({ coins: userCoins - totalCost });
+
+      // 2. Satıcının balansına təmiz məbləği (90%) əlavə edirik
+      rdb.ref(`users/${listing.seller_id}/coins`).once('value', (sCoin) => {
+        const oldCoins = sCoin.val() || 0;
+        rdb.ref(`users/${listing.seller_id}`).update({ coins: oldCoins + sellerNet });
       });
 
-      myCardsCache = data.myCards || [];
-      marketCache = data.marketplace || [];
-      renderMyCards();
-      applyFilters();
-      cardsLog.innerText = "Kart satışa qoyuldu.";
-    }catch(error){
-      cardsLog.innerText = "Satış xətası: " + error.message;
-    }
-  }
-
-  async function buyCardCoin(listingId){
-    const ok = confirm("Bu kartı coin ilə almaq istəyirsən?");
-    if(!ok) return;
-
-    try{
-      marketLog.innerText = "Coin ilə alış icra olunur...";
-      const data = await api("buy_card_listing", { listing_id: listingId });
-
-      profile = data.profile || profile || {};
-      coins = Number(profile.coins || 0);
-      coinText.innerText = coins;
-
-      marketCache = data.marketplace || [];
-      myCardsCache = data.myCards || [];
-      if(myCardsLoaded) renderMyCards();
-      applyFilters();
-
-      marketLog.innerText = "Kart coin ilə alındı.";
-    }catch(error){
-      marketLog.innerText = "Coin alış xətası: " + error.message;
-    }
-  }
-
-  async function buyCardTon(listingId, cardName, tonPrice, sellerId, userCardId){
-    const ok = confirm(cardName + " kartını " + tonPrice + " TON ilə almaq istəyirsən?");
-    if(!ok) return;
-
-    try{
-      marketLog.innerText = "TON order yaradılır...";
-
-      const data = await tonOrderApi("create_ton_card_order", {
-        listing_id: listingId,
-        user_card_id: userCardId ? Number(userCardId) : null,
-        seller_telegram_id: sellerId,
-        card_name: cardName,
-        amount_ton: tonPrice
+      // 3. Sənin Admin Pul Qabına (System Profit) 10% komissiyanı qeyd edirik
+      rdb.ref(`system_profit/coins`).once('value', (sysCoin) => {
+        const currentSys = sysCoin.val() || 0;
+        rdb.ref(`system_profit`).update({ coins: currentSys + commission });
       });
 
-      const order = data.order;
+      // 4. Kart transferi və elanın bazardan təmizlənməsi
+      rdb.ref(`users/${listing.seller_id}/my_cards/${listing.user_card_id}`).remove();
+      rdb.ref(`users/${userId}/my_cards`).push().set({
+        template_id: listing.template_id,
+        level: 1,
+        is_listed: false
+      });
 
-      alert(
-        "TON ödəniş məlumatı:\\n\\n" +
-        "Wallet:\\n" + order.pay_to_wallet + "\\n\\n" +
-        "Tag / Comment:\\n" + order.payment_tag + "\\n\\n" +
-        "Məbləğ: " + order.amount_ton + " TON\\n\\n" +
-        "Ödənişi göndərdikdən sonra admin təsdiq edəcək."
-      );
+      rdb.ref(`p2p_market/${listingId}`).remove().then(() => {
+        alert("Təbriklər! Kart 10% komissiya ilə daxili bazardan satın alındı.");
+      });
+    });
+  }
 
-      marketLog.innerText = "TON order yaradıldı. Payment tag: " + order.payment_tag;
+  // 💎 TON İLƏ ALMAQLA (10% ADMIN TON FEE DAXİL EDİLDİ)
+  function buyCardTon(listingId){
+    rdb.ref(`p2p_market/${listingId}`).once('value', (snapshot) => {
+      const listing = snapshot.val();
+      if(!listing){
+        alert("Bu elan tapılmadı.");
+        return;
+      }
+
+      const requiredTon = (listing.price_coin / 100000);
+
+      if(userTon < requiredTon){
+        alert("Daxili cüzdanınızda kifayət qədər TON yoxdur! Öncə WALLET bölməsindən deposit edin.");
+        return;
+      }
+
+      const ok = confirm("Bu AI kartı daxili balansınızdan " + requiredTon.toFixed(2) + " TON ödəyərək almaq istəyirsiniz?");
+      if(!ok) return;
+
+      // Hesablamalar (10% TON Komissiyası)
+      const totalTonCost = requiredTon;
+      const tonCommission = totalTonCost * 0.10;
+      const sellerNetTon = totalTonCost - tonCommission;
+
+      // 1. Alıcının TON balansını tam azaldırıq
+      rdb.ref(`users/${userId}`).update({ ton: userTon - totalTonCost });
+
+      // 2. Satıcının TON balansına 90% köçürürük
+      rdb.ref(`users/${listing.seller_id}/ton`).once('value', (sTon) => {
+        const oldTon = sTon.val() || 0;
+        rdb.ref(`users/${listing.seller_id}`).update({ ton: oldTon + sellerNetTon });
+      });
+
+      // 3. Sənin Admin Hesabına 10% HƏQİQİ TON xeyri əlavə edirik!
+      rdb.ref(`system_profit/ton`).once('value', (sysTon) => {
+        const currentSysTon = sysTon.val() || 0;
+        rdb.ref(`system_profit`).update({ ton: currentSysTon + tonCommission });
+      });
+
+      // 4. Kart transferi
+      rdb.ref(`users/${listing.seller_id}/my_cards/${listing.user_card_id}`).remove();
+      rdb.ref(`users/${userId}/my_cards`).push().set({
+        template_id: listing.template_id,
+        level: 1,
+        is_listed: false
+      });
+
+      rdb.ref(`p2p_market/${listingId}`).remove().then(() => {
+        alert("Təbriklər! Kart TON ilə alındı və 10% TON komissiyası idarəçi hesabınıza köçdü.");
+      });
+    });
+  }
+
+  async function copyReferralLink(){
+    try{
+      await navigator.clipboard.writeText(getMyReferralLink());
+      alert("Referral link kopyalandı!");
     }catch(error){
-      marketLog.innerText = "TON order xətası: " + error.message;
+      alert(getMyReferralLink());
     }
   }
 
-  function coinToTon(price){
-    return (Number(price || 0) / 100000).toFixed(2);
+  function refreshMarket(){
+    applyFilters();
   }
 
   function escapeHtml(text){
-    return String(text)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+    return String(text).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
   }
 
-  function escapeForJs(text){
-    return String(text)
-      .replaceAll("\\","\\\\")
-      .replaceAll("'","\\'")
-      .replaceAll('"','\\"')
-      .replaceAll("\n"," ");
-  }
-
-  init();
+  initTelegram();
+  loadDatabaseData();
 </script>
 
 </body>
-    </html>
+</html>
+
