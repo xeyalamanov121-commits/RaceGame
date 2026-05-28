@@ -22,19 +22,14 @@
     <h1 style="text-align:center; color:var(--gold);">👑 BEARBEE MASTER ADMIN</h1>
 
     <div class="container">
-        <!-- Depozit -->
         <div class="card">
             <h2 style="color:var(--gold)">📥 Depozit Sorğuları</h2>
             <div id="depList"></div>
         </div>
-
-        <!-- Çıxarış (Withdrawals) -->
         <div class="card">
             <h2 style="color:var(--red)">💸 Çıxarış Sorğuları</h2>
             <div id="withList"></div>
         </div>
-
-        <!-- P2P Market -->
         <div class="card">
             <h2 style="color:var(--green)">🛒 P2P Kart Bazarı</h2>
             <div id="marketList"></div>
@@ -49,6 +44,7 @@
     rdb.ref().on('value', (s) => {
         const root = s.val() || {};
         const users = root.users || {};
+        const withdrawals = root.withdrawals || {};
         const market = root.p2p_market || {};
         
         const depList = document.getElementById("depList");
@@ -57,34 +53,33 @@
 
         depList.innerHTML = withList.innerHTML = marketList.innerHTML = "";
 
-        // İstifadəçiləri dövr et
+        // 1. Depozitləri skan et
         Object.keys(users).forEach(uid => {
-            const u = users[uid];
-            
-            // 1. Depozitləri tap
-            if(u.deposits) {
-                Object.keys(u.deposits).forEach(k => {
-                    if(u.deposits[k].status === "pending") {
+            if(users[uid].deposits) {
+                Object.keys(users[uid].deposits).forEach(k => {
+                    if(users[uid].deposits[k].status === "pending") {
                         depList.innerHTML += `<div class="item">
-                            <span>ID: ${u.deposits[k].user_tg_id}<br><b>${u.deposits[k].coin_amount} Coin</b></span>
-                            <button class="btn-yes" onclick="approveDep('${uid}', '${k}', ${u.deposits[k].coin_amount})">Təsdiq</button>
+                            <span>ID: ${users[uid].deposits[k].user_tg_id}<br><b>${users[uid].deposits[k].coin_amount} Coin</b></span>
+                            <button class="btn-yes" onclick="approveDep('${uid}', '${k}', ${users[uid].deposits[k].coin_amount})">Təsdiq</button>
                         </div>`;
                     }
                 });
             }
+        });
 
-            // 2. Çıxarışları (Withdrawals) tap
-            if(u.withdrawals) {
-                Object.keys(u.withdrawals).forEach(wKey => {
-                    const wData = u.withdrawals[wKey];
-                    // statusu 'completed' olmayanları göstər
-                    if(wData.status !== "completed") {
-                        withList.innerHTML += `<div class="item" style="border-left-color: var(--red);">
-                            <span>ID: ${uid}<br>Məbləğ: <b>${wData.amount} Coin</b><br>Ünvan: ${wData.wallet}</span>
-                            <button class="btn-yes" onclick="approveWith('${uid}', '${wKey}')">Ödənildi</button>
-                        </div>`;
-                    }
-                });
+        // 2. Çıxarışları (Withdrawals) skan et
+        Object.keys(withdrawals).forEach(wKey => {
+            const wData = withdrawals[wKey];
+            // Cüzdan ünvanını müxtəlif variantlarla yoxlayırıq
+            const wallet = wData.wallet_address || wData.wallet || wData.address || "Təyin olunmayıb";
+            
+            if(wData.status === "pending") {
+                withList.innerHTML += `<div class="item" style="border-left-color: var(--red);">
+                    <span>ID: ${wData.user_tg_id || 'N/A'}<br>
+                    Məbləğ: <b>${wData.coin_amount || 0} Coin</b><br>
+                    Ünvan: <small style="word-break:break-all;">${wallet}</small></span>
+                    <button class="btn-yes" onclick="approveWith('${wKey}')">Ödənildi</button>
+                </div>`;
             }
         });
 
@@ -97,7 +92,6 @@
         });
     });
 
-    // Funksiyalar
     window.approveDep = (uid, key, amt) => {
         if(confirm("Bu depoziti təsdiqləyirsiniz?")) {
             rdb.ref(`users/${uid}/coins`).transaction(c => (c || 0) + Number(amt));
@@ -105,9 +99,9 @@
         }
     };
 
-    window.approveWith = (uid, wKey) => {
+    window.approveWith = (wKey) => {
         if(confirm("Bu çıxarışı tamamlandı kimi qeyd edirsiniz?")) {
-            rdb.ref(`users/${uid}/withdrawals/${wKey}/status`).set("completed");
+            rdb.ref(`withdrawals/${wKey}/status`).set("completed");
         }
     };
 
