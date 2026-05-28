@@ -1,1 +1,497 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bearbee Arena | Wallet</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+    body{\n      min-height:100vh;
+      background:
+        radial-gradient(circle at top, rgba(0,120,255,.25), transparent 35%),
+        radial-gradient(circle at bottom, rgba(255,215,0,.14), transparent 35%),
+        linear-gradient(180deg,#01040a,#030812 60%,#000);
+      color:#fff;
+      font-family:'Segoe UI',Arial,sans-serif;
+      padding-bottom:95px;
+      overflow-x:hidden;
+    }
+
+    body::before{
+      content: "";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(90deg,transparent 0 95%,rgba(21,151,255,.07) 96% 100%),
+        linear-gradient(0deg,transparent 0 95%,rgba(255,255,255,.02) 96% 100%);
+      background-size:26px 26px;
+      z-index:1;
+    }
+
+    .container{
+      max-width:500px;
+      margin:0 auto;
+      padding:20px;
+      position:relative;
+      z-index:2;
+    }
+
+    .header-box{
+      text-align:center;
+      margin-bottom:24px;
+      margin-top:10px;
+    }
+
+    .header-box h1{
+      font-size:26px;
+      font-weight:900;
+      letter-spacing:1px;
+      color:#ffd700;
+      text-shadow:0 0 15px rgba(255,215,0,.25);
+    }
+
+    .header-box p{
+      color:#8a99ad;
+      font-size:13px;
+      margin-top:4px;
+      font-weight:600;
+    }
+
+    .balance-card{
+      background:rgba(8,17,28,.65);
+      border:1px solid rgba(255,215,0,.25);
+      border-radius:20px;
+      padding:24px;
+      text-align:center;
+      backdrop-filter:blur(12px);
+      box-shadow:0 0 25px rgba(255,215,0,.06);
+      margin-bottom:20px;
+    }
+
+    .balance-title{
+      color:#8a99ad;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:1.5px;
+      text-transform:uppercase;
+      margin-bottom:6px;
+    }
+
+    .balance-amount{
+      font-size:38px;
+      font-weight:900;
+      color:#ffd700;
+      text-shadow:0 0 20px rgba(255,215,0,.3);
+    }
+
+    .tabs{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      background:rgba(8,17,28,.8);
+      border:1px solid #1e3b5a;
+      padding:4px;
+      border-radius:14px;
+      margin-bottom:20px;
+    }
+
+    .tab-btn{
+      background:transparent;
+      border:none;
+      color:#8a99ad;
+      padding:12px;
+      font-weight:800;
+      font-size:13px;
+      border-radius:10px;
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .tab-btn.active{
+      background:#ffd700;
+      color:#000;
+      box-shadow:0 0 14px rgba(255,215,0,.2);
+    }
+
+    .panel-content{
+      display:none;
+      background:rgba(8,17,28,.5);
+      border:1px solid #142538;
+      border-radius:18px;
+      padding:20px;
+      backdrop-filter:blur(8px);
+    }
+
+    .panel-content.active{
+      display:block;
+    }
+
+    label{
+      display:block;
+      font-size:12px;
+      color:#8a99ad;
+      font-weight:700;
+      margin-bottom:6px;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+    }
+
+    .input-group{
+      margin-bottom:16px;
+    }
+
+    .input-style{
+      width:100%;
+      background:#040a12;
+      border:1px solid #1e3b5a;
+      border-radius:12px;
+      padding:14px;
+      color:#fff;
+      font-size:14px;
+      font-weight:600;
+      transition:.2s;
+    }
+
+    .input-style:focus{
+      border-color:#ffd700;
+      outline:none;
+      box-shadow:0 0 10px rgba(255,215,0,.1);
+    }
+
+    .info-note{
+      font-size:12px;
+      color:#8a99ad;
+      line-height:1.5;
+      margin-bottom:16px;
+      background:rgba(21,151,255,.05);
+      border:1px solid rgba(21,151,255,.15);
+      padding:10px 12px;
+      border-radius:10px;
+    }
+
+    .action-btn{
+      width:100%;
+      background:#ffd700;
+      color:#000;
+      border:none;
+      padding:14px;
+      font-size:14px;
+      font-weight:800;
+      border-radius:12px;
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .action-btn:hover{background:#fff}
+    .action-btn:active{transform:scale(.98)}
+    .action-btn:disabled{background:#223347;color:#566980;cursor:not-allowed}
+
+    .history-section{
+      margin-top:24px;
+    }
+
+    .history-title{
+      font-size:14px;
+      color:#ffd700;
+      font-weight:800;
+      margin-bottom:12px;
+      letter-spacing:.5px;
+    }
+
+    .history-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .history-item{
+      background:#050d17;
+      border:1px solid #112033;
+      border-radius:12px;
+      padding:12px;
+      font-size:12px;
+      color:#cbd5e1;
+      line-height:1.6;
+    }
+
+    .history-item span.pending{color:#ffb700;font-weight:bold}
+    .history-item span.success{color:#22ff66;font-weight:bold}
+    .history-item span.failed{color:#ff2438;font-weight:bold}
+
+    .nav{
+      position:fixed;
+      bottom:0;
+      left:0;
+      width:100%;
+      background:#0d0d0d;
+      border-top:1px solid #222;
+      display:flex;
+      justify-content:space-around;
+      align-items:center;
+      padding:15px 0;
+      z-index:999;
+    }
+
+    .nav a{
+      color:#ffd700;
+      font-size:14px;
+      font-weight:bold;
+      text-decoration:none;
+      opacity:0.6;
+    }
+    .nav a.active {
+      opacity:1;
+      text-shadow:0 0 10px rgba(255,215,0,0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-box">
+      <h1>WALLET / COIN</h1>
+      <p>Balans idarəetmə və köçürmələr</p>
+    </div>
+
+    <div class="balance-card">
+      <div class="balance-title">Mövcud Balansınız</div>
+      <div class="balance-amount" id="display_coins">🪙 0</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="btn_deposit" onclick="switchTab('deposit')">DEPOSIT</button>
+      <button class="tab-btn" id="btn_withdraw" onclick="switchTab('withdraw')">WITHDRAW</button>
+    </div>
+
+    <div class="panel-content active" id="panel_deposit">
+      <div class="input-group">
+        <label>Alınacaq Coin Miqdarı</label>
+        <input type="number" id="dep_coin" class="input-style" placeholder="Məsələn: 500" oninput="calcDeposit()">
+      </div>
+      <div class="input-group">
+        <label>Ödəniləcək TON (Təxmini)</label>
+        <input type="text" id="dep_ton" class="input-style" readonly value="0.00 TON">
+      </div>
+      <div class="info-note">
+        💡 Hazırda avtomatlaşdırılmış TON ödəniş şlüzü inteqrasiya mərhələsindədir. Coin əldə etmək üçün admin paneldən dəstək ala bilərsiniz.
+      </div>
+      <button class="action-btn" id="submit_dep_btn" onclick="requestDeposit()">DEPOSIT SORĞUSU GÖNDƏR</button>
+
+      <div class="history-section">
+        <div class="history-title">Son Deposit Sorğuları</div>
+        <div class="history-list" id="depositHistory">
+          <div class="history-item">Tarixçə yüklənir...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-content" id="panel_withdraw">
+      <div class="input-group">
+        <label>Çıxarılacaq Coin Miqdarı</label>
+        <input type="number" id="wit_coin" class="input-style" placeholder="Minimum 1000" oninput="calcWithdraw()">
+      </div>
+      <div class="input-group">
+        <label>Alacağınız TON Məbləği</label>
+        <input type="text" id="wit_ton" class="input-style" readonly value="0.00 TON">
+      </div>
+      <div class="input-group">
+        <label>TON Pul Kisəsi Ünvanı (Wallet Address)</label>
+        <input type="text" id="wit_address" class="input-style" placeholder="UQ... və ya EQA...">
+      </div>
+      <button class="action-btn" id="submit_wit_btn" onclick="requestWithdraw()">ÇIXARIŞ SORĞUSUNU TƏSDİQLƏ</button>
+
+      <div class="history-section">
+        <div class="history-title">Son Çıxarış Sorğuları</div>
+        <div class="history-list" id="withdrawHistory">
+          <div class="history-item">Tarixçə yüklənir...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <a href="./index.html">ARENA</a>
+    <a href="./click-room.html">CLICK</a>
+    <a href="./race.html">RACE</a>
+    <a href="./wallet-room.html" class="active">WALLET</a>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <script>
+    // Firebase Config Məlumatları
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
+      authDomain: "racegane.firebaseapp.com",
+      databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "racegane",
+      storageBucket: "racegane.firebasestorage.app",
+      messagingSenderId: "477893876737",
+      appId: "1:477893876737:web:1b561bb3224b0086c63400"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const rdb = firebase.database();
+
+    const tg = window.Telegram?.WebApp;
+    if(tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    const userId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : "test_user_123";
+    let userCoins = 0;
+
+    // REAL-TIME BALANS DİNLƏMƏ (ADMİNDƏN COIN VURANDA ANINDA DƏYİŞİR)
+    function listenUserBalance() {
+      rdb.ref(`users/${userId}`).on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          userCoins = data.coins !== undefined ? data.coins : 0;
+          document.getElementById("display_coins").innerText = "🪙 " + userCoins;
+        }
+      });
+    }
+
+    // TABS METODU
+    function switchTab(type){
+      document.getElementById("btn_deposit").classList.remove("active");
+      document.getElementById("btn_withdraw").classList.remove("active");
+      document.getElementById("panel_deposit").classList.remove("active");
+      document.getElementById("panel_withdraw").classList.remove("active");
+
+      if(type === 'deposit'){
+        document.getElementById("btn_deposit").classList.add("active");
+        document.getElementById("panel_deposit").classList.add("active");
+      } else {
+        document.getElementById("btn_withdraw").classList.add("add","active");
+        document.getElementById("panel_withdraw").classList.add("active");
+      }
+    }
+
+    // DEPOSIT HESABLAMA (1 TON = 1000 COIN)
+    function calcDeposit(){
+      const val = parseInt(document.getElementById("dep_coin").value) || 0;
+      document.getElementById("dep_ton").value = (val / 1000).toFixed(2) + " TON";
+    }
+
+    // WITHDRAW HESABLAMA
+    function calcWithdraw(){
+      const val = parseInt(document.getElementById("wit_coin").value) || 0;
+      document.getElementById("wit_ton").value = (val / 1000).toFixed(2) + " TON";
+    }
+
+    // DEPOSIT SORĞUSU (FIREBASE-Ə YAZIR)
+    function requestDeposit(){
+      const coinAmt = parseInt(document.getElementById("dep_coin").value) || 0;
+      if(coinAmt <= 0) {
+        alert("Zəhmət olmasa düzgün məbləğ yazın.");
+        return;
+      }
+
+      const newKey = rdb.ref(`users/${userId}/deposits`).push().key;
+      rdb.ref(`users/${userId}/deposits/${newKey}`).set({
+        id: newKey.substring(1, 6).toUpperCase(),
+        coin_amount: coinAmt,
+        ton_amount: (coinAmt / 1000).toFixed(2),
+        status: "pending",
+        timestamp: Date.now()
+      }).then(() => {
+        alert("Deposit sorğusu göndərildi! Admin təsdiqlədikdən sonra balansınız oturacaq.");
+        document.getElementById("dep_coin").value = "";
+      });
+    }
+
+    // WITHDRAW SORĞUSU (FIREBASE-Ə YAZIR)
+    function requestWithdraw(){
+      const coinAmt = parseInt(document.getElementById("wit_coin").value) || 0;
+      const walletAddr = document.getElementById("wit_address").value.trim();
+
+      if(coinAmt < 1000){
+        alert("Minimum çıxarış 1000 coindir!");
+        return;
+      }
+      if(coinAmt > userCoins){
+        alert("Balansınızda kifayət qədər coin yoxdur!");
+        return;
+      }
+      if(!walletAddr){
+        alert("Zəhmət olmasa TON Wallet ünvanınızı yazın!");
+        return;
+      }
+
+      // Əvvəlcə istifadəçinin coinini balansından çıxırıq ki, fırıldaqçılıq olmasın
+      rdb.ref(`users/${userId}`).update({ coins: userCoins - coinAmt }).then(() => {
+        const newKey = rdb.ref(`users/${userId}/withdrawals`).push().key;
+        rdb.ref(`users/${userId}/withdrawals/${newKey}`).set({
+          id: newKey.substring(1, 6).toUpperCase(),
+          coin_amount: coinAmt,
+          ton_amount: (coinAmt / 1000).toFixed(2),
+          wallet_address: walletAddr,
+          status: "pending",
+          timestamp: Date.now()
+        }).then(() => {
+          alert("Çıxarış sorğunuz qəbul edildi! 24 saat ərzində cüzdanınıza köçürüləcək.");
+          document.getElementById("wit_coin").value = "";
+          document.getElementById("wit_address").value = "";
+        });
+      });
+    }
+
+    // CANLI TARİXÇƏ DİNLƏYİCİLƏRİ
+    function listenHistory() {
+      // Deposit tarixçəsi
+      rdb.ref(`users/${userId}/deposits`).on('value', (snapshot) => {
+        const listDiv = document.getElementById("depositHistory");
+        listDiv.innerHTML = "";
+        const data = snapshot.val();
+        if(!data) {
+          listDiv.innerHTML = '<div class="history-item">Deposit tarixçəsi yoxdur.</div>';
+          return;
+        }
+        Object.keys(data).reverse().forEach(k => {
+          const d = data[k];
+          const div = document.createElement("div");
+          div.className = "history-item";
+          div.innerHTML = `<b>#${d.id}</b> — ${d.ton_amount} TON → ${d.coin_amount} coin<br>Status: <span class="${d.status}">${d.status.toUpperCase()}</span>`;
+          listDiv.appendChild(div);
+        });
+      });
+
+      // Withdraw tarixçəsi
+      rdb.ref(`users/${userId}/withdrawals`).on('value', (snapshot) => {
+        const listDiv = document.getElementById("withdrawHistory");
+        listDiv.innerHTML = "";
+        const data = snapshot.val();
+        if(!data) {
+          listDiv.innerHTML = '<div class="history-item">Withdraw tarixçəsi yoxdur.</div>';
+          return;
+        }
+        Object.keys(data).reverse().forEach(k => {
+          const w = data[k];
+          const div = document.createElement("div");
+          div.className = "history-item";
+          div.innerHTML = `<b>#${w.id}</b> — ${w.coin_amount} coin → ${w.ton_amount} TON<br>Cüzdan: ${escapeHtml(w.wallet_address)}<br>Status: <span class="${w.status}">${w.status.toUpperCase()}</span>`;
+          listDiv.appendChild(div);
+        });
+      });
+    }
+
+    function escapeHtml(text){
+      return String(text).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    }
+
+    // Sistemləri işə salırıq
+    listenUserBalance();
+    listenHistory();
+  </script>
+</body>
+</html>
 
