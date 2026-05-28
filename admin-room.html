@@ -3,46 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bearbee Arena | Real Admin Panel</title>
+    <title>Bearbee Arena | Admin Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg: #000000; --panel: #0d0d0d; --border: #222222; --blue: #1597ff; --gold: #ffd700; --green: #22ff66; --red: #ff2438; --text: #ffffff; --muted: #aaa; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 20px; min-height: 100vh; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 15px; margin-bottom: 25px; }
-        h1 { color: var(--gold); font-size: 24px; font-weight: 900; }
-        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        :root { --bg: #000; --panel: #0d0d0d; --gold: #ffd700; --green: #22ff66; --red: #ff2438; --text: #fff; --border: #222; }
+        body { background: var(--bg); color: var(--text); padding: 20px; font-family: sans-serif; }
         .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
-        .search-box { width: 100%; padding: 12px; background: #111; border: 1px solid var(--border); border-radius: 10px; color: white; margin-bottom: 15px; }
+        h2 { color: var(--gold); font-size: 16px; margin-bottom: 15px; }
+        .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .btn { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; }
+        .btn-g { background: var(--gold); color: #000; }
+        .btn-r { background: var(--red); color: #fff; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
-        .btn { padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 11px; }
-        .btn-green { background: var(--gold); color: black; }
-        .btn-red { background: var(--red); color: white; }
-        .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        td { padding: 10px; border-bottom: 1px solid var(--border); }
     </style>
 </head>
 <body>
 
-<div class="container" id="adminWrapper" style="display: none;">
-    <header><h1>BEARBEE ARENA // ADMIN</h1></header>
-    <div class="grid">
-        <div class="card">
-            <h2>Oyunçular</h2>
-            <input type="text" id="userSearch" class="search-box" placeholder="Axtar...">
-            <table id="userTable">
-                <thead><tr><th>İstifadəçi</th><th>Balans</th><th>Əməliyyat</th></tr></thead>
-                <tbody id="userTableBody"></tbody>
-            </table>
-        </div>
-        <div class="card">
-            <h2>Aktiv Yarışlar</h2>
-            <div id="roomsList"></div>
-            <br>
-            <h2 style="color:var(--green)">Maliyyə Sorğuları (Pending)</h2>
-            <div id="financeList"></div>
-        </div>
+<div id="adminWrapper">
+    <div class="card">
+        <h2>Oyunçular və Maliyyə Sorğuları</h2>
+        <table id="userTable">
+            <tbody id="userTableBody"></tbody>
+        </table>
+        <h2 style="margin-top:20px; color:var(--green)">Dinamik Maliyyə Skaneri (Pending)</h2>
+        <div id="financeList"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Aktiv Yarışlar</h2>
+        <div id="roomsList"></div>
+    </div>
+
+    <div class="card">
+        <h2>Son 2 Saatın Fəaliyyəti</h2>
+        <div id="logList"></div>
     </div>
 </div>
 
@@ -51,62 +46,57 @@
 
 <script>
     const ADMIN_TELEGRAM_ID = 8591374417;
-    const firebaseConfig = { apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ", databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "racegane" };
-    
-    firebase.initializeApp(firebaseConfig);
+    const config = { apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ", databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "racegane" };
+    firebase.initializeApp(config);
     const rdb = firebase.database();
 
-    if (Number(window.Telegram?.WebApp?.initDataUnsafe?.user?.id) === ADMIN_TELEGRAM_ID) {
-        document.getElementById("adminWrapper").style.display = "block";
-        initAdminPanel();
-    }
+    // Panelin əsas funksiyası
+    rdb.ref('users').on('value', (s) => {
+        const users = s.val() || {};
+        const tbody = document.getElementById("userTableBody");
+        const finList = document.getElementById("financeList");
+        tbody.innerHTML = ""; finList.innerHTML = "";
 
-    function initAdminPanel() {
-        // 1. Oyunçular və Maliyyə Sorğuları
-        rdb.ref('users').on('value', (s) => {
-            const users = s.val() || {};
-            const tbody = document.getElementById("userTableBody");
-            const finList = document.getElementById("financeList");
-            tbody.innerHTML = ""; finList.innerHTML = "";
-
-            Object.keys(users).forEach(uid => {
-                const u = users[uid];
-                // Cədvəl
-                tbody.innerHTML += `<tr><td>${u.name || "Ayı"}<br><small>${uid}</small></td><td>🪙 ${u.coins || 0}</td><td><button class="btn btn-green" onclick="editCoins('${uid}', ${u.coins || 0})">Dəyiş</button></td></tr>`;
-                
-                // Maliyyə Skaneri (Pending Deposit)
-                if (u.pending_deposit || u.deposit_request) {
-                    const node = u.pending_deposit ? "pending_deposit" : "deposit_request";
-                    const amt = u[node].amount || u[node] || 0;
-                    finList.innerHTML += `<div class="item"><span>Depozit: <b>+${amt}</b></span><button class="btn btn-green" onclick="approveDep('${uid}', '${node}')">Təsdiq</button></div>`;
-                }
-                // Withdraw Request
-                if (u.withdraw_request?.status === "pending") {
-                    finList.innerHTML += `<div class="item"><span>Çıxarış: <b>-${u.withdraw_request.amount}</b></span><button class="btn btn-red" onclick="rejectWit('${uid}')">Ləğv</button></div>`;
+        Object.keys(users).forEach(uid => {
+            const u = users[uid];
+            // 1. İstifadəçi siyahısı
+            tbody.innerHTML += `<tr><td>${u.name || "Ayı"}<br><small>${uid}</small></td><td>🪙 ${u.coins || 0}</td><td><button class="btn btn-g" onclick="editCoins('${uid}', ${u.coins || 0})">Dəyiş</button></td></tr>`;
+            
+            // 2. Universal Maliyyə Skaneri (Hər hansı qovluqda olan sorğunu tapır)
+            const reqs = ['deposit', 'pending_deposit', 'deposit_request', 'withdraw_request'];
+            reqs.forEach(node => {
+                if(u[node]) {
+                    const amt = u[node].amount || u[node];
+                    finList.innerHTML += `<div class="item"><span>${node.replace('_',' ')} (${uid.slice(-4)}): <b>${amt}</b></span>
+                    <button class="btn btn-g" onclick="approve('${uid}', '${node}', ${amt})">Təsdiq</button></div>`;
                 }
             });
         });
+    });
 
-        // 2. Otaqlar
-        rdb.ref('rooms').on('value', (s) => {
-            const list = document.getElementById("roomsList"); list.innerHTML = "";
-            Object.keys(s.val() || {}).forEach(k => list.innerHTML += `<div class="item">#${k} <button class="btn btn-red" onclick="rdb.ref('rooms/${k}').remove()">Sil</button></div>`);
-        });
-    }
+    // 3. Otaqlar və Loglar
+    rdb.ref('rooms').on('value', (s) => {
+        const list = document.getElementById("roomsList"); list.innerHTML = "";
+        Object.keys(s.val() || {}).forEach(k => list.innerHTML += `<div class="item">#${k} <button class="btn btn-r" onclick="rdb.ref('rooms/${k}').remove()">Sil</button></div>`);
+    });
 
+    const twoHours = Date.now() - (2 * 60 * 60 * 1000);
+    rdb.ref('logs').orderByChild('timestamp').startAt(twoHours).on('value', (s) => {
+        const list = document.getElementById("logList"); list.innerHTML = "";
+        Object.values(s.val() || {}).forEach(l => list.innerHTML += `<div class="item">${l.time} - ${l.action}</div>`);
+    });
+
+    // FUNKSİYALAR
     window.editCoins = (uid, cur) => { const v = prompt("Yeni balans:", cur); if(v) rdb.ref(`users/${uid}/coins`).set(Number(v)); };
     
-    window.approveDep = (uid, node) => { 
-        rdb.ref(`users/${uid}/${node}`).once('value', snap => {
-            const amt = snap.val().amount || snap.val();
-            rdb.ref(`users/${uid}/coins`).once('value', s => { 
-                rdb.ref(`users/${uid}`).update({ coins: (s.val()||0) + Number(amt) }); 
-                rdb.ref(`users/${uid}/${node}`).remove(); 
-            }); 
+    window.approve = (uid, node, amt) => {
+        rdb.ref(`users/${uid}/coins`).once('value', s => {
+            rdb.ref(`users/${uid}`).update({ coins: (s.val()||0) + Number(amt) });
+            rdb.ref(`users/${uid}/${node}`).remove();
+            rdb.ref('logs').push({ action: `Təsdiq edildi: ${uid.slice(-4)} -> ${amt} Coin`, time: new Date().toLocaleTimeString(), timestamp: Date.now() });
         });
     };
-    
-    window.rejectWit = (uid) => { rdb.ref(`users/${uid}/withdraw_request`).remove(); };
 </script>
 </body>
 </html>
+
