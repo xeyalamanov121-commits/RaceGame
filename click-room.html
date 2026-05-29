@@ -246,7 +246,7 @@
             transition:0.16s;
             text-transform:uppercase;
             display:block;
-            margin-bottom: 8px;
+            margin-bottom:8px;
         }
 
         .btn:active{
@@ -448,9 +448,9 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db  = getFirestore(app);
 
-        const tg = window.Telegram?.WebApp;
+        const tg     = window.Telegram?.WebApp;
         if(tg) tg.expand();
 
         const tgUser = tg?.initDataUnsafe?.user;
@@ -467,6 +467,7 @@
         };
 
         let pendingClicks = 0;
+        let isSaving      = false;
 
         const coinText    = document.getElementById("coinText");
         const energyText  = document.getElementById("energyText");
@@ -476,10 +477,10 @@
         const clickLog    = document.getElementById("clickLog");
 
         function updateUI() {
-            coinText.innerText    = userData.coins;
-            energyText.innerText  = userData.energy;
-            boostText.innerText   = userData.boost + "x";
-            adPointText.innerText = userData.adPoints;
+            coinText.innerText     = userData.coins;
+            energyText.innerText   = userData.energy;
+            boostText.innerText    = userData.boost + "x";
+            adPointText.innerText  = userData.adPoints;
             energyFill.style.width = userData.energy + "%";
         }
 
@@ -500,6 +501,25 @@
             }
         }
 
+        async function saveProgress(silent = false) {
+            if (isSaving) return;
+            isSaving = true;
+            if (!silent) clickLog.innerText = "Xallar saxlanılır...";
+            try {
+                const userRef = doc(db, "users", userId);
+                await updateDoc(userRef, {
+                    coins:    userData.coins,
+                    energy:   userData.energy,
+                    adPoints: userData.adPoints
+                });
+                pendingClicks = 0;
+                if (!silent) clickLog.innerText = "✅ Tərəqqi qeydə alındı!";
+            } catch (err) {
+                if (!silent) clickLog.innerText = "Saxlama xətası: " + err.message;
+            }
+            isSaving = false;
+        }
+
         document.getElementById("tapBear").addEventListener("click", (e) => {
             if (userData.energy < userData.boost) {
                 clickLog.innerText = "Kifayət qədər enerji yoxdur!";
@@ -512,41 +532,34 @@
 
             const rect   = e.currentTarget.getBoundingClientRect();
             const effect = document.createElement("div");
-            effect.className   = "tap-effect";
-            effect.style.left  = (e.clientX - rect.left) + "px";
-            effect.style.top   = (e.clientY - rect.top)  + "px";
-            effect.innerText   = "+" + userData.boost;
+            effect.className  = "tap-effect";
+            effect.style.left = (e.clientX - rect.left) + "px";
+            effect.style.top  = (e.clientY - rect.top)  + "px";
+            effect.innerText  = "+" + userData.boost;
             e.currentTarget.appendChild(effect);
             setTimeout(() => effect.remove(), 900);
         });
 
-        async function saveProgress() {
-            if (pendingClicks === 0) {
-                clickLog.innerText = "Yadda saxlanılacaq yeni klik yoxdur.";
-                return;
-            }
-            clickLog.innerText = "Xallar saxlanılır...";
-            try {
-                const userRef = doc(db, "users", userId);
-                await updateDoc(userRef, {
-                    coins:  userData.coins,
-                    energy: userData.energy
-                });
-                pendingClicks = 0;
-                clickLog.innerText = "Tərəqqi Firebase-də qeydə alındı!";
-            } catch (err) {
-                clickLog.innerText = "Saxlama xətası: " + err.message;
-            }
-        }
-
-        document.getElementById("saveBtn").addEventListener("click", saveProgress);
+        document.getElementById("saveBtn").addEventListener("click", () => saveProgress(false));
         document.getElementById("syncBtn").addEventListener("click", loadUserData);
+
+        // ✅ Səhifə bağlananda avtomatik save
+        window.addEventListener("beforeunload", () => saveProgress(true));
+
+        // ✅ Hər 5 klikdən bir avtomatik save
+        setInterval(() => {
+            if (pendingClicks >= 5) saveProgress(true);
+        }, 2000);
+
+        // ✅ Hər 5 saniyədə bir arxa planda save
+        setInterval(() => saveProgress(true), 5000);
 
         window.watchEnergyAd = function() {
             const AdController = window.Adsgram?.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
             if (!AdController) {
                 userData.energy = 100;
                 updateUI();
+                saveProgress(true);
                 clickLog.innerText = "[Demo] Reklam tamamlandı. Enerji 100%!";
                 return;
             }
@@ -554,8 +567,7 @@
             AdController.show().then(async () => {
                 userData.energy = 100;
                 updateUI();
-                const userRef = doc(db, "users", userId);
-                await updateDoc(userRef, { energy: 100 });
+                await saveProgress(true);
                 clickLog.innerText = "Təbrik edirik! Enerji tam bərpa olundu.";
             }).catch(() => {
                 clickLog.innerText = "Reklam tamamlanmadı və ya xəta baş verdi.";
@@ -592,7 +604,7 @@
             clickLog.innerText = minutes + " dəqiqəlik qutu üçün reklam başladılır...";
             setTimeout(async () => {
                 const now = Date.now();
-                userData.coins   += reward;
+                userData.coins    += reward;
                 userData.adPoints += reward;
                 userData["lastBox" + minutes] = now;
                 updateUI();
@@ -604,17 +616,18 @@
                 };
                 fields["lastBox" + minutes] = now;
                 await updateDoc(userRef, fields);
-                clickLog.innerText = `Qutu açıldı! +${reward} Coin və Ad Xal balansınıza əlavə edildi.`;
+                clickLog.innerText = `Qutu açıldı! +${reward} Coin və Ad Xal əlavə edildi.`;
                 checkTimers();
             }, 1000);
         }
 
+        // Enerji hər 4 saniyədə +1 bərpa olur
         setInterval(() => {
             if (userData.energy < 100) { userData.energy++; updateUI(); }
         }, 4000);
 
-        setInterval(checkTimers,   1000);
-        setInterval(saveProgress, 10000);
+        // Taymerlər hər saniyə yenilənir
+        setInterval(checkTimers, 1000);
 
         loadUserData();
     </script>
