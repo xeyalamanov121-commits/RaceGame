@@ -145,223 +145,153 @@ let playerPos = 0, opponentPos = 0, roomData = null;
 
 const WALLET = "EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp";
 
-// TAB SWITCHING - DÜZƏLDİ
+// TAB SWITCHING
 function showTab(tab) {
   document.getElementById('depositPanel').classList.add('hidden');
   document.getElementById('lobbyPanel').classList.add('hidden');
   document.getElementById('gamePanel').classList.add('hidden');
-  document.getElementById(tab + 'Panel').classList.remove('hidden');
   
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Btn').classList.add('active');
+  document.getElementById(tab+'Panel').classList.remove('hidden');
+  
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)+'Btn').classList.add('active');
 }
 
-// TAB DÜYMƏLƏRİ
-document.getElementById('tabDepositBtn').addEventListener('click', () => showTab('deposit'));
-document.getElementById('tabLobbyBtn').addEventListener('click', () => showTab('lobby'));
-document.getElementById('tabGameBtn').addEventListener('click', () => {
+// TAB BUTTONS
+document.getElementById('tabDepositBtn').addEventListener('click', ()=>showTab('deposit'));
+document.getElementById('tabLobbyBtn').addEventListener('click', ()=>showTab('lobby'));
+document.getElementById('tabGameBtn').addEventListener('click', ()=> {
   if(roomCode) showTab('game');
   else alert('Əvvəl otaq yarat və ya qoşul');
 });
 
-// KOPYALA
-document.getElementById('copyAddressBtn').addEventListener('click', () => {
+// COPY
+document.getElementById('copyAddressBtn').addEventListener('click', ()=> {
   navigator.clipboard.writeText(WALLET);
-  alert("✅ Ünvan kopyalandı!\n\n" + WALLET);
+  alert("✅ Ünvan kopyalandı!\n\n"+WALLET);
 });
-
-document.getElementById('telegramBtn').addEventListener('click', () => {
+document.getElementById('telegramBtn').addEventListener('click', ()=>{
   const msg = encodeURIComponent(`Salam! Deposit etdim.\nUser ID: ${myId}\nMəbləğ: TON\nHash: `);
   window.open(`https://t.me/avanqard12?text=${msg}`, '_blank');
 });
 
-// BALANS
-async function loadBalance() {
+// BALANCE
+async function loadBalance(){
   const snap = await get(ref(rdb, `users/${myId}/balance`));
   myBalance = snap.val() || 0;
   document.getElementById('balance').innerText = `Balans: ${myBalance.toFixed(2)} TON`;
   updateBetButtons();
-  
-  if (myBalance > 0) {
-    document.getElementById('balanceWarn').style.display = 'none';
-  } else {
-    document.getElementById('balanceWarn').style.display = 'block';
-  }
+  document.getElementById('balanceWarn').style.display = myBalance>0?'none':'block';
 }
-
-function updateBetButtons() {
-  document.querySelectorAll('.bet-btn').forEach(btn => {
-    const bet = parseFloat(btn.dataset.bet);
-    btn.disabled = myBalance < bet;
+function updateBetButtons(){
+  document.querySelectorAll('.bet-btn').forEach(btn=>{
+    const bet=parseFloat(btn.dataset.bet);
+    btn.disabled=myBalance<bet;
   });
 }
-
-document.getElementById('refreshBtn').addEventListener('click', async () => {
+document.getElementById('refreshBtn').addEventListener('click', async ()=>{
   await loadBalance();
-  if (myBalance > 0) {
-    alert(`✅ Balans yeniləndi: ${myBalance.toFixed(2)} TON\n\nLobby-ə keçə bilərsən!`);
-    showTab('lobby');
-  } else {
-    alert("⚠️ Balans hələ 0-dır.\n\nAdmin hələ artırmayıb. @avanqard12 yaz.");
-  }
+  if(myBalance>0){ alert(`✅ Balans yeniləndi: ${myBalance.toFixed(2)} TON\n\nLobby-ə keçə bilərsən!`); showTab('lobby');}
+  else alert("⚠️ Balans hələ 0-dır.\n\nAdmin hələ artırmayıb. @avanqard12 yaz.");
 });
 
-// BET SEÇİMİ
-document.querySelectorAll('.bet-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+// BET SELECTION
+document.querySelectorAll('.bet-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.bet-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    selectedBet = parseFloat(btn.dataset.bet);
-    const win = (selectedBet * 2 * 0.7).toFixed(2);
-    document.getElementById('lobbyStatus').innerText = `Bet: ${selectedBet} TON | Uduş: ${win} TON`;
+    selectedBet=parseFloat(btn.dataset.bet);
+    const win=(selectedBet*2*0.7).toFixed(2);
+    document.getElementById('lobbyStatus').innerText=`Bet: ${selectedBet} TON | Uduş: ${win} TON`;
   });
 });
 
-// OTAQ YARAT
-document.getElementById('createRoomBtn').addEventListener('click', async () => {
-  if (myBalance < selectedBet) return alert("Balans kifayət deyil. Deposit et");
+// CREATE ROOM
+document.getElementById('createRoomBtn').addEventListener('click', async ()=>{
+  if(myBalance<selectedBet) return alert("Balans kifayət deyil. Deposit et");
 
-  const result = await runTransaction(ref(rdb, `users/${myId}/balance`), (c) => {
-    if ((c || 0) < selectedBet) return;
-    return c - selectedBet;
-  });
+  const result=await runTransaction(ref(rdb, `users/${myId}/balance`), (c)=>{ if((c||0)<selectedBet) return; return c-selectedBet; });
+  if(!result.committed) return alert("Balans xətası");
 
-  if (!result.committed) return alert("Balans xətası");
-
-  roomCode = "ROOM" + Math.floor(Math.random()*10000);
+  roomCode="ROOM"+Math.floor(Math.random()*10000);
   await set(ref(rdb, `rooms/${roomCode}`), {
-    turn: myId, started: false, 
-    players: { : 0 },
+    turn: myId, started: false,
+    players: { [myId]: 0 },
     bet: selectedBet, pot: selectedBet, status: "waiting"
   });
 
   await loadBalance();
   showTab('game');
-  document.getElementById('potAmount').innerText = selectedBet;
+  document.getElementById('potAmount').innerText=selectedBet;
   listenRoom();
 });
 
-// OTAĞA QATIL
-document.getElementById('joinRoomBtn').addEventListener('click', async () => {
-  roomCode = document.getElementById('roomInput').value.trim();
-  if (!roomCode) return alert("Oda kodu yaz");
-  
-  const snap = await get(ref(rdb, `rooms/${roomCode}`));
-  if (!snap.exists()) return alert("Oda tapılmadı");
-  if (snap.val().status!== "waiting") return alert("Oyun başlayıb/bitib");
-  if (Object.keys(snap.val().players || {}).length >= 2) return alert("Oda doludur");
+// JOIN ROOM
+document.getElementById('joinRoomBtn').addEventListener('click', async ()=>{
+  roomCode=document.getElementById('roomInput').value.trim();
+  if(!roomCode) return alert("Oda kodu yaz");
+  const snap=await get(ref(rdb, `rooms/${roomCode}`));
+  if(!snap.exists()) return alert("Oda tapılmadı");
+  if(snap.val().status!=="waiting") return alert("Oyun başlayıb/bitib");
+  if(Object.keys(snap.val().players||{}).length>=2) return alert("Oda doludur");
 
-  const roomBet = snap.val().bet;
-  if (myBalance < roomBet) return alert(`Balans kifayət deyil. Lazımdır: ${roomBet} TON`);
+  const roomBet=snap.val().bet;
+  if(myBalance<roomBet) return alert(`Balans kifayət deyil. Lazımdır: ${roomBet} TON`);
 
-  const result = await runTransaction(ref(rdb, `users/${myId}/balance`), (c) => {
-    if ((c || 0) < roomBet) return;
-    return c - roomBet;
-  });
+  const result=await runTransaction(ref(rdb, `users/${myId}/balance`), (c)=>{ if((c||0)<roomBet) return; return c-roomBet; });
+  if(!result.committed) return alert("Balans xətası");
 
-  if (!result.committed) return alert("Balans xətası");
-
-  await update(ref(rdb, `rooms/${roomCode}/players`), { : 0 });
-  await update(ref(rdb, `rooms/${roomCode}`), { pot: roomBet * 2 });
+  await update(ref(rdb, `rooms/${roomCode}/players`), { [myId]:0 });
+  await update(ref(rdb, `rooms/${roomCode}`), { pot: roomBet*2 });
 
   await loadBalance();
   showTab('game');
   listenRoom();
 });
 
-// OYUN
-function getTrackWidth() { return document.getElementById("track").offsetWidth - 55; }
-function getOpponentId() {
-  if (!roomData ||!roomData.players) return null;
-  return Object.keys(roomData.players).find(id => id!== myId);
-}
+// GAME FUNCTIONS
+function getTrackWidth(){ return document.getElementById("track").offsetWidth-55; }
+function getOpponentId(){ if(!roomData||!roomData.players) return null; return Object.keys(roomData.players).find(id=>id!==myId); }
 
-let unsubscribe = null;
-function listenRoom() {
-  if (unsubscribe) unsubscribe();
-  const roomRef = ref(rdb, `rooms/${roomCode}`);
-  unsubscribe = onValue(roomRef, snap => {
-    if (!snap.exists()) {
-      document.getElementById("raceStatus").innerText = "Oda bağlandı";
-      setTimeout(() => leaveRoom(), 2000);
-      return;
-    }
-    roomData = snap.val();
-    isMyTurn = roomData.turn === myId;
-    gameStarted = roomData.started || false;
-    playerPos = roomData.players || 0;
-    const oppId = getOpponentId();
-    opponentPos = oppId? (roomData.players[oppId] || 0) : 0;
-    
-    document.getElementById("playerCar").style.left = playerPos + "px";
-    document.getElementById("opponentCar").style.left = opponentPos + "px";
-    document.getElementById("clickBtn").disabled =!isMyTurn ||!gameStarted;
-    document.getElementById("startBtn").disabled =!roomData.players || Object.keys(roomData.players).length < 2 || gameStarted;
-    document.getElementById("potAmount").innerText = roomData.pot || 0;
+let unsubscribe=null;
+function listenRoom(){
+  if(unsubscribe) unsubscribe();
+  const roomRef=ref(rdb, `rooms/${roomCode}`);
+  unsubscribe=onValue(roomRef, snap=>{
+    if(!snap.exists()){ document.getElementById("raceStatus").innerText="Oda bağlandı"; setTimeout(()=>leaveRoom(),2000); return; }
+    roomData=snap.val();
+    isMyTurn=roomData.turn===myId;
+    gameStarted=roomData.started||false;
+    playerPos=roomData.players[myId]||0;
+    const oppId=getOpponentId();
+    opponentPos=oppId?roomData.players[oppId]||0:0;
 
-    if (gameStarted) {
-      document.getElementById("raceStatus").innerText = isMyTurn? "Sənin növbəndir! QAC!" : "Rəqibin növbəsi...";
-    } else {
-      document.getElementById("raceStatus").innerText = `${Object.keys(roomData.players).length}/2 oyunçu hazır`;
+    document.getElementById("playerCar").style.left=playerPos+"px";
+    document.getElementById("opponentCar").style.left=opponentPos+"px";
+    document.getElementById("clickBtn").disabled=!isMyTurn||!gameStarted;
+    document.getElementById("startBtn").disabled=!(roomData.players && Object.keys(roomData.players).length===2) || gameStarted;
+    document.getElementById("potAmount").innerText=roomData.pot||0;
+
+    if(gameStarted){
+      document.getElementById("raceStatus").innerText=isMyTurn?"Sənin növbəndir! QAC!":"Rəqibin növbəsi...";
+    }else{
+      document.getElementById("raceStatus").innerText=`${Object.keys(roomData.players).length}/2 oyunçu hazır`;
     }
     checkFinish();
   });
 }
 
-document.getElementById("readyBtn").addEventListener('click', async () => {
+document.getElementById("readyBtn").addEventListener('click', async ()=>{
   await update(ref(rdb, `rooms/${roomCode}/players/${myId}`), 0);
-  document.getElementById("readyBtn").disabled = true;
+  document.getElementById("readyBtn").disabled=true;
 });
-
-document.getElementById("startBtn").addEventListener('click', async () => {
-  await update(ref(rdb, `rooms/${roomCode}`), { started: true, status: "playing" });
+document.getElementById("startBtn").addEventListener('click', async ()=>{
+  await update(ref(rdb, `rooms/${roomCode}`), { started:true, status:"playing" });
 });
-
-document.getElementById("clickBtn").addEventListener('click', async () => {
-  if (!isMyTurn ||!gameStarted) return;
-  const newPos = playerPos + 30;
-  const oppId = getOpponentId();
-  if (!oppId) return;
+document.getElementById("clickBtn").addEventListener('click', async ()=>{
+  if(!isMyTurn||!gameStarted) return;
+  const newPos=playerPos+30;
+  const oppId=getOpponentId();
+  if(!oppId) return;
   await set(ref(rdb, `rooms/${roomCode}/players/${myId}`), newPos);
-  await update(ref(rdb, `rooms/${roomCode}`), { turn: oppId });
-});
-
-document.getElementById("leaveBtn").addEventListener('click', () => leaveRoom());
-
-async function leaveRoom() {
-  if (unsubscribe) unsubscribe();
-  showTab('lobby');
-  roomCode = null;
-  document.getElementById("readyBtn").disabled = false;
-  await loadBalance();
-}
-
-async function checkFinish() {
-  const finish = getTrackWidth();
-  if (!roomData || roomData.status === "finished") return;
-
-  const totalPot = roomData.pot;
-  const winnerPrize = totalPot * 0.7;
-
-  if (playerPos >= finish) {
-    await runTransaction(ref(rdb, `users/${myId}/balance`), (c) => (c || 0) + winnerPrize);
-    alert(`🏆 QALİB SƏN! ${winnerPrize.toFixed(2)} TON balansına əlavə edildi`);
-    await update(ref(rdb, `rooms/${roomCode}`), { 
-      winner: myId, winnerPrize: winnerPrize, status: "finished" 
-    });
-    setTimeout(() => leaveRoom(), 2000);
-  }
-  if (opponentPos >= finish) {
-    alert(`😢 Rəqib qazandı. ${winnerPrize.toFixed(2)} TON aldı`);
-    await update(ref(rdb, `rooms/${roomCode}`), { 
-      winner: getOpponentId(), winnerPrize: winnerPrize, status: "finished" 
-    });
-    setTimeout(() => leaveRoom(), 2000);
-  }
-}
-
-// BAŞLANGIC
-loadBalance();
-</script>
-</body>
-</html>
+  await update(ref(rdb, `rooms/${roomCode}`
