@@ -1,213 +1,622 @@
-
 <!DOCTYPE html>
 <html lang="az">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bearbee Arena | Click Room</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bearbee Arena | Click Room</title>
 
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <script src="https://richinfo.co/richpartners/pops/js/richads-pu-ob.js" data-pubid="1012853" data-siteid="397995" async data-cfasync="false"></script>
 
-<style>
-body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#02060d;color:#fff;overflow-x:hidden;}
-.page{max-width:500px;margin:0 auto;padding:12px;}
-.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-.back,.btn{padding:10px 12px;border-radius:10px;border:none;cursor:pointer;text-align:center;font-weight:800;}
-.back{background:#08111c;color:#ffd700;}
-.btn-purple{background:#973dff;color:#fff;}
-.btn-gold{background:gold;color:#111;}
-.status{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
-.status-box{background:#08111c;border-radius:12px;padding:10px;text-align:center;}
-.bear-ring{width:200px;height:200px;margin:12px auto;border-radius:50%;background:conic-gradient(#1597ff,#ffd700,#9b3dff,#1597ff);display:grid;place-items:center;cursor:pointer;}
-.energy-line{width:100%;height:16px;background:#111c2a;border-radius:12px;margin:10px 0;}
-.energy-fill{height:100%;width:100%;background:linear-gradient(90deg,#22ff66,#00d7ff);transition:0.2s;}
-.box-card{background:#0d1928;border-radius:12px;padding:10px;text-align:center;margin-bottom:10px;}
-.grid-3{display:grid;grid-template-columns:1fr;gap:10px;}
-.nav{position:fixed;bottom:0;width:100%;height:60px;background:#06111a;display:grid;grid-template-columns:repeat(5,1fr);align-items:center;text-align:center;}
-.nav a{color:#8793a3;text-decoration:none;font-size:12px;}
-.nav a.active{color:#ffd700;}
-</style>
+    <style>
+        :root{
+            --bg:#02060d;
+            --panel:#08111c;
+            --panel2:#0c1624;
+            --line:#1e3b5a;
+            --blue:#1597ff;
+            --gold:#ffd700;
+            --green:#22ff66;
+            --red:#ff2438;
+            --purple:#9b3dff;
+            --text:#fff;
+            --muted:#98a8ba;
+        }
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            -webkit-tap-highlight-color:transparent;
+        }
+
+        body{
+            min-height:100vh;
+            background:
+                radial-gradient(circle at top, rgba(0,93,255,0.22), transparent 36%),
+                radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 32%),
+                linear-gradient(180deg, #01040a, #030812 60%, #000);
+            color:var(--text);
+            font-family:'Segoe UI', Arial, sans-serif;
+            padding-bottom:92px;
+            overflow-x:hidden;
+        }
+
+        body::before{
+            content:"";
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background:
+                linear-gradient(90deg, transparent 0 95%, rgba(21,151,255,0.07) 96% 100%),
+                linear-gradient(0deg, transparent 0 95%, rgba(255,255,255,0.025) 96% 100%);
+            background-size:34px 34px;
+            opacity:0.42;
+            mask-image:linear-gradient(to bottom, #000, transparent 86%);
+        }
+
+        .page{
+            width:min(1050px, 100%);
+            margin:0 auto;
+            padding:16px 14px 0;
+        }
+
+        .top-bar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:12px;
+            margin-bottom:16px;
+        }
+
+        .back{
+            color:var(--gold);
+            text-decoration:none;
+            font-weight:1000;
+            background:rgba(8,18,32,0.82);
+            border:1px solid rgba(60,91,128,0.65);
+            border-radius:14px;
+            padding:12px 14px;
+        }
+
+        .logo{
+            text-align:center;
+            line-height:0.9;
+            user-select:none;
+            filter:drop-shadow(0 0 12px rgba(255,215,0,0.25));
+        }
+
+        .logo .bearbee{
+            font-size:24px;
+            font-weight:1000;
+            font-style:italic;
+            letter-spacing:2px;
+            color:#f4f7ff;
+            text-shadow:0 3px 0 #29354a;
+        }
+
+        .logo .arena{
+            font-size:34px;
+            font-weight:1000;
+            font-style:italic;
+            letter-spacing:3px;
+            color:var(--gold);
+            text-shadow:0 4px 0 #6a3e00;
+        }
+
+        .status{
+            display:grid;
+            grid-template-columns:repeat(4, 1fr);
+            gap:12px;
+            margin-bottom:16px;
+        }
+
+        .status-box{
+            background:rgba(8,18,32,0.88);
+            border:1px solid rgba(60,91,128,0.65);
+            border-radius:18px;
+            padding:14px;
+            text-align:center;
+            box-shadow:0 0 24px rgba(21,151,255,0.08);
+        }
+
+        .status-box h3{
+            color:var(--muted);
+            font-size:13px;
+            margin-bottom:6px;
+            text-transform:uppercase;
+            letter-spacing:1px;
+        }
+
+        .status-box span{
+            color:var(--gold);
+            font-size:24px;
+            font-weight:1000;
+        }
+
+        .layout{
+            display:grid;
+            grid-template-columns:1fr;
+            gap:16px;
+        }
+
+        .panel{
+            background: linear-gradient(180deg, rgba(12,22,36,0.96), rgba(4,9,16,0.96));
+            border:1px solid rgba(71,101,136,0.62);
+            border-radius:22px;
+            box-shadow: inset 0 0 22px rgba(21,151,255,0.08), 0 0 26px rgba(21,151,255,0.08);
+            padding:16px;
+            margin-bottom:16px;
+            position:relative;
+            overflow:hidden;
+        }
+
+        .panel-title{
+            color:var(--gold);
+            text-align:center;
+            font-size:22px;
+            font-weight:1000;
+            letter-spacing:1px;
+            margin-bottom:10px;
+        }
+
+        .panel-sub{
+            color:var(--muted);
+            text-align:center;
+            font-size:14px;
+            line-height:1.5;
+            margin-bottom:14px;
+        }
+
+        .click-panel{
+            text-align:center;
+        }
+
+        .bear-ring{
+            width:270px;
+            height:270px;
+            margin:16px auto;
+            border-radius:50%;
+            padding:6px;
+            background: conic-gradient(from 120deg, #1597ff, #ffd700, #9b3dff, #1597ff);
+            box-shadow: 0 0 40px rgba(21,151,255,0.30), 0 0 35px rgba(255,215,0,0.18);
+            cursor:pointer;
+            user-select:none;
+            transition:0.08s;
+        }
+
+        .bear-ring:active{
+            transform:scale(0.95);
+        }
+
+        .bear-button{
+            width:100%;
+            height:100%;
+            border-radius:50%;
+            overflow:hidden;
+            background: radial-gradient(circle at 40% 25%, rgba(255,215,0,0.22), transparent 34%), linear-gradient(180deg, #07101b, #02060d);
+            border:4px solid rgba(0,0,0,0.76);
+            display:grid;
+            place-items:center;
+            position:relative;
+        }
+
+        .bear-button img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+        }
+
+        .bear-fallback{
+            font-size:96px;
+            filter:drop-shadow(0 0 16px rgba(255,215,0,0.45));
+        }
+
+        .energy-line{
+            width:100%;
+            height:18px;
+            background:#111c2a;
+            border:1px solid #26476a;
+            border-radius:22px;
+            overflow:hidden;
+            margin:14px 0;
+        }
+
+        .energy-fill{
+            height:100%;
+            width:100%;
+            background:linear-gradient(90deg, #22ff66, #00d7ff);
+            transition:0.2s;
+        }
+
+        .btn{
+            width:100%;
+            border:none;
+            cursor:pointer;
+            border-radius:13px;
+            padding:13px 14px;
+            font-size:15px;
+            font-weight:1000;
+            letter-spacing:0.7px;
+            color:#fff;
+            text-decoration:none;
+            text-align:center;
+            transition:0.16s;
+            text-transform:uppercase;
+            display:block;
+            margin-bottom: 8px;
+        }
+
+        .btn:active{
+            transform:scale(0.97);
+        }
+
+        .btn-blue{ background:linear-gradient(180deg, #1678e8, #064fad); border:1px solid #58b9ff; box-shadow:0 0 18px rgba(21,151,255,0.20); }
+        .btn-purple{ background:linear-gradient(180deg, #973dff, #5515a0); border:1px solid #c692ff; box-shadow:0 0 18px rgba(155,61,255,0.20); }
+        .btn-gold{ background:linear-gradient(180deg, #ffd700, #a56b00); border:1px solid #ffef92; color:#111; }
+        .btn-dark{ background:linear-gradient(180deg, #152339, #0a1220); border:1px solid #33557d; }
+
+        .btn:disabled{ opacity:0.45; cursor:not-allowed; transform:none; }
+
+        .tap-effect{
+            position:absolute;
+            color:var(--gold);
+            font-size:30px;
+            font-weight:1000;
+            pointer-events:none;
+            animation:floatUp 0.9s forwards;
+            z-index:1000;
+            text-shadow:0 0 12px rgba(255,215,0,0.65);
+        }
+
+        @keyframes floatUp{
+            0%{ opacity:1; transform:translateY(0) scale(1); }
+            100%{ opacity:0; transform:translateY(-85px) scale(1.25); }
+        }
+
+        .grid-3{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+
+        .box-card{
+            border:1px solid #31577d;
+            background:linear-gradient(180deg, #0d1928, #07101b);
+            border-radius:18px;
+            padding:14px;
+            text-align:center;
+            box-shadow:0 0 18px rgba(21,151,255,0.08);
+        }
+
+        .box-icon{ font-size:42px; margin-bottom:8px; }
+        .box-card h3{ color:var(--gold); font-size:16px; margin-bottom:6px; }
+        .box-card p{ color:var(--muted); font-size:13px; line-height:1.4; margin-bottom:8px; }
+        .timer{ color:#00ffcc; font-weight:1000; margin:8px 0; }
+
+        .log{
+            margin-top:12px;
+            background:#030a13;
+            border:1px solid #263f5d;
+            border-radius:14px;
+            padding:12px;
+            color:#00ffcc;
+            min-height:45px;
+            font-weight:800;
+            font-size:14px;
+            text-align:center;
+            line-height:1.45;
+        }
+
+        .nav{
+            position:fixed;
+            left:0;
+            bottom:0;
+            width:100%;
+            height:82px;
+            background:rgba(6,11,18,0.96);
+            border-top:1px solid rgba(70,100,132,0.55);
+            display:grid;
+            grid-template-columns:repeat(5, 1fr);
+            z-index:9999;
+            backdrop-filter:blur(12px);
+        }
+
+        .nav a{
+            color:#8793a3;
+            text-decoration:none;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            gap:5px;
+            font-weight:1000;
+            letter-spacing:0.5px;
+            font-size:11px;
+        }
+
+        .nav a.active{
+            color:var(--gold);
+            text-shadow:0 0 14px rgba(255,215,0,0.45);
+        }
+
+        .nav .icon{ font-size:22px; }
+
+        @media(max-width:850px){
+            .grid-3{ grid-template-columns:1fr; }
+            .bear-ring{ width:230px; height:230px; }
+        }
+    </style>
 </head>
 <body>
 
-<main class="page">
-<div class="top-bar">
-  <a href="./index.html" class="back">← Menyu</a>
-  <button class="btn btn-gold" id="syncBtn">Yenilə</button>
-</div>
+    <main class="page">
+        <div class="top-bar">
+            <a href="./index.html" class="back">← Menyu</a>
+            <div class="logo">
+                <div class="bearbee">BEARBEE</div>
+                <div class="arena">CLICK</div>
+            </div>
+            <button class="btn btn-dark" style="width:auto; margin:0;" id="syncBtn">Yenilə</button>
+        </div>
 
-<section class="status">
-  <div class="status-box">Coin<br>🪙<span id="coinText">0</span></div>
-  <div class="status-box">Enerji<br>⚡<span id="energyText">100</span>/100</div>
-  <div class="status-box">Click<br>🚀<span id="boostText">1x</span></div>
-  <div class="status-box">Ad Xal<br>⭐<span id="adPointText">0</span></div>
-</section>
+        <section class="status">
+            <div class="status-box">
+                <h3>Coin</h3>
+                🪙 <span id="coinText">0</span>
+            </div>
+            <div class="status-box">
+                <h3>Enerji</h3>
+                ⚡ <span id="energyText">100</span>/100
+            </div>
+            <div class="status-box">
+                <h3>Click Gücü</h3>
+                🚀 <span id="boostText">1x</span>
+            </div>
+            <div class="status-box">
+                <h3>Ad Xal</h3>
+                ⭐ <span id="adPointText">0</span>
+            </div>
+        </section>
 
-<!-- Click panel -->
-<section class="click-panel" id="clickPanel">
-  <div class="bear-ring" id="tapBear">🐻</div>
-  <div class="energy-line"><div class="energy-fill" id="energyFill"></div></div>
-  <button class="btn btn-purple" id="energyAdBtn">🎥 Reklama bax və Enerjini Full et</button>
-  <button class="btn btn-gold" id="saveBtn">🪙 Xalları Bazada Saxla</button>
-</section>
+        <section class="layout">
+            <section class="panel click-panel">
+                <h1 class="panel-title">Cyber Bear Click</h1>
+                <p class="panel-sub">Ekrana klik edərək coin qazanın. Server asılılığı yoxdur, birbaşa Firebase ilə işləyir.</p>
 
-<section>
-<h2>Reklamlı Qutular</h2>
-<div class="grid-3">
-<div class="box-card"><div>🎁</div><div>2 dəq qutu</div><button class="btn btn-purple" id="boxBtn2">Aç</button></div>
-<div class="box-card"><div>📦</div><div>5 dəq qutu</div><button class="btn btn-purple" id="boxBtn5">Aç</button></div>
-<div class="box-card"><div>💎</div><div>10 dəq qutu</div><button class="btn btn-purple" id="boxBtn10">Aç</button></div>
-</div>
-</section>
-</main>
+                <div class="bear-ring" id="tapBear">
+                    <div class="bear-button">
+                        <img src="./assets/cyber-bear.png" alt="Cyber Bear" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div class="bear-fallback" style="display:none;">🐻</div>
+                    </div>
+                </div>
 
-<nav class="nav">
-<a href="#" class="active">🐻 Click</a>
-<a href="#">⛏️ Mining</a>
-<a href="#">🛒 Market</a>
-<a href="#">🏎️ Race</a>
-<a href="#">💰 Wallet</a>
-</nav>
+                <div class="energy-line">
+                    <div class="energy-fill" id="energyFill"></div>
+                </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+                <button class="btn btn-purple" id="energyAdBtn">🎥 Reklama bax və Enerjini Full et</button>
+                <button class="btn btn-gold" id="saveBtn">🪙 Xalları Bazada Saxla</button>
+                <div class="log" id="clickLog">Yüklənir...</div>
+            </section>
 
-// Firebase konfiqurasiyası
-const firebaseConfig = {
-  apiKey:"YOUR_API_KEY",
-  authDomain:"YOUR_AUTH_DOMAIN",
-  projectId:"YOUR_PROJECT_ID",
-  storageBucket:"YOUR_STORAGE_BUCKET",
-  messagingSenderId:"YOUR_MESSAGING_SENDER_ID",
-  appId:"YOUR_APP_ID"
-};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+            <section class="panel">
+                <h2 class="panel-title">Reklamlı Qutular</h2>
+                <p class="panel-sub">Hər qutunu açdıqdan sonra taymer aktivləşir.</p>
+                <div class="grid-3">
+                    <div class="box-card">
+                        <div class="box-icon">🎁</div>
+                        <h3>2 dəq qutu</h3>
+                        <div class="timer" id="timer2">Yüklənir</div>
+                        <button class="btn btn-blue" id="boxBtn2">Aç</button>
+                    </div>
+                    <div class="box-card">
+                        <div class="box-icon">📦</div>
+                        <h3>5 dəq qutu</h3>
+                        <div class="timer" id="timer5">Yüklənir</div>
+                        <button class="btn btn-blue" id="boxBtn5">Aç</button>
+                    </div>
+                    <div class="box-card">
+                        <div class="box-icon">💎</div>
+                        <h3>10 dəq qutu</h3>
+                        <div class="timer" id="timer10">Yüklənir</div>
+                        <button class="btn btn-blue" id="boxBtn10">Aç</button>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
 
-const tg = window.Telegram?.WebApp;
-if(tg) tg.expand();
-const userId = tg?.initDataUnsafe?.user?.id || crypto.randomUUID();
+    <nav class="nav">
+        <a href="./click-room.html" class="active"><span class="icon">🐻</span>Click</a>
+        <a href="./mining-room.html"><span class="icon">⛏️</span>Mining</a>
+        <a href="./market-room.html"><span class="icon">🛒</span>Market</a>
+        <a href="./race.html"><span class="icon">🏎️</span>Race</a>
+        <a href="./wallet-room.html"><span class="icon">💰</span>Wallet</a>
+    </nav>
 
-let userData={coins:0,energy:100,boost:1,adPoints:0,lastBox2:0,lastBox5:0,lastBox10:0};
-let pendingClicks=0;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// UI elementləri
-const coinText=document.getElementById("coinText");
-const energyText=document.getElementById("energyText");
-const boostText=document.getElementById("boostText");
-const adPointText=document.getElementById("adPointText");
-const energyFill=document.getElementById("energyFill");
-const tapBear=document.getElementById("tapBear");
-const saveBtn=document.getElementById("saveBtn");
-const syncBtn=document.getElementById("syncBtn");
+        const firebaseConfig = {
+            apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
+            authDomain: "racegane.firebaseapp.com",
+            databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "racegane",
+            storageBucket: "racegane.firebasestorage.app",
+            messagingSenderId: "477893876737",
+            appId: "1:477893876737:web:1b561bb3224b0086c63400"
+        };
 
-// UI yenilə
-function updateUI(){
-  coinText.innerText=userData.coins;
-  energyText.innerText=userData.energy;
-  boostText.innerText=userData.boost+"x";
-  adPointText.innerText=userData.adPoints;
-  energyFill.style.width=userData.energy+"%";
-}
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-// Firebase-dən yüklə
-async function loadUserData(){
-  try{
-    const userRef=doc(db,"users",userId);
-    const snap=await getDoc(userRef);
-    if(snap.exists()) userData={...userData,...snap.data()};
-    else await setDoc(userRef,userData);
-    updateUI();
-    checkTimers();
-  }catch(e){console.log(e);}
-}
+        const tg = window.Telegram?.WebApp;
+        if(tg) tg.expand();
 
-// Klik effekti və dərhal Firebase-ə yaz
-function setupClickPanel(bearId, adBtnId, saveBtnId){
-  const bear=document.getElementById(bearId);
-  const adBtn=document.getElementById(adBtnId);
-  const save=document.getElementById(saveBtnId);
+        const tgUser = tg?.initDataUnsafe?.user;
+        const userId = tgUser ? String(tgUser.id) : "demo_user";
 
-  bear.addEventListener("click",()=>{
-    if(userData.energy<userData.boost) return;
-    userData.energy-=userData.boost;
-    userData.coins+=userData.boost;
-    pendingClicks+=userData.boost;
-    updateUI();
-    saveProgress();
-  });
+        let userData = {
+            coins: 0,
+            energy: 100,
+            boost: 1,
+            adPoints: 0,
+            lastBox2: 0,
+            lastBox5: 0,
+            lastBox10: 0
+        };
 
-  adBtn.addEventListener("click", async()=>{
-    const adController = window.RichAds?.init({blockId:"1012853"});
-    if(!adController) return alert("Reklam hazır deyil!");
-    try{
-      await adController.show();
-      userData.energy=100;
-      updateUI();
-      const userRef=doc(db,"users",userId);
-      await updateDoc(userRef,{energy:100});
-      saveProgress();
-    }catch(e){console.log(e);}
-  });
+        let pendingClicks = 0;
 
-  save.addEventListener("click", saveProgress);
-}
+        const coinText    = document.getElementById("coinText");
+        const energyText  = document.getElementById("energyText");
+        const boostText   = document.getElementById("boostText");
+        const adPointText = document.getElementById("adPointText");
+        const energyFill  = document.getElementById("energyFill");
+        const clickLog    = document.getElementById("clickLog");
 
-// Dərhal Firebase-ə yaz
-async function saveProgress(){
-  if(pendingClicks===0) return;
-  try{
-    const userRef=doc(db,"users",userId);
-    await updateDoc(userRef,{coins:userData.coins,adPoints:userData.adPoints,energy:userData.energy});
-    pendingClicks=0;
-  }catch(e){console.log(e);}
-}
+        function updateUI() {
+            coinText.innerText    = userData.coins;
+            energyText.innerText  = userData.energy;
+            boostText.innerText   = userData.boost + "x";
+            adPointText.innerText = userData.adPoints;
+            energyFill.style.width = userData.energy + "%";
+        }
 
-// Qutular
-function checkTimers(){
-  setupBox(2,userData.lastBox2,2*60*1000,20);
-  setupBox(5,userData.lastBox5,5*60*1000,60);
-  setupBox(10,userData.lastBox10,10*60*1000,150);
-}
-function setupBox(m,last,duration,reward){
-  const btn=document.getElementById("boxBtn"+m);
-  const now=Date.now();
-  if(now>=last+duration){
-    btn.disabled=false;
-    btn.onclick=()=>triggerBoxAd(m,reward);
-  }else{
-    btn.disabled=true;
-    setTimeout(()=>setupBox(m,last,duration,reward),1000);
-  }
-}
-async function triggerBoxAd(m,reward){
-  userData.coins+=reward;
-  userData.adPoints+=reward;
-  userData["lastBox"+m]=Date.now();
-  updateUI();
-  const userRef=doc(db,"users",userId);
-  const upd={coins:userData.coins,adPoints:userData.adPoints};
-  upd["lastBox"+m]=userData["lastBox"+m];
-  await updateDoc(userRef,upd);
-  checkTimers();
-}
+        async function loadUserData() {
+            try {
+                const userRef  = doc(db, "users", userId);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    userData = { ...userData, ...userSnap.data() };
+                } else {
+                    await setDoc(userRef, userData);
+                }
+                updateUI();
+                clickLog.innerText = "Məlumatlar uğurla yükləndi. Klikləyin!";
+                checkTimers();
+            } catch (err) {
+                clickLog.innerText = "Yükləmə xətası: " + err.message;
+            }
+        }
 
-// Enerji bərpası
-setInterval(()=>{if(userData.energy<100) userData.energy++; updateUI();},4000);
-setInterval(saveProgress,10000);
+        document.getElementById("tapBear").addEventListener("click", (e) => {
+            if (userData.energy < userData.boost) {
+                clickLog.innerText = "Kifayət qədər enerji yoxdur!";
+                return;
+            }
+            userData.energy -= userData.boost;
+            userData.coins  += userData.boost;
+            pendingClicks   += userData.boost;
+            updateUI();
 
-// Setup Click panel
-setupClickPanel("tapBear","energyAdBtn","saveBtn");
+            const rect   = e.currentTarget.getBoundingClientRect();
+            const effect = document.createElement("div");
+            effect.className   = "tap-effect";
+            effect.style.left  = (e.clientX - rect.left) + "px";
+            effect.style.top   = (e.clientY - rect.top)  + "px";
+            effect.innerText   = "+" + userData.boost;
+            e.currentTarget.appendChild(effect);
+            setTimeout(() => effect.remove(), 900);
+        });
 
-loadUserData();
-</script>
+        async function saveProgress() {
+            if (pendingClicks === 0) {
+                clickLog.innerText = "Yadda saxlanılacaq yeni klik yoxdur.";
+                return;
+            }
+            clickLog.innerText = "Xallar saxlanılır...";
+            try {
+                const userRef = doc(db, "users", userId);
+                await updateDoc(userRef, {
+                    coins:  userData.coins,
+                    energy: userData.energy
+                });
+                pendingClicks = 0;
+                clickLog.innerText = "Tərəqqi Firebase-də qeydə alındı!";
+            } catch (err) {
+                clickLog.innerText = "Saxlama xətası: " + err.message;
+            }
+        }
 
-<script src="https://richinfo.co/richpartners/pops/js/richads-pu-ob.js"
-data-pubid="1012853"
-data-siteid="397995"
-async
-data-cfasync="false"></script>
+        document.getElementById("saveBtn").addEventListener("click", saveProgress);
+        document.getElementById("syncBtn").addEventListener("click", loadUserData);
 
+        window.watchEnergyAd = function() {
+            const AdController = window.Adsgram?.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
+            if (!AdController) {
+                userData.energy = 100;
+                updateUI();
+                clickLog.innerText = "[Demo] Reklam tamamlandı. Enerji 100%!";
+                return;
+            }
+            clickLog.innerText = "Reklam yüklənir...";
+            AdController.show().then(async () => {
+                userData.energy = 100;
+                updateUI();
+                const userRef = doc(db, "users", userId);
+                await updateDoc(userRef, { energy: 100 });
+                clickLog.innerText = "Təbrik edirik! Enerji tam bərpa olundu.";
+            }).catch(() => {
+                clickLog.innerText = "Reklam tamamlanmadı və ya xəta baş verdi.";
+            });
+        };
+        document.getElementById("energyAdBtn").addEventListener("click", window.watchEnergyAd);
+
+        function checkTimers() {
+            setupBox(2,  userData.lastBox2,  2  * 60 * 1000, 20);
+            setupBox(5,  userData.lastBox5,  5  * 60 * 1000, 60);
+            setupBox(10, userData.lastBox10, 10 * 60 * 1000, 150);
+        }
+
+        function setupBox(minutes, lastTime, duration, reward) {
+            const btn       = document.getElementById("boxBtn"  + minutes);
+            const timerText = document.getElementById("timer"   + minutes);
+            const now       = Date.now();
+            const nextTime  = lastTime + duration;
+
+            if (now >= nextTime) {
+                timerText.innerText = "Hazırdır";
+                btn.disabled = false;
+                btn.onclick  = () => triggerBoxAd(minutes, reward);
+            } else {
+                btn.disabled = true;
+                const diff = nextTime - now;
+                const mins = Math.floor(diff / 60000);
+                const secs = Math.floor((diff % 60000) / 1000);
+                timerText.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+        }
+
+        function triggerBoxAd(minutes, reward) {
+            clickLog.innerText = minutes + " dəqiqəlik qutu üçün reklam başladılır...";
+            setTimeout(async () => {
+                const now = Date.now();
+                userData.coins   += reward;
+                userData.adPoints += reward;
+                userData["lastBox" + minutes] = now;
+                updateUI();
+
+                const userRef = doc(db, "users", userId);
+                const fields  = {
+                    coins:    userData.coins,
+                    adPoints: userData.adPoints
+                };
+                fields["lastBox" + minutes] = now;
+                await updateDoc(userRef, fields);
+                clickLog.innerText = `Qutu açıldı! +${reward} Coin və Ad Xal balansınıza əlavə edildi.`;
+                checkTimers();
+            }, 1000);
+        }
+
+        setInterval(() => {
+            if (userData.energy < 100) { userData.energy++; updateUI(); }
+        }, 4000);
+
+        setInterval(checkTimers,   1000);
+        setInterval(saveProgress, 10000);
+
+        loadUserData();
+    </script>
 </body>
 </html>
