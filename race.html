@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bearbee Arena | TON Game</title>
-<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+<title>Bearbee Arena | Manual</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0b0f1a;--panel:#121927;--accent:#8b3cff;--gold:#ffd700;--green:#22ff66;--red:#ff2438;}
@@ -15,14 +14,13 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:#fff;min
 .copy-btn{background:linear-gradient(180deg,#8b3cff,#5a00ff);border:none;color:#fff;padding:14px;border-radius:10px;width:100%;cursor:pointer;font-weight:700;font-size:16px;transition:0.2s;}
 .copy-btn:hover{transform:scale(1.02);}
 .copy-btn:disabled{background:#333;color:#666;cursor:not-allowed;transform:none;}
-.status-box{padding:12px;border-radius:10px;background:rgba(139,60,255,0.1);text-align:center;font-weight:900;}
+.status-box{padding:12px;border-radius:10px;background:rgba(139,60,255,0.1);text-align:center;font-weight:900;word-break:break-all;}
 input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;font-size:16px;}
 .bet-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 .bet-btn{background:#1a2332;border:2px solid #8b3cff;padding:20px;border-radius:10px;color:#fff;font-weight:900;cursor:pointer;transition:0.2s;}
 .bet-btn.active{background:#8b3cff;box-shadow:0 0 20px rgba(139,60,255,0.5);}
 .bet-btn:disabled{border-color:#333;color:#666;cursor:not-allowed;opacity:0.3;}
 .balance{font-size:28px;color:var(--green);text-align:center;font-weight:900;}
-#ton-connect{display:flex;justify-content:center;margin:10px 0;}
 .track{position:relative;height:140px;background:linear-gradient(90deg,#1a2332 0%,#121927 100%);border-radius:12px;overflow:hidden;margin-top:10px;border:2px solid #8b3cff;}
 .car{width:50px;height:50px;border-radius:10px;position:absolute;transition:left 0.3s ease;display:flex;align-items:center;justify-content:center;font-size:24px;}
 .finish{position:absolute;right:0;top:0;width:8px;height:100%;background:repeating-linear-gradient(0deg,#fff 0px,#fff 10px,#000 10px,#000 20px);}
@@ -30,7 +28,8 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
 .tab-btns{display:flex;gap:10px;margin-bottom:10px;}
 .tab-btn{flex:1;padding:12px;border-radius:10px;border:none;background:#1a2332;color:#fff;font-weight:700;cursor:pointer;}
 .tab-btn.active{background:#8b3cff;}
-.tab-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.address-box{background:#000;padding:12px;border-radius:8px;font-family:monospace;font-size:12px;text-align:center;cursor:pointer;}
+.address-box:hover{background:#111;}
 </style>
 </head>
 <body>
@@ -38,21 +37,34 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
 
 <div class="tab-btns">
   <button class="tab-btn active" id="tabDeposit">💎 Deposit</button>
-  <button class="tab-btn" id="tabLobby" disabled>🎮 Lobby</button>
+  <button class="tab-btn" id="tabLobby">🎮 Lobby</button>
   <button class="tab-btn" id="tabGame" disabled>🏎️ Oyun</button>
 </div>
 
-<!-- DEPOSIT PANEL -->
+<!-- DEPOSIT PANEL - MANUAL -->
 <div class="panel" id="depositPanel">
-  <div class="panel-title">💎 TON Deposit & Balans</div>
-  <div id="ton-connect"></div>
+  <div class="panel-title">💎 Manual Deposit & Balans</div>
   <div class="balance" id="balance">Balans: 0.00 TON</div>
-  <input type="number" id="depositAmount" placeholder="Deposit məbləği" step="0.1" min="0.5" value="0.5">
-  <button class="copy-btn" id="depositBtn">💎 TON Deposit Et</button>
-  <div class="status-box" id="depositStatus">Cüzdanı qoş və deposit et</div>
-  <div class="status-box" style="background:rgba(255,149,0,0.1);font-size:14px;">
-    Dəstək: 9947429 | Komissiya: 30%
+  
+  <div class="status-box" style="background:rgba(255,149,0,0.2);">
+    <b>1.</b> Aşağıdakı ünvana TON göndər<br>
+    <b>2.</b> Transaction hash-i Admin-ə göndər<br>
+    <b>3.</b> Balansın artırılacaq
   </div>
+  
+  <div class="address-box" id="walletAddress" onclick="copyAddress()">
+    EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp
+  </div>
+  
+  <button class="copy-btn" onclick="copyAddress()">📋 Ünvanı Kopyala</button>
+  
+  <div class="status-box">
+    Admin: 9947429 | Komissiya: 30%<br>
+    Min deposit: 0.5 TON
+  </div>
+  
+  <button class="copy-btn" id="refreshBtn">🔄 Balansı Yenilə</button>
+  <div class="status-box" id="depositStatus">Deposit et və Admin-ə yaz</div>
 </div>
 
 <!-- LOBBY PANEL -->
@@ -107,16 +119,26 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const rdb = getDatabase(app);
 
-const SAHIB_CUZDAN = "EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp";
-const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-    manifestUrl: 'https://ton-connect.github.io/demo-dapp-with-wallet/tonconnect-manifest.json',
-    buttonRootId: 'ton-connect'
-});
+// USER ID - localStorage-də saxla ki, refresh edəndə itməsin
+let myId = localStorage.getItem('bearbee_userid');
+if (!myId) {
+  myId = "user_" + Math.floor(Math.random()*100000);
+  localStorage.setItem('bearbee_userid', myId);
+}
 
-const myId = "user_" + Math.floor(Math.random()*10000);
 let myBalance = 0, selectedBet = 0.5;
 let roomCode = null, isMyTurn = false, gameStarted = false;
 let playerPos = 0, opponentPos = 0, roomData = null;
+
+// ÜNVANI KOPYALA
+window.copyAddress = function() {
+  const addr = "EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp";
+  navigator.clipboard.writeText(addr);
+  document.getElementById('depositStatus').innerText = "✅ Ünvan kopyalandı!";
+  setTimeout(() => {
+    document.getElementById('depositStatus').innerText = "Deposit et və Admin-ə yaz";
+  }, 2000);
+}
 
 // TAB SWITCHING
 const tabs = {
@@ -133,7 +155,7 @@ function showTab(tab) {
 }
 
 document.getElementById('tabDeposit').onclick = () => showTab('deposit');
-document.getElementById('tabLobby').onclick = () => { if(myBalance > 0) showTab('lobby'); };
+document.getElementById('tabLobby').onclick = () => { if(myBalance > 0) showTab('lobby'); else alert("Əvvəl deposit et"); };
 document.getElementById('tabGame').onclick = () => { if(roomCode) showTab('game'); };
 
 // BALANS
@@ -156,34 +178,7 @@ function updateBetButtons() {
   });
 }
 
-// DEPOSIT - REAL TON
-document.getElementById('depositBtn').onclick = async () => {
-  if (!tonConnectUI.connected) {
-    document.getElementById('depositStatus').innerText = "Əvvəlcə cüzdanı qoş";
-    return;
-  }
-  const amount = parseFloat(document.getElementById('depositAmount').value);
-  if (amount < 0.5) return alert("Min 0.5 TON");
-
-  try {
-    const tx = {
-      validUntil: Math.floor(Date.now() / 1000) + 300,
-      messages: [{ address: SAHIB_CUZDAN, amount: (amount * 1e9).toString() }]
-    };
-    document.getElementById('depositStatus').innerText = `${amount} TON ödənişi gözlənilir...`;
-    const result = await tonConnectUI.sendTransaction(tx);
-
-    if (result.boc) {
-      await runTransaction(ref(rdb, `users/${myId}/balance`), (c) => (c || 0) + amount);
-      await loadBalance();
-      document.getElementById('depositStatus').innerText = `✅ ${amount} TON əlavə edildi!`;
-      setTimeout(() => showTab('lobby'), 1000);
-    }
-  } catch (e) {
-    document.getElementById('depositStatus').innerText = "❌ Ödəniş ləğv edildi";
-    console.log(e);
-  }
-};
+document.getElementById('refreshBtn').onclick = loadBalance;
 
 // BET SEÇİMİ
 document.querySelectorAll('.bet-btn').forEach(btn => {
@@ -342,13 +337,8 @@ async function checkFinish() {
   }
 }
 
+// BAŞLANGIC
 loadBalance();
-tonConnectUI.onStatusChange(wallet => { 
-  if (wallet) {
-    loadBalance();
-    document.getElementById('depositStatus').innerText = "Cüzdan qoşuldu. Deposit edə bilərsən";
-  }
-});
 </script>
 </body>
 </html>
