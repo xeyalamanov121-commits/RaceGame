@@ -194,7 +194,8 @@
             height:100%;
             border-radius:50%;
             overflow:hidden;
-            background: radial-gradient(circle at 40% 25%, rgba(255,215,0,0.22), transparent 34%), linear-gradient(180deg, #07101b, #02060d);
+            background: radial-gradient(circle at 40% 25%, rgba(255,215,0,0.22), transparent 34%),
+                        linear-gradient(180deg, #07101b, #02060d);
             border:4px solid rgba(0,0,0,0.76);
             display:grid;
             place-items:center;
@@ -252,10 +253,10 @@
             transform:scale(0.97);
         }
 
-        .btn-blue{ background:linear-gradient(180deg, #1678e8, #064fad); border:1px solid #58b9ff; box-shadow:0 0 18px rgba(21,151,255,0.20); }
-        .btn-purple{ background:linear-gradient(180deg, #973dff, #5515a0); border:1px solid #c692ff; box-shadow:0 0 18px rgba(155,61,255,0.20); }
-        .btn-gold{ background:linear-gradient(180deg, #ffd700, #a56b00); border:1px solid #ffef92; color:#111; }
-        .btn-dark{ background:linear-gradient(180deg, #152339, #0a1220); border:1px solid #33557d; }
+        .btn-blue   { background:linear-gradient(180deg,#1678e8,#064fad); border:1px solid #58b9ff; box-shadow:0 0 18px rgba(21,151,255,0.20); }
+        .btn-purple { background:linear-gradient(180deg,#973dff,#5515a0); border:1px solid #c692ff; box-shadow:0 0 18px rgba(155,61,255,0.20); }
+        .btn-gold   { background:linear-gradient(180deg,#ffd700,#a56b00); border:1px solid #ffef92; color:#111; }
+        .btn-dark   { background:linear-gradient(180deg,#152339,#0a1220); border:1px solid #33557d; }
 
         .btn:disabled{ opacity:0.45; cursor:not-allowed; transform:none; }
 
@@ -271,24 +272,24 @@
         }
 
         @keyframes floatUp{
-            0%{ opacity:1; transform:translateY(0) scale(1); }
+            0%  { opacity:1; transform:translateY(0) scale(1); }
             100%{ opacity:0; transform:translateY(-85px) scale(1.25); }
         }
 
-        .grid-3{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+        .grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
 
         .box-card{
             border:1px solid #31577d;
-            background:linear-gradient(180deg, #0d1928, #07101b);
+            background:linear-gradient(180deg,#0d1928,#07101b);
             border-radius:18px;
             padding:14px;
             text-align:center;
             box-shadow:0 0 18px rgba(21,151,255,0.08);
         }
 
-        .box-icon{ font-size:42px; margin-bottom:8px; }
+        .box-icon { font-size:42px; margin-bottom:8px; }
         .box-card h3{ color:var(--gold); font-size:16px; margin-bottom:6px; }
-        .box-card p{ color:var(--muted); font-size:13px; line-height:1.4; margin-bottom:8px; }
+        .box-card p { color:var(--muted); font-size:13px; line-height:1.4; margin-bottom:8px; }
         .timer{ color:#00ffcc; font-weight:1000; margin:8px 0; }
 
         .log{
@@ -307,14 +308,13 @@
 
         .nav{
             position:fixed;
-            left:0;
-            bottom:0;
+            left:0; bottom:0;
             width:100%;
             height:82px;
             background:rgba(6,11,18,0.96);
             border-top:1px solid rgba(70,100,132,0.55);
             display:grid;
-            grid-template-columns:repeat(5, 1fr);
+            grid-template-columns:repeat(5,1fr);
             z-index:9999;
             backdrop-filter:blur(12px);
         }
@@ -347,280 +347,290 @@
 </head>
 <body>
 
-    <main class="page">
-        <div class="top-bar">
-            <a href="./index.html" class="back">← Menyu</a>
-            <div class="logo">
-                <div class="bearbee">BEARBEE</div>
-                <div class="arena">CLICK</div>
-            </div>
-            <button class="btn btn-dark" style="width:auto; margin:0;" id="syncBtn">Yenilə</button>
+<main class="page">
+    <div class="top-bar">
+        <a href="./index.html" class="back">← Menyu</a>
+        <div class="logo">
+            <div class="bearbee">BEARBEE</div>
+            <div class="arena">CLICK</div>
         </div>
+        <button class="btn btn-dark" style="width:auto;margin:0;" id="syncBtn">Yenilə</button>
+    </div>
 
-        <section class="status">
-            <div class="status-box">
-                <h3>Coin</h3>
-                🪙 <span id="coinText">0</span>
+    <section class="status">
+        <div class="status-box">
+            <h3>Coin</h3>
+            🪙 <span id="coinText">0</span>
+        </div>
+        <div class="status-box">
+            <h3>Enerji</h3>
+            ⚡ <span id="energyText">100</span>/100
+        </div>
+        <div class="status-box">
+            <h3>Click Gücü</h3>
+            🚀 <span id="boostText">1x</span>
+        </div>
+        <div class="status-box">
+            <h3>Ad Xal</h3>
+            ⭐ <span id="adPointText">0</span>
+        </div>
+    </section>
+
+    <section class="layout">
+
+        <section class="panel click-panel">
+            <h1 class="panel-title">Cyber Bear Click</h1>
+            <p class="panel-sub">Ekrana klik edərək coin qazanın. Birbaşa Firebase ilə işləyir.</p>
+
+            <div class="bear-ring" id="tapBear">
+                <div class="bear-button">
+                    <img src="./assets/cyber-bear.png" alt="Cyber Bear"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div class="bear-fallback" style="display:none;">🐻</div>
+                </div>
             </div>
-            <div class="status-box">
-                <h3>Enerji</h3>
-                ⚡ <span id="energyText">100</span>/100
+
+            <div class="energy-line">
+                <div class="energy-fill" id="energyFill"></div>
             </div>
-            <div class="status-box">
-                <h3>Click Gücü</h3>
-                🚀 <span id="boostText">1x</span>
-            </div>
-            <div class="status-box">
-                <h3>Ad Xal</h3>
-                ⭐ <span id="adPointText">0</span>
+
+            <button class="btn btn-purple" id="energyAdBtn">🎥 Reklama bax → Enerjini Full et</button>
+            <button class="btn btn-gold"   id="saveBtn">🪙 Xalları Bazada Saxla</button>
+            <div class="log" id="clickLog">Yüklənir...</div>
+        </section>
+
+        <section class="panel">
+            <h2 class="panel-title">Mükafat Qutular</h2>
+            <p class="panel-sub">Hər qutunu açmaq üçün reklam izlənir.</p>
+            <div class="grid-3">
+                <div class="box-card">
+                    <div class="box-icon">🎁</div>
+                    <h3>2 dəq qutu</h3>
+                    <div class="timer" id="timer2">Yüklənir</div>
+                    <button class="btn btn-blue" id="boxBtn2">Aç</button>
+                </div>
+                <div class="box-card">
+                    <div class="box-icon">📦</div>
+                    <h3>5 dəq qutu</h3>
+                    <div class="timer" id="timer5">Yüklənir</div>
+                    <button class="btn btn-blue" id="boxBtn5">Aç</button>
+                </div>
+                <div class="box-card">
+                    <div class="box-icon">💎</div>
+                    <h3>10 dəq qutu</h3>
+                    <div class="timer" id="timer10">Yüklənir</div>
+                    <button class="btn btn-blue" id="boxBtn10">Aç</button>
+                </div>
             </div>
         </section>
 
-        <section class="layout">
-            <section class="panel click-panel">
-                <h1 class="panel-title">Cyber Bear Click</h1>
-                <p class="panel-sub">Ekrana klik edərək coin qazanın. Birbaşa Firebase ilə işləyir.</p>
+    </section>
+</main>
 
-                <div class="bear-ring" id="tapBear">
-                    <div class="bear-button">
-                        <img src="./assets/cyber-bear.png" alt="Cyber Bear" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <div class="bear-fallback" style="display:none;">🐻</div>
-                    </div>
-                </div>
+<nav class="nav">
+    <a href="./click-room.html" class="active"><span class="icon">🐻</span>Click</a>
+    <a href="./mining-room.html"><span class="icon">⛏️</span>Mining</a>
+    <a href="./market-room.html"><span class="icon">🛒</span>Market</a>
+    <a href="./race.html"><span class="icon">🏎️</span>Race</a>
+    <a href="./wallet-room.html"><span class="icon">💰</span>Wallet</a>
+</nav>
 
-                <div class="energy-line">
-                    <div class="energy-fill" id="energyFill"></div>
-                </div>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc }
+        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-                <button class="btn btn-purple" id="energyAdBtn">🎥 Reklama bax → Enerjini Full et</button>
-                <button class="btn btn-gold" id="saveBtn">🪙 Xalları Bazada Saxla</button>
-                <div class="log" id="clickLog">Yüklənir...</div>
-            </section>
+    /* ── Firebase ── */
+    const app = initializeApp({
+        apiKey:            "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
+        authDomain:        "racegane.firebaseapp.com",
+        databaseURL:       "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId:         "racegane",
+        storageBucket:     "racegane.firebasestorage.app",
+        messagingSenderId: "477893876737",
+        appId:             "1:477893876737:web:1b561bb3224b0086c63400"
+    });
+    const db = getFirestore(app);
 
-            <section class="panel">
-                <h2 class="panel-title">Mükafat Qutular</h2>
-                <p class="panel-sub">Hər qutunu açdıqdan sonra taymer aktivləşir.</p>
-                <div class="grid-3">
-                    <div class="box-card">
-                        <div class="box-icon">🎁</div>
-                        <h3>2 dəq qutu</h3>
-                        <div class="timer" id="timer2">Yüklənir</div>
-                        <button class="btn btn-blue" id="boxBtn2">Aç</button>
-                    </div>
-                    <div class="box-card">
-                        <div class="box-icon">📦</div>
-                        <h3>5 dəq qutu</h3>
-                        <div class="timer" id="timer5">Yüklənir</div>
-                        <button class="btn btn-blue" id="boxBtn5">Aç</button>
-                    </div>
-                    <div class="box-card">
-                        <div class="box-icon">💎</div>
-                        <h3>10 dəq qutu</h3>
-                        <div class="timer" id="timer10">Yüklənir</div>
-                        <button class="btn btn-blue" id="boxBtn10">Aç</button>
-                    </div>
-                </div>
-            </section>
-        </section>
-    </main>
+    /* ── Telegram ── */
+    const tg = window.Telegram?.WebApp;
+    if (tg) tg.expand();
+    const userId = tg?.initDataUnsafe?.user
+        ? String(tg.initDataUnsafe.user.id)
+        : "demo_user";
 
-    <nav class="nav">
-        <a href="./click-room.html" class="active"><span class="icon">🐻</span>Click</a>
-        <a href="./mining-room.html"><span class="icon">⛏️</span>Mining</a>
-        <a href="./market-room.html"><span class="icon">🛒</span>Market</a>
-        <a href="./race.html"><span class="icon">🏎️</span>Race</a>
-        <a href="./wallet-room.html"><span class="icon">💰</span>Wallet</a>
-    </nav>
+    /* ── State ── */
+    let userData = {
+        coins: 0, energy: 100, boost: 1, adPoints: 0,
+        lastBox2: 0, lastBox5: 0, lastBox10: 0
+    };
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    /* ── DOM ── */
+    const coinText    = document.getElementById("coinText");
+    const energyText  = document.getElementById("energyText");
+    const boostText   = document.getElementById("boostText");
+    const adPointText = document.getElementById("adPointText");
+    const energyFill  = document.getElementById("energyFill");
+    const clickLog    = document.getElementById("clickLog");
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
-            authDomain: "racegane.firebaseapp.com",
-            databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "racegane",
-            storageBucket: "racegane.firebasestorage.app",
-            messagingSenderId: "477893876737",
-            appId: "1:477893876737:web:1b561bb3224b0086c63400"
-        };
+    /* ── UI ── */
+    function updateUI() {
+        coinText.innerText     = userData.coins;
+        energyText.innerText   = userData.energy;
+        boostText.innerText    = userData.boost + "x";
+        adPointText.innerText  = userData.adPoints;
+        energyFill.style.width = userData.energy + "%";
+    }
 
-        const app = initializeApp(firebaseConfig);
-        const db  = getFirestore(app);
-
-        const tg     = window.Telegram?.WebApp;
-        if(tg) tg.expand();
-
-        const tgUser = tg?.initDataUnsafe?.user;
-        const userId = tgUser ? String(tgUser.id) : "demo_user";
-
-        let userData = {
-            coins: 0,
-            energy: 100,
-            boost: 1,
-            adPoints: 0,
-            lastBox2: 0,
-            lastBox5: 0,
-            lastBox10: 0
-        };
-
-        let isSaving = false;
-
-        const coinText    = document.getElementById("coinText");
-        const energyText  = document.getElementById("energyText");
-        const boostText   = document.getElementById("boostText");
-        const adPointText = document.getElementById("adPointText");
-        const energyFill  = document.getElementById("energyFill");
-        const clickLog    = document.getElementById("clickLog");
-
-        function updateUI() {
-            coinText.innerText     = userData.coins;
-            energyText.innerText   = userData.energy;
-            boostText.innerText    = userData.boost + "x";
-            adPointText.innerText  = userData.adPoints;
-            energyFill.style.width = userData.energy + "%";
-        }
-
-        async function loadUserData() {
-            try {
-                const userRef  = doc(db, "users", userId);
-                const userSnap = await getDoc(userRef);
-                if (userSnap.exists()) {
-                    userData = { ...userData, ...userSnap.data() };
-                } else {
-                    await setDoc(userRef, userData);
-                }
-                updateUI();
-                clickLog.innerText = "✅ Məlumatlar yükləndi. Klikləyin!";
-                checkTimers();
-            } catch (err) {
-                clickLog.innerText = "Yükləmə xətası: " + err.message;
+    /* ── LOAD ── */
+    async function loadUserData() {
+        clickLog.innerText = "⏳ Yüklənir...";
+        try {
+            const snap = await getDoc(doc(db, "users", userId));
+            if (snap.exists()) {
+                userData = { ...userData, ...snap.data() };
+            } else {
+                await setDoc(doc(db, "users", userId), userData);
             }
-        }
-
-        // ✅ Həmişə save edir, isSaving ilə paralel sorğu bloklanır
-        async function saveProgress(silent = false) {
-            if (isSaving) return;
-            isSaving = true;
-            if (!silent) clickLog.innerText = "💾 Xallar saxlanılır...";
-            try {
-                const userRef = doc(db, "users", userId);
-                await updateDoc(userRef, {
-                    coins:    userData.coins,
-                    energy:   userData.energy,
-                    adPoints: userData.adPoints,
-                    boost:    userData.boost
-                });
-                if (!silent) clickLog.innerText = "✅ Tərəqqi qeydə alındı!";
-            } catch (err) {
-                if (!silent) clickLog.innerText = "❌ Saxlama xətası: " + err.message;
-            }
-            isSaving = false;
-        }
-
-        // ✅ Tap
-        document.getElementById("tapBear").addEventListener("click", (e) => {
-            if (userData.energy < userData.boost) {
-                clickLog.innerText = "⚡ Kifayət qədər enerji yoxdur!";
-                return;
-            }
-            userData.energy -= userData.boost;
-            userData.coins  += userData.boost;
             updateUI();
+            clickLog.innerText = "✅ Məlumatlar yükləndi. Klikləyin!";
+            checkTimers();
+        } catch (err) {
+            clickLog.innerText = "❌ Yükləmə xətası: " + err.message;
+            console.error(err);
+        }
+    }
 
-            const rect   = e.currentTarget.getBoundingClientRect();
-            const effect = document.createElement("div");
-            effect.className  = "tap-effect";
-            effect.style.left = (e.clientX - rect.left) + "px";
-            effect.style.top  = (e.clientY - rect.top)  + "px";
-            effect.innerText  = "+" + userData.boost;
-            e.currentTarget.appendChild(effect);
-            setTimeout(() => effect.remove(), 900);
-        });
+    /* ── SAVE  (setDoc + merge → sənəd yoxdursa yaradır) ── */
+    async function saveProgress(silent = false) {
+        if (!silent) clickLog.innerText = "💾 Saxlanılır...";
+        try {
+            await setDoc(doc(db, "users", userId), {
+                coins:     userData.coins,
+                energy:    userData.energy,
+                boost:     userData.boost,
+                adPoints:  userData.adPoints,
+                lastBox2:  userData.lastBox2,
+                lastBox5:  userData.lastBox5,
+                lastBox10: userData.lastBox10
+            }, { merge: true });
+            if (!silent) clickLog.innerText = "✅ Tərəqqi qeydə alındı!";
+        } catch (err) {
+            if (!silent) clickLog.innerText = "❌ Saxlama xətası: " + err.message;
+            console.error(err);
+        }
+    }
 
-        // ✅ Enerji düyməsi — RichAds popunder + enerji bərpası
-        document.getElementById("energyAdBtn").addEventListener("click", async () => {
-            // RichAds skripti səhifəyə qoşulduğu üçün bu klik avtomatik
-            // popunder açır. Biz sadəcə enerjini bərpa edib save edirik.
-            clickLog.innerText = "🎥 Reklam göstərildi. Enerji bərpa olunur...";
-            userData.energy = 100;
-            updateUI();
-            await saveProgress(true);
+    /* ── RichAds popunder helper ── */
+    function showAd() {
+        const w = window.open("about:blank", "_blank");
+        if (w) setTimeout(() => w.close(), 5000);
+    }
+
+    /* ── TAP ── */
+    document.getElementById("tapBear").addEventListener("click", (e) => {
+        if (userData.energy < userData.boost) {
+            clickLog.innerText = "⚡ Kifayət qədər enerji yoxdur!";
+            return;
+        }
+        userData.energy -= userData.boost;
+        userData.coins  += userData.boost;
+        updateUI();
+
+        const rect   = e.currentTarget.getBoundingClientRect();
+        const effect = document.createElement("div");
+        effect.className  = "tap-effect";
+        effect.style.left = (e.clientX - rect.left) + "px";
+        effect.style.top  = (e.clientY - rect.top)  + "px";
+        effect.innerText  = "+" + userData.boost;
+        e.currentTarget.appendChild(effect);
+        setTimeout(() => effect.remove(), 900);
+    });
+
+    /* ── ENERJİ + REKLAM ── */
+    document.getElementById("energyAdBtn").addEventListener("click", () => {
+        showAd();
+        clickLog.innerText = "🎥 Reklam göstərildi. Enerji bərpa olunur...";
+        userData.energy = 100;
+        updateUI();
+        saveProgress(true).then(() => {
             clickLog.innerText = "✅ Enerji tam bərpa olundu! (100/100)";
         });
+    });
 
-        document.getElementById("saveBtn").addEventListener("click", () => saveProgress(false));
-        document.getElementById("syncBtn").addEventListener("click", loadUserData);
+    /* ── DÜYMƏLƏR ── */
+    document.getElementById("saveBtn").addEventListener("click", () => saveProgress(false));
+    document.getElementById("syncBtn").addEventListener("click", loadUserData);
 
-        // ✅ Səhifə arxa plana keçəndə save (mobil üçün ən etibarlı)
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "hidden") saveProgress(true);
-        });
+    /* ── ARXA PLAN / BAĞLANMA ── */
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") saveProgress(true);
+    });
+    window.addEventListener("beforeunload", () => saveProgress(true));
 
-        // ✅ Səhifə bağlananda save
-        window.addEventListener("beforeunload", () => saveProgress(true));
+    /* ── AUTO-SAVE hər 5 saniyə ── */
+    setInterval(() => saveProgress(true), 5000);
 
-        // ✅ Hər 3 saniyədə bir arxa planda save
-        setInterval(() => saveProgress(true), 3000);
+    /* ── QUTU TİMERLARI ── */
+    function checkTimers() {
+        setupBox(2,  userData.lastBox2,   2 * 60 * 1000,  20);
+        setupBox(5,  userData.lastBox5,   5 * 60 * 1000,  60);
+        setupBox(10, userData.lastBox10, 10 * 60 * 1000, 150);
+    }
 
-        // ✅ Qutu funksiyaları
-        function checkTimers() {
-            setupBox(2,  userData.lastBox2,  2  * 60 * 1000, 20);
-            setupBox(5,  userData.lastBox5,  5  * 60 * 1000, 60);
-            setupBox(10, userData.lastBox10, 10 * 60 * 1000, 150);
-        }
+    function setupBox(minutes, lastTime, duration, reward) {
+        const btn       = document.getElementById("boxBtn"  + minutes);
+        const timerText = document.getElementById("timer"   + minutes);
+        const now       = Date.now();
+        const nextTime  = lastTime + duration;
 
-        function setupBox(minutes, lastTime, duration, reward) {
-            const btn       = document.getElementById("boxBtn"  + minutes);
-            const timerText = document.getElementById("timer"   + minutes);
-            const now       = Date.now();
-            const nextTime  = lastTime + duration;
-
-            if (now >= nextTime) {
-                timerText.innerText = "✅ Hazırdır";
-                btn.disabled = false;
-                btn.onclick  = () => triggerBox(minutes, reward);
-            } else {
-                btn.disabled = true;
-                const diff = nextTime - now;
-                const mins = Math.floor(diff / 60000);
-                const secs = Math.floor((diff % 60000) / 1000);
-                timerText.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            }
-        }
-
-        async function triggerBox(minutes, reward) {
-            const btn = document.getElementById("boxBtn" + minutes);
+        if (now >= nextTime) {
+            timerText.innerText = "✅ Hazırdır";
+            btn.disabled = false;
+            btn.onclick  = () => triggerBox(minutes, reward);
+        } else {
             btn.disabled = true;
-            clickLog.innerText = "📦 Qutu açılır...";
-            const now = Date.now();
-            userData.coins    += reward;
-            userData.adPoints += reward;
-            userData["lastBox" + minutes] = now;
-            updateUI();
-
-            try {
-                const userRef = doc(db, "users", userId);
-                const fields  = { coins: userData.coins, adPoints: userData.adPoints };
-                fields["lastBox" + minutes] = now;
-                await updateDoc(userRef, fields);
-                clickLog.innerText = `✅ Qutu açıldı! +${reward} Coin əlavə edildi.`;
-            } catch(err) {
-                clickLog.innerText = "❌ Xəta: " + err.message;
-            }
-            checkTimers();
+            const diff = nextTime - now;
+            const mins = Math.floor(diff / 60000);
+            const secs = Math.floor((diff % 60000) / 1000);
+            timerText.innerText = `${mins}:${secs < 10 ? "0" : ""}${secs}`;
         }
+    }
 
-        // Enerji hər 4 saniyədə +1
-        setInterval(() => {
-            if (userData.energy < 100) { userData.energy++; updateUI(); }
-        }, 4000);
+    /* ── QUTU AÇ + RİCHADS ── */
+    async function triggerBox(minutes, reward) {
+        document.getElementById("boxBtn" + minutes).disabled = true;
+        clickLog.innerText = "🎥 Reklam yüklənir...";
 
-        // Taymerlər hər saniyə
-        setInterval(checkTimers, 1000);
+        // RichAds popunder tetikle
+        showAd();
 
-        loadUserData();
-    </script>
+        // Reklamın açılmasına qısa vaxt ver
+        await new Promise(r => setTimeout(r, 1200));
+
+        clickLog.innerText = "📦 Qutu açılır...";
+        const now = Date.now();
+        userData.coins    += reward;
+        userData.adPoints += reward;
+        userData["lastBox" + minutes] = now;
+        updateUI();
+
+        await saveProgress(true);
+        clickLog.innerText = `✅ Qutu açıldı! +${reward} Coin əlavə edildi.`;
+        checkTimers();
+    }
+
+    /* ── ENERJİ BƏRPASI hər 4 saniyə +1 ── */
+    setInterval(() => {
+        if (userData.energy < 100) { userData.energy++; updateUI(); }
+    }, 4000);
+
+    /* ── TİMER LOOPU ── */
+    setInterval(checkTimers, 1000);
+
+    /* ── BAŞLAT ── */
+    loadUserData();
+</script>
+
 </body>
 </html>
