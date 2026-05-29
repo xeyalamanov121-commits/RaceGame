@@ -3,65 +3,91 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bearbee Arena | TON Lobby</title>
+<title>Bearbee Arena | TON Game</title>
 <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 <style>
+*{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0b0f1a;--panel:#121927;--accent:#8b3cff;--gold:#ffd700;--green:#22ff66;--red:#ff2438;}
-body{margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:#fff;}
-.panel{background:var(--panel);margin:12px;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;}
-.panel-title{color:var(--gold);font-weight:900;text-align:center;font-size:18px;}
-.copy-btn{background:linear-gradient(180deg,#8b3cff,#5a00ff);border:none;color:#fff;padding:14px;border-radius:10px;width:100%;cursor:pointer;font-weight:700;font-size:16px;}
-.copy-btn:disabled{background:#333;color:#666;cursor:not-allowed;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:#fff;min-height:100vh;}
+.container{max-width:600px;margin:0 auto;padding:10px;}
+.panel{background:var(--panel);margin:12px 0;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.panel-title{color:var(--gold);font-weight:900;text-align:center;font-size:20px;}
+.copy-btn{background:linear-gradient(180deg,#8b3cff,#5a00ff);border:none;color:#fff;padding:14px;border-radius:10px;width:100%;cursor:pointer;font-weight:700;font-size:16px;transition:0.2s;}
+.copy-btn:hover{transform:scale(1.02);}
+.copy-btn:disabled{background:#333;color:#666;cursor:not-allowed;transform:none;}
 .status-box{padding:12px;border-radius:10px;background:rgba(139,60,255,0.1);text-align:center;font-weight:900;}
-input[type=number]{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;box-sizing:border-box;font-size:16px;}
-.bet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.bet-btn{background:#1a2332;border:2px solid #8b3cff;padding:16px;border-radius:10px;color:#fff;font-weight:900;cursor:pointer;}
-.bet-btn:disabled{border-color:#333;color:#666;cursor:not-allowed;}
-.balance{font-size:24px;color:var(--green);text-align:center;font-weight:900;}
-#ton-connect{margin:0 auto;}
-.track{position:relative;height:120px;background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;margin-top:10px;}
-.car{width:40px;height:40px;border-radius:8px;position:absolute;transition: left 0.2s linear;}
-.finish{position:absolute;right:0;top:0;width:5px;height:100%;background:red;}
+input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;font-size:16px;}
+.bet-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.bet-btn{background:#1a2332;border:2px solid #8b3cff;padding:20px;border-radius:10px;color:#fff;font-weight:900;cursor:pointer;transition:0.2s;}
+.bet-btn.active{background:#8b3cff;box-shadow:0 0 20px rgba(139,60,255,0.5);}
+.bet-btn:disabled{border-color:#333;color:#666;cursor:not-allowed;opacity:0.3;}
+.balance{font-size:28px;color:var(--green);text-align:center;font-weight:900;}
+#ton-connect{display:flex;justify-content:center;margin:10px 0;}
+.track{position:relative;height:140px;background:linear-gradient(90deg,#1a2332 0%,#121927 100%);border-radius:12px;overflow:hidden;margin-top:10px;border:2px solid #8b3cff;}
+.car{width:50px;height:50px;border-radius:10px;position:absolute;transition:left 0.3s ease;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.finish{position:absolute;right:0;top:0;width:8px;height:100%;background:repeating-linear-gradient(0deg,#fff 0px,#fff 10px,#000 10px,#000 20px);}
+.hidden{display:none!important;}
+.tab-btns{display:flex;gap:10px;margin-bottom:10px;}
+.tab-btn{flex:1;padding:12px;border-radius:10px;border:none;background:#1a2332;color:#fff;font-weight:700;cursor:pointer;}
+.tab-btn.active{background:#8b3cff;}
+.tab-btn:disabled{opacity:0.3;cursor:not-allowed;}
 </style>
 </head>
 <body>
+<div class="container">
 
-<div class="panel">
-  <div class="panel-title">💎 TON Cüzdan & Balans</div>
-  <div id="ton-connect"></div>
-  <div class="balance" id="balance">Balans: 0 TON</div>
-  <input type="number" id="depositAmount" placeholder="Deposit məbləği TON" step="0.1" min="0.5" value="0.5">
-  <button class="copy-btn" id="depositBtn">💎 TON Deposit Et</button>
-  <div class="status-box" id="depositStatus">Deposit üçün cüzdanı qoş</div>
+<div class="tab-btns">
+  <button class="tab-btn active" id="tabDeposit">💎 Deposit</button>
+  <button class="tab-btn" id="tabLobby" disabled>🎮 Lobby</button>
+  <button class="tab-btn" id="tabGame" disabled>🏎️ Oyun</button>
 </div>
 
-<div class="panel" id="lobbyPanel" style="display:none;">
+<!-- DEPOSIT PANEL -->
+<div class="panel" id="depositPanel">
+  <div class="panel-title">💎 TON Deposit & Balans</div>
+  <div id="ton-connect"></div>
+  <div class="balance" id="balance">Balans: 0.00 TON</div>
+  <input type="number" id="depositAmount" placeholder="Deposit məbləği" step="0.1" min="0.5" value="0.5">
+  <button class="copy-btn" id="depositBtn">💎 TON Deposit Et</button>
+  <div class="status-box" id="depositStatus">Cüzdanı qoş və deposit et</div>
+  <div class="status-box" style="background:rgba(255,149,0,0.1);font-size:14px;">
+    Dəstək: 9947429 | Komissiya: 30%
+  </div>
+</div>
+
+<!-- LOBBY PANEL -->
+<div class="panel hidden" id="lobbyPanel">
   <div class="panel-title">🏎️ Otaq Seç - Bet Məbləği</div>
   <div class="bet-grid">
-    <button class="bet-btn" data-bet="0.5">0.5 TON</button>
-    <button class="bet-btn" data-bet="1">1 TON</button>
-    <button class="bet-btn" data-bet="2">2 TON</button>
-    <button class="bet-btn" data-bet="5">5 TON</button>
+    <button class="bet-btn active" data-bet="0.5">0.5 TON<br><small>Uduş: 0.7 TON</small></button>
+    <button class="bet-btn" data-bet="1">1 TON<br><small>Uduş: 1.4 TON</small></button>
+    <button class="bet-btn" data-bet="2">2 TON<br><small>Uduş: 2.8 TON</small></button>
+    <button class="bet-btn" data-bet="5">5 TON<br><small>Uduş: 7 TON</small></button>
   </div>
-  <input type="text" id="roomInput" placeholder="Oda Kodu - boş burax avtomatik" style="width:100%;padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;box-sizing:border-box;">
-  <button class="copy-btn" id="createRoomBtn">Otaq Yarat</button>
-  <button class="copy-btn" id="joinRoomBtn">Otağa Qatıl</button>
-  <div class="status-box" id="lobbyStatus">Bet seç və otaq yarat</div>
+  <input type="text" id="roomInput" placeholder="Oda Kodu - boş burax avtomatik">
+  <button class="copy-btn" id="createRoomBtn">➕ Yeni Otaq Yarat</button>
+  <button class="copy-btn" id="joinRoomBtn">🔗 Otağa Qatıl</button>
+  <div class="status-box" id="lobbyStatus">Bet: 0.5 TON seçildi</div>
 </div>
 
-<div class="panel" id="gamePanel" style="display:none;">
+<!-- OYUN PANEL -->
+<div class="panel hidden" id="gamePanel">
   <div class="panel-title">🏎️ Yarış - Bank: <span id="potAmount">0</span> TON</div>
-  <div class="status-box" id="raceStatus">Gözlənilir...</div>
-  <button class="copy-btn" id="readyBtn" disabled>Hazır Ol</button>
-  <button class="copy-btn" id="startBtn" disabled>Yarışı Başlat</button>
-  <button class="copy-btn" id="clickBtn" disabled>⚡ QAC (KLİK)</button>
+  <div class="status-box" id="raceStatus">Rəqib gözlənilir...</div>
+  <div class="bet-grid">
+    <button class="copy-btn" id="readyBtn">✅ Hazır Ol</button>
+    <button class="copy-btn" id="startBtn" disabled>🚀 Başlat</button>
+  </div>
+  <button class="copy-btn" id="clickBtn" disabled style="font-size:20px;padding:20px;">⚡ QAC (KLİK)</button>
   <button class="copy-btn" id="leaveBtn" style="background:#ff2438;">❌ Otaqdan Çıx</button>
 
   <div class="track" id="track">
-    <div class="car" id="playerCar" style="background:#22ff66;top:10px;left:0;"></div>
-    <div class="car" id="opponentCar" style="background:#ff2438;top:60px;left:0;"></div>
+    <div class="car" id="playerCar" style="background:#22ff66;top:15px;left:0;">🏎️</div>
+    <div class="car" id="opponentCar" style="background:#ff2438;top:75px;left:0;">🏎️</div>
     <div class="finish"></div>
   </div>
+</div>
+
 </div>
 
 <script type="module">
@@ -81,7 +107,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const rdb = getDatabase(app);
 
-// TON Ayarları
 const SAHIB_CUZDAN = "EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp";
 const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
     manifestUrl: 'https://ton-connect.github.io/demo-dapp-with-wallet/tonconnect-manifest.json',
@@ -89,123 +114,129 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
 });
 
 const myId = "user_" + Math.floor(Math.random()*10000);
-let myBalance = 0;
-let selectedBet = 0.5;
+let myBalance = 0, selectedBet = 0.5;
 let roomCode = null, isMyTurn = false, gameStarted = false;
 let playerPos = 0, opponentPos = 0, roomData = null;
 
-const balanceEl = document.getElementById("balance");
-const lobbyPanel = document.getElementById("lobbyPanel");
-const gamePanel = document.getElementById("gamePanel");
-const depositStatus = document.getElementById("depositStatus");
+// TAB SWITCHING
+const tabs = {
+  deposit: document.getElementById('depositPanel'),
+  lobby: document.getElementById('lobbyPanel'),
+  game: document.getElementById('gamePanel')
+};
 
-// 1. BALANS YÜKLƏ
+function showTab(tab) {
+  Object.values(tabs).forEach(p => p.classList.add('hidden'));
+  tabs[tab].classList.remove('hidden');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+}
+
+document.getElementById('tabDeposit').onclick = () => showTab('deposit');
+document.getElementById('tabLobby').onclick = () => { if(myBalance > 0) showTab('lobby'); };
+document.getElementById('tabGame').onclick = () => { if(roomCode) showTab('game'); };
+
+// BALANS
 async function loadBalance() {
   const snap = await get(ref(rdb, `users/${myId}/balance`));
   myBalance = snap.val() || 0;
-  balanceEl.innerText = `Balans: ${myBalance.toFixed(2)} TON`;
+  document.getElementById('balance').innerText = `Balans: ${myBalance.toFixed(2)} TON`;
   updateBetButtons();
-  if (myBalance > 0) lobbyPanel.style.display = "flex";
+  if (myBalance > 0) {
+    document.getElementById('tabLobby').disabled = false;
+  } else {
+    document.getElementById('tabLobby').disabled = true;
+  }
 }
 
 function updateBetButtons() {
   document.querySelectorAll('.bet-btn').forEach(btn => {
     const bet = parseFloat(btn.dataset.bet);
     btn.disabled = myBalance < bet;
-    btn.style.opacity = myBalance < bet? "0.3" : "1";
   });
 }
 
-// 2. DEPOSIT - TON ÖDƏNİŞ
-document.getElementById("depositBtn").onclick = async () => {
+// DEPOSIT - REAL TON
+document.getElementById('depositBtn').onclick = async () => {
   if (!tonConnectUI.connected) {
-    depositStatus.innerText = "Əvvəlcə TON cüzdanını qoş";
+    document.getElementById('depositStatus').innerText = "Əvvəlcə cüzdanı qoş";
     return;
   }
-  const amount = parseFloat(document.getElementById("depositAmount").value);
+  const amount = parseFloat(document.getElementById('depositAmount').value);
   if (amount < 0.5) return alert("Min 0.5 TON");
 
   try {
-    const transaction = {
+    const tx = {
       validUntil: Math.floor(Date.now() / 1000) + 300,
       messages: [{ address: SAHIB_CUZDAN, amount: (amount * 1e9).toString() }]
     };
-    depositStatus.innerText = `${amount} TON ödənişi gözlənilir...`;
-    const result = await tonConnectUI.sendTransaction(transaction);
+    document.getElementById('depositStatus').innerText = `${amount} TON ödənişi gözlənilir...`;
+    const result = await tonConnectUI.sendTransaction(tx);
 
     if (result.boc) {
-      // Balansı artır
-      await runTransaction(ref(rdb, `users/${myId}/balance`), (current) => {
-        return (current || 0) + amount;
-      });
+      await runTransaction(ref(rdb, `users/${myId}/balance`), (c) => (c || 0) + amount);
       await loadBalance();
-      depositStatus.innerText = `✅ ${amount} TON deposit edildi!`;
+      document.getElementById('depositStatus').innerText = `✅ ${amount} TON əlavə edildi!`;
+      setTimeout(() => showTab('lobby'), 1000);
     }
   } catch (e) {
-    depositStatus.innerText = "❌ Ödəniş ləğv edildi";
+    document.getElementById('depositStatus').innerText = "❌ Ödəniş ləğv edildi";
+    console.log(e);
   }
 };
 
-// 3. BET SEÇİMİ
+// BET SEÇİMİ
 document.querySelectorAll('.bet-btn').forEach(btn => {
   btn.onclick = () => {
-    document.querySelectorAll('.bet-btn').forEach(b => b.style.background = '#1a2332');
-    btn.style.background = '#8b3cff';
+    document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
     selectedBet = parseFloat(btn.dataset.bet);
-    document.getElementById("lobbyStatus").innerText = `Seçildi: ${selectedBet} TON`;
+    const win = (selectedBet * 2 * 0.7).toFixed(2);
+    document.getElementById('lobbyStatus').innerText = `Bet: ${selectedBet} TON | Uduş: ${win} TON`;
   };
 });
 
-// 4. OTAQ YARAT - BALANSDAN ÇIXIR
-document.getElementById("createRoomBtn").onclick = async () => {
-  if (myBalance < selectedBet) return alert("Balans kifayət deyil");
+// OTAQ YARAT
+document.getElementById('createRoomBtn').onclick = async () => {
+  if (myBalance < selectedBet) return alert("Balans kifayət deyil. Deposit et");
 
-  // Balansdan çıx
-  const balanceRef = ref(rdb, `users/${myId}/balance`);
-  const result = await runTransaction(balanceRef, (current) => {
-    if ((current || 0) < selectedBet) return; // abort
-    return current - selectedBet;
+  const result = await runTransaction(ref(rdb, `users/${myId}/balance`), (c) => {
+    if ((c || 0) < selectedBet) return;
+    return c - selectedBet;
   });
 
   if (!result.committed) return alert("Balans xətası");
 
   roomCode = "ROOM" + Math.floor(Math.random()*10000);
-  document.getElementById("roomInput").value = roomCode;
-
   await set(ref(rdb, `rooms/${roomCode}`), {
-    turn: myId,
-    started: false,
+    turn: myId, started: false, 
     players: { : 0 },
-    bet: selectedBet,
-    pot: selectedBet,
-    status: "waiting"
+    bet: selectedBet, pot: selectedBet, status: "waiting"
   });
 
   await loadBalance();
-  lobbyPanel.style.display = "none";
-  gamePanel.style.display = "flex";
-  document.getElementById("potAmount").innerText = selectedBet;
+  showTab('game');
+  document.getElementById('tabGame').disabled = false;
+  document.getElementById('potAmount').innerText = selectedBet;
   listenRoom();
 };
 
-// 5. OTAĞA QATIL - BALANSDAN ÇIXIR
-document.getElementById("joinRoomBtn").onclick = async () => {
-  roomCode = document.getElementById("roomInput").value;
+// OTAĞA QATIL
+document.getElementById('joinRoomBtn').onclick = async () => {
+  roomCode = document.getElementById('roomInput').value.trim();
   if (!roomCode) return alert("Oda kodu yaz");
-
+  
   const snap = await get(ref(rdb, `rooms/${roomCode}`));
   if (!snap.exists()) return alert("Oda tapılmadı");
-  if (snap.val().status!== "waiting") return alert("Oyun başlayıb");
+  if (snap.val().status!== "waiting") return alert("Oyun başlayıb/bitib");
   if (Object.keys(snap.val().players || {}).length >= 2) return alert("Oda doludur");
 
   const roomBet = snap.val().bet;
   if (myBalance < roomBet) return alert(`Balans kifayət deyil. Lazımdır: ${roomBet} TON`);
 
-  // Balansdan çıx
-  const balanceRef = ref(rdb, `users/${myId}/balance`);
-  const result = await runTransaction(balanceRef, (current) => {
-    if ((current || 0) < roomBet) return;
-    return current - roomBet;
+  const result = await runTransaction(ref(rdb, `users/${myId}/balance`), (c) => {
+    if ((c || 0) < roomBet) return;
+    return c - roomBet;
   });
 
   if (!result.committed) return alert("Balans xətası");
@@ -214,13 +245,13 @@ document.getElementById("joinRoomBtn").onclick = async () => {
   await update(ref(rdb, `rooms/${roomCode}`), { pot: roomBet * 2 });
 
   await loadBalance();
-  lobbyPanel.style.display = "none";
-  gamePanel.style.display = "flex";
+  showTab('game');
+  document.getElementById('tabGame').disabled = false;
   listenRoom();
 };
 
-// 6. OYUN MƏNTİQİ - DƏYİŞMİR
-function getTrackWidth() { return document.getElementById("track").offsetWidth - 45; }
+// OYUN
+function getTrackWidth() { return document.getElementById("track").offsetWidth - 55; }
 function getOpponentId() {
   if (!roomData ||!roomData.players) return null;
   return Object.keys(roomData.players).find(id => id!== myId);
@@ -242,7 +273,7 @@ function listenRoom() {
     playerPos = roomData.players || 0;
     const oppId = getOpponentId();
     opponentPos = oppId? (roomData.players[oppId] || 0) : 0;
-
+    
     document.getElementById("playerCar").style.left = playerPos + "px";
     document.getElementById("opponentCar").style.left = opponentPos + "px";
     document.getElementById("clickBtn").disabled =!isMyTurn ||!gameStarted;
@@ -250,9 +281,9 @@ function listenRoom() {
     document.getElementById("potAmount").innerText = roomData.pot || 0;
 
     if (gameStarted) {
-      document.getElementById("raceStatus").innerText = isMyTurn? "Sənin növbəndir!" : "Rəqibin növbəsidir...";
+      document.getElementById("raceStatus").innerText = isMyTurn? "Sənin növbəndir! QAC!" : "Rəqibin növbəsi...";
     } else {
-      document.getElementById("raceStatus").innerText = `Oda: ${roomCode} | ${Object.keys(roomData.players).length}/2`;
+      document.getElementById("raceStatus").innerText = `${Object.keys(roomData.players).length}/2 oyunçu hazır`;
     }
     checkFinish();
   });
@@ -260,6 +291,7 @@ function listenRoom() {
 
 document.getElementById("readyBtn").onclick = async () => {
   await update(ref(rdb, `rooms/${roomCode}/players/${myId}`), 0);
+  document.getElementById("readyBtn").disabled = true;
 };
 
 document.getElementById("startBtn").onclick = async () => {
@@ -268,7 +300,7 @@ document.getElementById("startBtn").onclick = async () => {
 
 document.getElementById("clickBtn").onclick = async () => {
   if (!isMyTurn ||!gameStarted) return;
-  const newPos = playerPos + 25;
+  const newPos = playerPos + 30;
   const oppId = getOpponentId();
   if (!oppId) return;
   await set(ref(rdb, `rooms/${roomCode}/players/${myId}`), newPos);
@@ -279,9 +311,10 @@ document.getElementById("leaveBtn").onclick = () => leaveRoom();
 
 async function leaveRoom() {
   if (unsubscribe) unsubscribe();
-  gamePanel.style.display = "none";
-  lobbyPanel.style.display = "flex";
+  showTab('lobby');
+  document.getElementById('tabGame').disabled = true;
   roomCode = null;
+  document.getElementById("readyBtn").disabled = false;
   await loadBalance();
 }
 
@@ -290,34 +323,31 @@ async function checkFinish() {
   if (!roomData || roomData.status === "finished") return;
 
   const totalPot = roomData.pot;
-  const winnerPrize = totalPot * 0.7; // 70%
-  const commission = totalPot * 0.3; // 30% sənə qalır
+  const winnerPrize = totalPot * 0.7;
 
   if (playerPos >= finish) {
-    // Qalib sənsən - 70% balansına əlavə et
-    await runTransaction(ref(rdb, `users/${myId}/balance`), (current) => {
-      return (current || 0) + winnerPrize;
-    });
-    alert(`🏆 Qalib: Sən! ${winnerPrize} TON balansına əlavə edildi`);
-    await update(ref(rdb, `rooms/${roomCode}`), {
-      winner: myId, winnerPrize: winnerPrize, commission: commission, status: "finished"
+    await runTransaction(ref(rdb, `users/${myId}/balance`), (c) => (c || 0) + winnerPrize);
+    alert(`🏆 QALİB SƏN! ${winnerPrize.toFixed(2)} TON balansına əlavə edildi`);
+    await update(ref(rdb, `rooms/${roomCode}`), { 
+      winner: myId, winnerPrize: winnerPrize, status: "finished" 
     });
     setTimeout(() => leaveRoom(), 2000);
   }
   if (opponentPos >= finish) {
-    // Qalib rəqibdir
-    alert(`😢 Qalib: Rəqib. O ${winnerPrize} TON qazandı`);
-    await update(ref(rdb, `rooms/${roomCode}`), {
-      winner: getOpponentId(), winnerPrize: winnerPrize, commission: commission, status: "finished"
+    alert(`😢 Rəqib qazandı. ${winnerPrize.toFixed(2)} TON aldı`);
+    await update(ref(rdb, `rooms/${roomCode}`), { 
+      winner: getOpponentId(), winnerPrize: winnerPrize, status: "finished" 
     });
     setTimeout(() => leaveRoom(), 2000);
   }
 }
 
-// Başlanğıcda balansı yüklə
 loadBalance();
-tonConnectUI.onStatusChange(wallet => {
-  if (wallet) loadBalance();
+tonConnectUI.onStatusChange(wallet => { 
+  if (wallet) {
+    loadBalance();
+    document.getElementById('depositStatus').innerText = "Cüzdan qoşuldu. Deposit edə bilərsən";
+  }
 });
 </script>
 </body>
