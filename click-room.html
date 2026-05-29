@@ -6,11 +6,16 @@
     <title>Bearbee Arena | Click Room + Card Market</title>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 
-    <!-- RichAds popunder (AdsGram yoxdursa fallback kimi işləyir) -->
-    <script src="https://richinfo.co/richpartners/pops/js/richads-pu-ob.js"
-            data-pubid="1012853" data-siteid="397995" async data-cfasync="false"></script>
+    <!-- RichAds Telegram Ads -->
+    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+    <script>
+        window.TelegramAdsController = new TelegramAdsController();
+        window.TelegramAdsController.initialize({
+            pubId: "1012853",
+            appId: "7573",
+        });
+    </script>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -457,7 +462,6 @@
             display:block;
         }
 
-        /* Mining */
         .mining-box{
             background:
                 radial-gradient(circle at 20% 10%, rgba(255,215,0,0.14), transparent 38%),
@@ -648,7 +652,7 @@
             <!-- QUTULAR -->
             <section class="panel">
                 <h2 class="panel-title">Reklamlı Qutular</h2>
-                <p class="panel-sub">Qutu yalnız reklam tamamlanandan sonra mükafat verir.</p>
+                <p class="panel-sub">Qutu yalnız Telegram reklam tamamlanandan sonra mükafat verir.</p>
 
                 <div class="grid-3">
                     <div class="box-card">
@@ -792,12 +796,6 @@
     const MINING_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-mining";
     const MINI_APP_URL   = "https://t.me/Bearbeee_bot/GameR";
 
-    /*
-       AdsGram Block ID varsa bura yaz.
-       Boş qalsa RichAds popunder avtomatik işləyir.
-    */
-    const ADSGRAM_BLOCK_ID = "";
-
     const firebaseConfig = {
         apiKey: "AIzaSyCzywfKRvjp0stL9ptl1ox3mUpfZ8VG27o",
         authDomain: "gamer-d11ba.firebaseapp.com",
@@ -822,7 +820,6 @@
     let selectedCard  = null;
     let selectedBoost = 1;
     let myCardsCache  = [];
-    let AdController  = null;
     let firebaseDb    = null;
 
     /* ════════════════════════════════════════
@@ -845,6 +842,31 @@
     const refEarned      = document.getElementById("refEarned");
     const refLog         = document.getElementById("refLog");
     const tapBear        = document.getElementById("tapBear");
+
+    /* ════════════════════════════════════════
+       TELEGRAM ADS — bütün reklamlar üçün
+       Həm qutular, həm enerji butonu buradan keçir
+    ════════════════════════════════════════ */
+    function showAd(label){
+        return new Promise(async (resolve) => {
+            const ctrl = window.TelegramAdsController;
+            if(!ctrl){
+                adLog.innerText = "⚠️ Telegram Ads yüklənmədi, yenidən cəhd edin.";
+                resolve(false);
+                return;
+            }
+            try{
+                adLog.innerText = "🎥 Telegram reklam açılır...";
+                await ctrl.show();
+                adLog.innerText = "✅ Reklam tamamlandı: " + label;
+                resolve(true);
+            }catch(err){
+                console.log("TelegramAds xətası:", err);
+                adLog.innerText = "❌ Reklam tamamlanmadı. Mükafat verilmədi.";
+                resolve(false);
+            }
+        });
+    }
 
     /* ════════════════════════════════════════
        FIREBASE
@@ -977,65 +999,6 @@
     }
 
     /* ════════════════════════════════════════
-       REKLAM — AdsGram + RichAds fallback
-    ════════════════════════════════════════ */
-    function initAdsGram(){
-        if(!ADSGRAM_BLOCK_ID) return null;
-        if(window.Adsgram && !AdController){
-            AdController = window.Adsgram.init({
-                blockId: ADSGRAM_BLOCK_ID,
-                debug: true,
-                debugConsole: true
-            });
-        }
-        return AdController;
-    }
-
-    /* RichAds popunder helper */
-    function triggerRichAd(){
-        const w = window.open("about:blank", "_blank");
-        if(w) setTimeout(() => w.close(), 5000);
-    }
-
-    /*
-       showRewardedAd:
-       - AdsGram Block ID varsa → AdsGram rewarded ad göstər
-       - Yoxdursa → RichAds popunder tetiklə, 1.5s gözlə, true qaytar
-    */
-    function showRewardedAd(adType){
-        return new Promise(async (resolve) => {
-
-            // ── AdsGram yolu ──
-            if(ADSGRAM_BLOCK_ID){
-                try{
-                    const controller = initAdsGram();
-                    if(!controller){
-                        adLog.innerText = "AdsGram yüklənmədi.";
-                        resolve(false);
-                        return;
-                    }
-                    adLog.innerText = "🎥 AdsGram reklam açılır: " + adType;
-                    await controller.show();
-                    adLog.innerText = "✅ AdsGram reklam tamamlandı: " + adType;
-                    resolve(true);
-                }catch(err){
-                    console.log(err);
-                    adLog.innerText = "❌ Reklam tamamlanmadı. Mükafat verilmədi.";
-                    resolve(false);
-                }
-                return;
-            }
-
-            // ── RichAds fallback yolu ──
-            adLog.innerText = "🎥 Reklam yüklənir...";
-            triggerRichAd();
-            await new Promise(r => setTimeout(r, 1500));
-            adLog.innerText = "✅ Reklam tamamlandı: " + adType;
-            resolve(true);
-        });
-    }
-
-    /* ════════════════════════════════════════
        API
     ════════════════════════════════════════ */
     async function api(action, payload = {}){
@@ -1116,10 +1079,10 @@
     }
 
     function updateUI(){
-        coinText.innerText    = coins;
-        energyText.innerText  = energy;
-        adPointText.innerText = adPoints;
-        boostText.innerText   = selectedBoost + "x";
+        coinText.innerText     = coins;
+        energyText.innerText   = energy;
+        adPointText.innerText  = adPoints;
+        boostText.innerText    = selectedBoost + "x";
         energyFill.style.width = energy + "%";
 
         if(energy <= 20){
@@ -1174,7 +1137,7 @@
 
         try{
             const data = await api("claim_click_reward",{
-                click_count:    clicksToSend,
+                click_count:      clicksToSend,
                 selected_card_id: selectedCard ? selectedCard.user_card_id : null
             });
 
@@ -1193,11 +1156,11 @@
     }
 
     /* ════════════════════════════════════════
-       ENERJİ REKLAMI
+       ENERJİ BUTONU — TelegramAdsController
     ════════════════════════════════════════ */
     async function watchEnergyAd(){
-        const watched = await showRewardedAd("energy_100");
-        if(!watched){ adLog.innerText = "❌ Reklam tamamlanmadı."; return; }
+        const watched = await showAd("energy_100");
+        if(!watched) return;
 
         try{
             const data = await api("claim_ad_reward",{ reward_type:"energy_100" });
@@ -1209,11 +1172,11 @@
     }
 
     /* ════════════════════════════════════════
-       QUTULAR
+       QUTULAR — TelegramAdsController
     ════════════════════════════════════════ */
     async function openRewardBox(minutes, reward){
-        const key      = "box_" + minutes + "_ready_at";
-        const readyAt  = Number(profile ? profile[key] : 0) || 0;
+        const key     = "box_" + minutes + "_ready_at";
+        const readyAt = Number(profile ? profile[key] : 0) || 0;
 
         if(Date.now() < readyAt){
             adLog.innerText = "⏳ Bu qutu hələ hazır deyil.";
@@ -1223,11 +1186,9 @@
         const btn = document.getElementById("boxBtn" + minutes);
         btn.disabled = true;
 
-        // Reklam göstər (AdsGram və ya RichAds)
-        const watched = await showRewardedAd("box_" + minutes);
+        const watched = await showAd("box_" + minutes);
 
         if(!watched){
-            adLog.innerText = "❌ Reklam tamamlanmadı. Qutu açılmadı.";
             btn.disabled = false;
             return;
         }
@@ -1254,17 +1215,17 @@
         const button = document.getElementById("boxBtn" + minutes);
         if(!profile){ timer.innerText = "Yüklənir..."; button.disabled = true; return; }
 
-        const key      = "box_" + minutes + "_ready_at";
-        const readyAt  = Number(profile[key]) || 0;
-        const now      = Date.now();
+        const key     = "box_" + minutes + "_ready_at";
+        const readyAt = Number(profile[key]) || 0;
+        const now     = Date.now();
 
         if(now >= readyAt){
-            timer.innerText  = "✅ Hazırdır";
-            button.disabled  = false;
+            timer.innerText = "✅ Hazırdır";
+            button.disabled = false;
         }else{
-            const diff     = readyAt - now;
-            const min      = Math.floor(diff / 60000);
-            const sec      = Math.floor((diff % 60000) / 1000);
+            const diff = readyAt - now;
+            const min  = Math.floor(diff / 60000);
+            const sec  = Math.floor((diff % 60000) / 1000);
             timer.innerText = min + " dəq " + (sec < 10 ? "0" : "") + sec + " san";
             button.disabled = true;
         }
@@ -1326,7 +1287,7 @@
        KARTLAR
     ════════════════════════════════════════ */
     function renderMyCards(cards){
-        myCardsCache  = cards || [];
+        myCardsCache      = cards || [];
         myCards.innerHTML = "";
 
         if(myCardsCache.length === 0){
@@ -1340,10 +1301,10 @@
         }
 
         myCardsCache.forEach((item, index) => {
-            const t   = item.tg_card_templates || {};
-            const div = document.createElement("div");
+            const t        = item.tg_card_templates || {};
+            const div      = document.createElement("div");
             const isActive = selectedCard && selectedCard.user_card_id === item.id;
-            div.className = "card-item" + (isActive ? " active" : "");
+            div.className  = "card-item" + (isActive ? " active" : "");
 
             const rarity = String(t.rarity || "rare").toLowerCase();
             const img    = t.image_url
@@ -1417,8 +1378,6 @@
     /* ════════════════════════════════════════
        HELPERS
     ════════════════════════════════════════ */
-    function coinToTon(price){ return (Number(price||0) / 100000).toFixed(2); }
-
     function escapeHtml(text){
         return String(text)
             .replaceAll("&","&amp;")
@@ -1442,4 +1401,4 @@
 </script>
 
 </body>
-</html>
+    </html>
