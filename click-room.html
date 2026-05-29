@@ -1,132 +1,298 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bearbee Arena | Multiplayer Turn Race</title>
-<style>
-:root{
---bg:#0b0f1a; --panel:#121927; --accent:#8b3cff; --gold:#ffd700; --green:#22ff66; --red:#ff2438; --muted:#9aa7b8;
-}
-body{margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:#fff;display:flex;flex-direction:column;min-height:100vh;}
-.panel{background:var(--panel);margin:12px;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;}
-.panel-title{color:var(--gold);font-weight:900;text-align:center;margin-bottom:8px;}
-.track{position:relative;height:120px;background:rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;margin-top:10px;}
-.car{width:40px;height:40px;border-radius:8px;position:absolute;}
-.finish{position:absolute;right:0;top:0;width:5px;height:100%;background:red;}
-.copy-btn{background:linear-gradient(180deg,#8b3cff,#5a00ff);border:none;color:#fff;padding:10px;border-radius:10px;width:100%;cursor:pointer;margin-top:4px;}
-.status-box{padding:8px;border-radius:10px;background:rgba(139,60,255,0.1);text-align:center;font-weight:900;}
-input[type=text]{width:100%;padding:8px;border-radius:8px;border:none;margin-top:4px;background:rgba(255,255,255,0.05);color:#fff;}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bearbee Arena | Click Room + Card Market</title>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- ✅ OnClickA TMA Mükafatlı Video SDK - defer ilə yüklə -->
+    <script src="https://cdn.onclicka.com/tma/1.0/sdk.js" defer></script>
+
+    <!-- ✅ Monetag Rewarded - show_11073465 -->
+    <script src="https://libtl.com/sdk.js" data-zone="11073465" data-sdk="show_11073465" async></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root{
+            --bg:#02060d; --panel:#08111c; --panel2:#0c1624; --line:#1e3b5a; --blue:#1597ff;
+            --gold:#ffd700; --green:#22ff66; --red:#ff2438; --purple:#9b3dff; --text:#fff; --muted:#98a8ba;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        body{min-height:100vh;background:radial-gradient(circle at top, rgba(0,93,255,0.22), transparent 36%),radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 32%),linear-gradient(180deg, #01040a, #030812 60%, #000);color:var(--text);font-family:'Segoe UI', Arial, sans-serif;padding-bottom:92px;overflow-x:hidden;}
+        body::before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(90deg, transparent 0 95%, rgba(21,151,255,0.07) 96% 100%),linear-gradient(0deg, transparent 0 95%, rgba(255,255,255,0.025) 96% 100%);background-size:34px 34px;opacity:0.42;mask-image:linear-gradient(to bottom, #000, transparent 86%);}
+       .page{width:min(1180px, 100%);margin:0 auto;padding:16px 14px 0;}
+       .top-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;}
+       .back{color:var(--gold);text-decoration:none;font-weight:1000;background:rgba(8,18,32,0.82);border:1px solid rgba(60,91,128,0.65);border-radius:14px;padding:12px 14px;}
+       .logo{text-align:center;line-height:0.9;user-select:none;filter:drop-shadow(0 0 12px rgba(255,215,0,0.25));}
+       .logo.bearbee{font-size:24px;font-weight:1000;font-style:italic;letter-spacing:2px;color:#f4f7ff;text-shadow:0 3px 0 #29354a;}
+       .logo.arena{font-size:34px;font-weight:1000;font-style:italic;letter-spacing:3px;color:var(--gold);text-shadow:0 4px 0 #6a3e00;}
+       .status{display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-bottom:16px;}
+       .status-box{background:rgba(8,18,32,0.88);border:1px solid rgba(60,91,128,0.65);border-radius:18px;padding:14px;text-align:center;box-shadow:0 0 24px rgba(21,151,255,0.08);}
+       .status-box h3{color:var(--muted);font-size:13px;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;}
+       .status-box span{color:var(--gold);font-size:24px;font-weight:1000;}
+       .layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;align-items:start;}
+       .panel{background:linear-gradient(180deg, rgba(12,22,36,0.96), rgba(4,9,16,0.96));border:1px solid rgba(71,101,136,0.62);border-radius:22px;box-shadow:inset 0 0 22px rgba(21,151,255,0.08), 0 0 26px rgba(21,151,255,0.08);padding:18px;margin-bottom:16px;position:relative;overflow:hidden;}
+       .panel-title{color:var(--gold);text-align:center;font-size:22px;font-weight:1000;letter-spacing:1px;margin-bottom:10px;}
+       .panel-sub{color:var(--muted);text-align:center;font-size:14px;line-height:1.5;margin-bottom:14px;}
+       .click-panel{ text-align:center; }
+       .bear-ring{width:270px;height:270px;margin:16px auto;border-radius:50%;padding:6px;background:conic-gradient(from 120deg, #1597ff, #ffd700, #9b3dff, #1597ff);box-shadow:0 0 40px rgba(21,151,255,0.30), 0 0 35px rgba(255,215,0,0.18);cursor:pointer;user-select:none;transition:0.08s;}
+       .bear-ring:active{ transform:scale(0.95); }
+       .bear-button{width:100%;height:100%;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 40% 25%, rgba(255,215,0,0.22), transparent 34%),linear-gradient(180deg, #07101b, #02060d);border:4px solid rgba(0,0,0,0.76);display:grid;place-items:center;position:relative;}
+       .bear-button img{width:100%;height:100%;object-fit:cover;display:block;}
+       .bear-fallback{font-size:96px;filter:drop-shadow(0 0 16px rgba(255,215,0,0.45));}
+       .energy-line{width:100%;height:18px;background:#111c2a;border:1px solid #26476a;border-radius:22px;overflow:hidden;margin:14px 0;}
+       .energy-fill{height:100%;width:100%;background:linear-gradient(90deg, #22ff66, #00d7ff);transition:0.2s;}
+       .btn{width:100%;border:none;cursor:pointer;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:1000;letter-spacing:0.7px;color:#fff;text-decoration:none;text-align:center;transition:0.16s;text-transform:uppercase;display:block;margin-bottom:8px;}
+       .btn:active{ transform:scale(0.97); }
+       .btn-blue{background:linear-gradient(180deg,#1678e8,#064fad);border:1px solid #58b9ff;box-shadow:0 0 18px rgba(21,151,255,0.20);}
+       .btn-green{background:linear-gradient(180deg,#20c235,#087816);border:1px solid #66ff7e;box-shadow:0 0 18px rgba(34,255,102,0.20);}
+       .btn-purple{background:linear-gradient(180deg,#973dff,#5515a0);border:1px solid #c692ff;box-shadow:0 0 18px rgba(155,61,255,0.20);}
+       .btn-gold{background:linear-gradient(180deg,#ffd700,#a56b00);border:1px solid #ffef92;color:#111;}
+       .btn-red{background:linear-gradient(180deg,#e0182e,#8d0a18);border:1px solid #ff6674;}
+       .btn-dark{background:linear-gradient(180deg,#152339,#0a1220);border:1px solid #33557d;}
+       .btn:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
+       .tap-effect{position:fixed;color:var(--gold);font-size:30px;font-weight:1000;pointer-events:none;animation:floatUp 0.9s forwards;z-index:9999;text-shadow:0 0 12px rgba(255,215,0,0.65);}
+        @keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-85px) scale(1.25);}}
+       .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+       .box-card,.card-item,.listing-card{border:1px solid rgba(88,185,255,0.28);background:radial-gradient(circle at 50% 0%, rgba(255,215,0,0.08), transparent 42%),linear-gradient(180deg,#111d2d,#050b12);border-radius:18px;padding:14px;text-align:center;box-shadow:0 0 18px rgba(21,151,255,0.08);transition:0.16s ease;}
+       .listing-card:hover,.card-item:hover{transform:translateY(-3px);border-color:#ffd700;box-shadow:0 0 24px rgba(255,215,0,0.13);}
+       .box-icon{font-size:42px;margin-bottom:8px;}
+       .box-card h3,.card-item h3,.listing-card h3{color:var(--gold);font-size:16px;margin-bottom:6px;}
+       .box-card p,.card-item p,.listing-card p{color:var(--muted);font-size:13px;line-height:1.4;margin-bottom:8px;}
+       .timer{color:#00ffcc;font-weight:1000;margin:8px 0;}
+       .cards-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(190px,1fr));gap:12px;}
+       .card-item{position:relative;cursor:pointer;}
+       .card-item.active{border:2px solid var(--gold);box-shadow:0 0 22px rgba(255,215,0,0.24);}
+       .card-item.active::after{content:"SEÇİLİB";position:absolute;top:9px;right:9px;background:var(--gold);color:#111;border-radius:8px;padding:4px 7px;font-size:10px;font-weight:1000;}
+       .card-art{width:100%;height:96px;border-radius:14px;margin-bottom:10px;background:radial-gradient(circle at 50% 35%, rgba(255,215,0,0.20), transparent 45%),linear-gradient(135deg,#183a61,#1b1540 55%,#2a103d);display:grid;place-items:center;font-size:44px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;}
+       .card-art img{width:100%;height:100%;object-fit:cover;}
+       .rarity{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:1000;margin:5px 0;background:#142033;color:#bde5ff;}
+       .rarity.legendary{background:linear-gradient(90deg,#ffd700,#ff8c00);color:#111;}
+       .rarity.epic{background:linear-gradient(90deg,#9b3dff,#1597ff);color:#fff;}
+       .rarity.rare{background:linear-gradient(90deg,#1597ff,#22ff66);color:#001018;}
+       .card-item.input-row{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px;width:100%;}
+       .card-item.input-row input,.card-item.input-row.btn{width:100%;min-width:0;}
+        input{background:#030a13;border:1px solid #2a547d;border-radius:12px;color:#fff;outline:none;padding:12px;font-size:14px;font-weight:900;text-align:center;height:44px;}
+       .price-ton{color:#ffd700;font-weight:1000;}
+       .price-coin{color:#98a8ba;font-size:12px;}
+       .power-text{color:#00ffcc;font-weight:1000;}
+       .log{margin-top:12px;background:#030a13;border:1px solid #263f5d;border-radius:14px;padding:12px;color:#00ffcc;min-height:45px;font-weight:800;font-size:14px;text-align:center;line-height:1.45;}
+       .miniapp-open{margin-top:12px;background:linear-gradient(180deg,#20c235,#087816);border:1px solid #66ff7e;color:#fff;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:1000;cursor:pointer;width:100%;text-transform:uppercase;}
+       .ref-box{background:linear-gradient(180deg,#0d1928,#07101b);border:1px solid #31577d;border-radius:18px;padding:14px;text-align:center;}
+       .ref-link{width:100%;min-height:46px;background:#030a13;border:1px solid #2a547d;border-radius:12px;color:#00ffcc;outline:none;padding:12px;font-size:13px;font-weight:900;text-align:center;overflow-wrap:anywhere;margin:10px 0;display:block;}
+       .mining-box{background:radial-gradient(circle at 20% 10%, rgba(255,215,0,0.14), transparent 38%),radial-gradient(circle at 80% 20%, rgba(21,151,255,0.18), transparent 34%),linear-gradient(180deg,#101d30,#050b13);border:1px solid rgba(255,215,0,0.34);border-radius:18px;padding:14px;box-shadow:inset 0 0 26px rgba(255,215,0,0.08), 0 0 26px rgba(21,151,255,0.14);}
+       .mining-rig{min-height:150px;border-radius:20px;margin-bottom:14px;display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:center;padding:14px;background:linear-gradient(135deg,rgba(0,0,0,0.55),rgba(21,151,255,0.10)),repeating-linear-gradient(90deg,rgba(255,255,255,0.025) 0 1px,transparent 1px 18px);border:1px solid rgba(88,185,255,0.25);}
+       .rig-icon{width:100px;height:100px;border-radius:22px;display:grid;place-items:center;font-size:54px;background:radial-gradient(circle,rgba(255,215,0,0.25),transparent 60%),linear-gradient(180deg,#10233b,#060b12);border:1px solid rgba(255,215,0,0.35);box-shadow:0 0 26px rgba(255,215,0,0.14);}
+       .rig-info h3{color:#ffd700;font-size:22px;margin-bottom:8px;}
+       .rig-info p{color:#a8b4c4;font-size:14px;line-height:1.5;}
+       .mining-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;}
+       .mining-stat{background:#030a13;border:1px solid #263f5d;border-radius:14px;padding:12px;text-align:center;}
+       .mining-stat h3{color:#98a8ba;font-size:12px;margin-bottom:6px;text-transform:uppercase;}
+       .mining-stat strong{color:#ffd700;font-size:22px;}
+       .market-scroll{max-height:560px;overflow-y:auto;padding-right:4px;}
+       .market-scroll::-webkit-scrollbar{width:7px;}
+       .market-scroll::-webkit-scrollbar-thumb{background:#31577d;border-radius:999px;}
+       .market-scroll::-webkit-scrollbar-track{background:#030a13;border-radius:999px;}
+       .card-room-title{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;}
+       .pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#030a13;border:1px solid #31577d;color:#00ffcc;font-size:11px;font-weight:1000;}
+       .nav{position:fixed;left:0;bottom:0;width:100%;height:82px;background:rgba(6,11,18,0.96);border-top:1px solid rgba(70,100,132,0.55);display:grid;grid-template-columns:repeat(5,1fr);z-index:9999;backdrop-filter:blur(12px);}
+       .nav a{color:#8793a3;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-weight:1000;letter-spacing:1px;font-size:11px;}
+       .nav a.active{color:var(--gold);text-shadow:0 0 14px rgba(255,215,0,0.45);}
+       .nav.icon{font-size:25px;}
+        @media(max-width:850px){.layout{grid-template-columns:1fr;}.status{grid-template-columns:repeat(2,1fr);}.grid-3{grid-template-columns:1fr;}.bear-ring{width:230px;height:230px;}.mining-rig{grid-template-columns:1fr;text-align:center;}.rig-icon{margin:0 auto;}.mining-stats{grid-template-columns:1fr;}.market-scroll{max-height:none;overflow:visible;}.cards-grid{grid-template-columns:1fr;}}
+    </style>
 </head>
 <body>
+<main class="page">
+    <div class="top-bar">
+        <a href="./index.html" class="back">← Geri</a>
+        <div class="logo"><div class="bearbee">BEARBEE</div><div class="arena">CLICK</div></div>
+        <button class="btn btn-dark" style="width:auto;margin:0;" onclick="refreshAll()">Yenilə</button>
+    </div>
+    <section class="status">
+        <div class="status-box"><h3>Coin</h3>🪙 <span id="coinText">0</span></div>
+        <div class="status-box"><h3>Enerji</h3>⚡ <span id="energyText">100</span>/100</div>
+        <div class="status-box"><h3>Click Gücü</h3>🚀 <span id="boostText">1x</span></div>
+        <div class="status-box"><h3>Ad Xal</h3>⭐ <span id="adPointText">0</span></div>
+    </section>
+    <section class="layout">
+        <div>
+            <section class="panel click-panel">
+                <h1 class="panel-title">Cyber Bear Click</h1>
+                <p class="panel-sub">Kart seç, cyber ayıya klik et. Kartın boost-u click gücünü artırır.</p>
+                <div class="bear-ring" id="tapBear"><div class="bear-button"><img src="./assets/cyber-bear.png" alt="Cyber Bear" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><div class="bear-fallback" style="display:none;">🐻</div></div></div>
+                <div class="energy-line"><div class="energy-fill" id="energyFill"></div></div>
+                <button class="btn btn-purple" onclick="watchEnergyAd()">🎥 Reklama bax → Enerji 100 et</button>
+                <button class="btn btn-gold" onclick="claimClickReward()">🪙 Click xallarını serverə göndər</button>
+                <div class="log" id="clickLog">Hazırdır. Cyber ayıya klik et.</div>
+            </section>
+            <section class="panel">
+                <h2 class="panel-title">Reklamlı Qutular</h2>
+                <p class="panel-sub">Qutu yalnız reklam tamamlanandan sonra mükafat verir.</p>
+                <div class="grid-3">
+                    <div class="box-card"><div class="box-icon">🎁</div><h3>2 dəq qutu</h3><p>+20 coin</p><div class="timer" id="timer2">Yüklənir</div><button class="btn btn-blue" id="boxBtn2" onclick="openRewardBox(2, 20)">Aç</button></div>
+                    <div class="box-card"><div class="box-icon">📦</div><h3>5 dəq qutu</h3><p>+60 coin</p><div class="timer" id="timer5">Yüklənir</div><button class="btn btn-blue" id="boxBtn5" onclick="openRewardBox(5, 60)">Aç</button></div>
+                    <div class="box-card"><div class="box-icon">💎</div><h3>10 dəq qutu</h3><p>+150 coin</p><div class="timer" id="timer10">Yüklənir</div><button class="btn btn-blue" id="boxBtn10" onclick="openRewardBox(10, 150)">Aç</button></div>
+                </div>
+                <div class="log" id="adLog">Reklam sistemi hazırdır.</div>
+            </section>
+            <section class="panel">
+                <h2 class="panel-title">Referal Sistemi</h2>
+                <p class="panel-sub">Dostunu dəvət et. Yeni oyunçu linkinlə qoşulanda sən +100 coin, o isə +25 coin qazanır.</p>
+                <div class="ref-box">
+                    <h3>Dəvət linkin</h3>
+                    <div class="ref-link" id="refLink">Yüklənir...</div>
+                    <div class="grid-3">
+                        <div class="box-card"><div class="box-icon">👥</div><h3>Dəvət</h3><p><span id="refCount">0</span> nəfər</p></div>
+                        <div class="box-card"><div class="box-icon">🪙</div><h3>Qazanc</h3><p><span id="refEarned">0</span> coin</p></div>
+                        <div class="box-card"><div class="box-icon">🎁</div><h3>Bonus</h3><p>+100 / +25</p></div>
+                    </div>
+                    <button class="btn btn-green" onclick="copyReferralLink()">Linki kopyala</button>
+                </div>
+                <div class="log" id="refLog">Referal məlumatları yüklənir...</div>
+            </section>
+            <section class="panel">
+                <h2 class="panel-title">Mining Power</h2>
+                <p class="panel-sub">Kartlar Power verir, Power passiv coin qazandırır.</p>
+                <div class="mining-box">
+                    <div class="mining-rig"><div class="rig-icon">⛏️</div><div class="rig-info"><h3>Bearbee Mining Rig</h3><p>Kartların Mining Power yaradır. Power artdıqca passiv coin gəlirin artır.</p></div></div>
+                    <div class="mining-stats">
+                        <div class="mining-stat"><h3>Total Power</h3><strong id="totalPowerText">0</strong></div>
+                        <div class="mining-stat"><h3>Income</h3><strong id="lastIncomeText">0</strong></div>
+                        <div class="mining-stat"><h3>Rate</h3><strong>100K=1 TON</strong></div>
+                    </div>
+                    <button class="btn btn-green" onclick="claimMiningIncome()">⛏ Claim Mining Income</button>
+                    <button class="btn btn-dark" onclick="loadMiningPower()">Mining Yenilə</button>
+                </div>
+                <div class="log" id="miningLog">Mining power yüklənir...</div>
+            </section>
+        </div>
+        <div>
+            <section class="panel">
+                <h2 class="panel-title card-room-title">Mənim Cyber Kartlarım <span class="pill">Power + Boost</span></h2>
+                <p class="panel-sub">Kart seçəndə click boost dəyişir. Kartı satışa qoymaq üçün qiymət yaz.</p>
+                <div class="cards-grid" id="myCards"></div>
+                <div class="log" id="cardLog">Kartlar yüklənir...</div>
+            </section>
+            <section class="panel">
+                <h2 class="panel-title card-room-title">Kart Birjası <span class="pill">Ayrı otaq</span></h2>
+                <p class="panel-sub">Birja artıq ayrıca MARKET otağındadır. Kart al-sat üçün ora keç.</p>
+                <a href="./market-room.html" class="btn btn-gold">🛒 MARKET OTAĞINA KEÇ</a>
+            </section>
+        </div>
+    </section>
+</main>
+<nav class="nav">
+    <a href="./index.html"><span class="icon">🏠</span>ARENA</a>
+    <a href="./click-room.html" class="active"><span class="icon">🐻</span>CLICK</a>
+    <a href="./mining-room.html"><span class="icon">⛏</span>MINING</a>
+    <a href="./market-room.html"><span class="icon">🛒</span>MARKET</a>
+    <a href="./wallet-room.html"><span class="icon">💎</span>WALLET</a>
+</nav>
 
-<div class="panel">
-<div class="panel-title">🏎️ Multiplayer Turn-Based Race</div>
-<input type="text" id="roomInput" placeholder="Oda Kodu">
-<button class="copy-btn" id="createBtn">Yeni Oda Yarat</button>
-<button class="copy-btn" id="joinBtn">Qatıl</button>
-<div class="status-box" id="raceStatus">Odaya qoşulmayıb</div>
-<button class="copy-btn" id="readyBtn" disabled>Hazır Ol</button>
-<button class="copy-btn" id="startBtn" disabled>Yarışı Başlat</button>
-<button class="copy-btn" id="clickBtn" disabled>⚡ QAC (KLİK)</button>
+<script>
+    const TG_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-api-ref";
+    const MINING_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-mining";
+    const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
+    const ONCLICKA_BLOCK_ID = "442774";
+    const firebaseConfig = {apiKey: "AIzaSyCzywfKRvjp0stL9ptl1ox3mUpfZ8VG27o",authDomain: "gamer-d11ba.firebaseapp.com",projectId: "gamer-d11ba",storageBucket: "gamer-d11ba.firebasestorage.app",messagingSenderId: "696457199951",appId: "1:696457199951:web:d1ec83b76af07b47a6853a"};
+    const MAX_ENERGY = 100;
+    let telegramUser = null; let profile = null; let coins = 0; let energy = MAX_ENERGY; let adPoints = 0; let pendingClicks = 0; let pendingCoins = 0; let isClaiming = false; let selectedCard = null; let selectedBoost = 1; let myCardsCache = []; let firebaseDb = null;
+    const coinText = document.getElementById("coinText"); const energyText = document.getElementById("energyText"); const energyFill = document.getElementById("energyFill"); const boostText = document.getElementById("boostText"); const adPointText = document.getElementById("adPointText"); const clickLog = document.getElementById("clickLog"); const adLog = document.getElementById("adLog"); const cardLog = document.getElementById("cardLog"); const myCards = document.getElementById("myCards"); const totalPowerText = document.getElementById("totalPowerText"); const lastIncomeText = document.getElementById("lastIncomeText"); const miningLog = document.getElementById("miningLog"); const refLink = document.getElementById("refLink"); const refCount = document.getElementById("refCount"); const refEarned = document.getElementById("refEarned"); const refLog = document.getElementById("refLog"); const tapBear = document.getElementById("tapBear");
 
-<div class="track" id="track">
-<div class="car" id="playerCar" style="background:#22ff66;top:10px;left:0;"></div>
-<div class="car" id="opponentCar" style="background:#ff2438;top:60px;left:0;"></div>
-<div class="finish"></div>
-</div>
-</div>
+    /* ════════════════════════════════════════
+       BİRLƏŞDİRİLMİŞ REKLAM - 1.OnClickA 2.show_11073465
+    ════════════════════════════════════════ */
+    function showAd(label) {
+        return new Promise(async (resolve) => {
+            adLog.innerText = "🎥 Reklam yüklənir...";
+            const first = await tryOnClickA(label);
+            if (first) { resolve(true); return; }
+            adLog.innerText = "🎥 Alternativ reklam yüklənir...";
+            const second = await trySecondAd(label);
+            resolve(second);
+        });
+    }
+    function tryOnClickA(label) {
+        return new Promise((resolve) => {
+            let attempts = 30;
+            const wait = () => {
+                if (attempts <= 0) { resolve(false); return; }
+                if (window.OnClickaSDK) { start(); } else { attempts--; setTimeout(wait, 500); }
+            };
+            const start = () => {
+                try {
+                    const adBlock = window.OnClickaSDK.createRewardedAd({
+                        blockId: ONCLICKA_BLOCK_ID,
+                        onReward: () => { adLog.innerText = "✅ Reklam tamamlandı: " + label; resolve(true); },
+                        onClose: () => { setTimeout(() => resolve(false), 300); },
+                        onError: (err) => { console.log("OnClickA onError:", err); resolve(false); }
+                    });
+                    adBlock.show();
+                } catch (err) { console.log("OnClickA createRewardedAd xətası:", err); resolve(false); }
+            };
+            wait();
+        });
+    }
+    function trySecondAd(label) {
+        return new Promise((resolve) => {
+            if (typeof window.show_11073465!== 'function') { adLog.innerText = "⚠️ İkinci reklam tapılmadı"; resolve(false); return; }
+            try {
+                // Rewarded interstitial
+                show_11073465().then(() => {
+                    // You need to add your user reward function here, which will be executed after the user watches the ad.
+                    // For more details, please refer to the detailed instructions.
+                    alert('You have seen an ad!');
+                    adLog.innerText = "✅ Reklam tamamlandı: " + label;
+                    resolve(true);
+                }).catch((err) => {
+                    console.log("show_11073465 error:", err);
+                    adLog.innerText = "❌ Reklam bağlandı";
+                    resolve(false);
+                });
+            } catch (e) { resolve(false); }
+        });
+    }
 
-<div class="panel">
-<div class="panel-title">💎 Depozit Paneli</div>
-<div class="status-box" id="statusBox">💎 Depozit göndərdikdən sonra təsdiqlə</div>
-<div class="copy-btn" id="sentBtn">✅ Göndərdim, Təsdiqlə</div>
-<div class="copy-btn" id="cancelBtn" style="background:red;display:none;">❌ Ləğv et</div>
-</div>
-
-<script type="module">
-// Firebase Setup
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-// Firebase config
-const firebaseConfig = { /* buraya firebase config */ };
-const app = initializeApp(firebaseConfig);
-const rdb = getDatabase(app);
-
-// Demo user
-const myId = String(Math.floor(Math.random()*10000));
-let roomCode = null;
-let isMyTurn = false;
-let gameStarted = false;
-let playerPos = 0, opponentPos = 0;
-const trackWidth = 300;
-
-// Elements
-const playerCar = document.getElementById("playerCar");
-const opponentCar = document.getElementById("opponentCar");
-const clickBtn = document.getElementById("clickBtn");
-const startBtn = document.getElementById("startBtn");
-const raceStatus = document.getElementById("raceStatus");
-
-// Room yaratmaq
-document.getElementById("createBtn").onclick = async ()=>{
-  roomCode = document.getElementById("roomInput").value || ("ROOM"+Math.floor(Math.random()*1000));
-  await set(ref(rdb, `rooms/${roomCode}`), {turn:myId, started:false, players:{[myId]:0}});
-  raceStatus.innerText="Oda yaradıldı. Sizin növbəniz";
-  startBtn.disabled=false;
-};
-
-// Qoşulmaq
-document.getElementById("joinBtn").onclick = async ()=>{
-  roomCode = document.getElementById("roomInput").value;
-  if(!roomCode) return;
-  await update(ref(rdb, `rooms/${roomCode}/players`), {[myId]:0});
-  raceStatus.innerText="Odaya qoşuldunuz. Hazır olun";
-  document.getElementById("readyBtn").disabled=false;
-};
-
-// Yarışı başlat
-startBtn.onclick = async ()=>{
-  await update(ref(rdb, `rooms/${roomCode}`), {started:true});
-  gameStarted = true;
-  raceStatus.innerText="Yarış başladı";
-  clickBtn.disabled = false;
-};
-
-// Klik düyməsi
-clickBtn.onclick = async ()=>{
-  if(!isMyTurn || !gameStarted) return;
-  playerPos += 10;
-  playerCar.style.left = playerPos + "px";
-  await update(ref(rdb, `rooms/${roomCode}/players/${myId}`), playerPos);
-  await update(ref(rdb, `rooms/${roomCode}`), {turn: getOpponentId()});
-  checkFinish();
-};
-
-// Firebase listener
-onValue(ref(rdb, `rooms/${roomCode}`), snap=>{
-  if(!snap.exists()) return;
-  const data = snap.val();
-  isMyTurn = data.turn===myId;
-  clickBtn.disabled = !isMyTurn;
-  const opponentEntry = Object.entries(data.players).filter(p=>p[0]!==myId)[0];
-  opponentPos = opponentEntry?.[1]||0;
-  opponentCar.style.left = opponentPos + "px";
-});
-
-// Helpers
-function getOpponentId(){
-  if(!roomCode) return null;
-  const playersRef = ref(rdb, `rooms/${roomCode}/players`);
-  return Object.keys(playersRef.toString()).find(id=>id!==myId);
-}
-
-function checkFinish(){
-  if(playerPos>=trackWidth){alert("Qalib: Siz"); clickBtn.disabled=true;}
-  if(opponentPos>=trackWidth){alert("Qalib: Rəqib"); clickBtn.disabled=true;}
-}
+    function initFirebaseStats(){ try{ if(window.firebase &&!firebase.apps.length) firebase.initializeApp(firebaseConfig); if(window.firebase) firebaseDb = firebase.firestore(); }catch(e){ console.log("Firebase init:", e); } }
+    function getPlayerDocId(){ return telegramUser? String(telegramUser.id) : ""; }
+    async function saveFirebaseLogin(){ if(!firebaseDb ||!telegramUser) return; try{ await firebaseDb.collection("players").doc(getPlayerDocId()).set({telegram_id:Number(telegramUser.id),username:telegramUser.username||"",first_name:telegramUser.first_name||"",last_name:telegramUser.last_name||"",coins:Number(coins)||0,energy:Number(energy)||0,ad_points:Number(adPoints)||0,login_count:firebase.firestore.FieldValue.increment(1),last_login_at:firebase.firestore.FieldValue.serverTimestamp(),last_active_at:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}); await firebaseDb.collection("login_events").add({telegram_id:Number(telegramUser.id),username:telegramUser.username||"",first_name:telegramUser.first_name||"",page:"click-room",user_agent:navigator.userAgent,created_at:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){ console.log("Firebase login log:", e); } }
+    async function saveFirebaseClickReward(clicks, rewardCoins){ if(!firebaseDb ||!telegramUser) return; try{ await firebaseDb.collection("players").doc(getPlayerDocId()).set({telegram_id:Number(telegramUser.id),username:telegramUser.username||"",first_name:telegramUser.first_name||"",coins:Number(coins)||0,energy:Number(energy)||0,total_clicks:firebase.firestore.FieldValue.increment(Number(clicks)||0),total_click_coins:firebase.firestore.FieldValue.increment(Number(rewardCoins)||0),last_active_at:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}); await firebaseDb.collection("click_events").add({telegram_id:Number(telegramUser.id),username:telegramUser.username||"",clicks:Number(clicks)||0,reward_coins:Number(rewardCoins)||0,boost:Number(selectedBoost)||1,created_at:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){ console.log("Firebase click log:", e); } }
+    async function saveFirebaseMarketEvent(type, data = {}){ if(!firebaseDb ||!telegramUser) return; try{ await firebaseDb.collection("market_events").add({telegram_id:Number(telegramUser.id),username:telegramUser.username||"",type,data,created_at:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){ console.log("Firebase market log:", e); } }
+    function initTelegramMiniApp(){ if(window.Telegram?.WebApp){ window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); } }
+    function hasTelegramInitData(){ return Boolean(window.Telegram?.WebApp?.initData && window.Telegram.WebApp.initData.length > 10); }
+    function getTelegramInitData(){ if(!hasTelegramInitData()){ showMiniAppOpenScreen(); throw new Error("Mini App kimi açılmayıb. PLAY ilə aç."); } return window.Telegram.WebApp.initData; }
+    function openTelegramMiniApp(){ window.location.href = MINI_APP_URL; }
+    function showMiniAppOpenScreen(){ const html = `Bu səhifə adi link kimi açılıb. Coin/kart yadda qalması üçün oyunu Telegram Mini App kimi açmaq lazımdır.<button class="miniapp-open" onclick="openTelegramMiniApp()">🎮 PLAY ilə aç</button>`; if(clickLog) clickLog.innerHTML = html; if(cardLog) cardLog.innerText = "Telegram initData yoxdur. PLAY ilə aç."; }
+    function getStartParam(){ const p = window.Telegram?.WebApp?.initDataUnsafe?.start_param; if(p) return String(p); const u = new URLSearchParams(window.location.search); return u.get("startapp") || u.get("ref") || ""; }
+    function getReferrerIdFromStartParam(){ const sp = getStartParam(); if(!sp) return null; const m = String(sp).match(/ref[_-]?(\d+)/i); if(m && m[1]) return Number(m[1]); if(/^\d+$/.test(String(sp))) return Number(sp); return null; }
+    function getMyReferralLink(){ return telegramUser? "https://t.me/Bearbeee_bot/GameR?startapp=ref_" + telegramUser.id : ""; }
+    async function api(action, payload = {}){ const res = await fetch(TG_API_URL, {method:"POST",headers:{"Content-Type":"application/json"},body: JSON.stringify({ initData: getTelegramInitData(), action, payload })}); const data = await res.json(); if(!res.ok ||!data.ok) throw new Error(data.error || "API xətası"); return data; }
+    async function miningApi(action, payload = {}){ const res = await fetch(MINING_API_URL, {method:"POST",headers:{"Content-Type":"application/json"},body: JSON.stringify({ initData: getTelegramInitData(), action, payload })}); const data = await res.json(); if(!res.ok ||!data.ok) throw new Error(data.error || "Mining API xətası"); return data; }
+    async function init(){ try{ initTelegramMiniApp(); if(!hasTelegramInitData()){ showMiniAppOpenScreen(); return; } initFirebaseStats(); const data = await api("init", { referrer_id: getReferrerIdFromStartParam() }); telegramUser = data.user; applyProfile(data.profile); renderMyCards(data.myCards || []); renderReferralStats(data.referralStats); if(data.referralResult?.status === "rewarded"){ refLog.innerText = "Referal bonus aktiv oldu: sən +25 coin qazandın."; } cardLog.innerText = "Telegram ID ilə giriş edildi: " + telegramUser.id; clickLog.innerText = "Hazırdır. Cyber ayıya klik et."; saveFirebaseLogin(); updateBoxTimers(); setInterval(updateBoxTimers, 1000); }catch(err){ console.error(err); clickLog.innerText = "Başlatma xətası: " + err.message; cardLog.innerText = "Telegram giriş alınmadı."; } }
+    function applyProfile(p){ profile = p; coins = Number(profile.coins) || 0; energy = profile.energy?? MAX_ENERGY; adPoints = Number(profile.ad_points) || 0; updateUI(); }
+    async function loadProfile(){ const data = await api("load_profile"); applyProfile(data.profile); }
+    function updateUI(){ coinText.innerText = coins; energyText.innerText = energy; adPointText.innerText = adPoints; boostText.innerText = selectedBoost + "x"; energyFill.style.width = energy + "%"; if(energy <= 20){ energyFill.style.background = "linear-gradient(90deg,#ff2438,#ff8c00)"; }else if(energy <= 50){ energyFill.style.background = "linear-gradient(90deg,#ff8c00,#ffd700)"; }else{ energyFill.style.background = "linear-gradient(90deg,#22ff66,#00d7ff)"; } }
+    tapBear.addEventListener("click", function(e){ if(!hasTelegramInitData()){ showMiniAppOpenScreen(); return; } if(energy <= 0){ clickLog.innerText = "⚡ Enerji bitdi! Reklama bax."; return; } const gain = 2 * selectedBoost; energy--; pendingClicks++; pendingCoins += gain; updateUI(); clickLog.innerText = "Pending: +" + pendingCoins + " coin (" + pendingClicks + " click)"; const plus = document.createElement("div"); plus.className = "tap-effect"; plus.innerText = "+" + gain; plus.style.left = e.pageX + "px"; plus.style.top = e.pageY + "px"; document.body.appendChild(plus); setTimeout(() => plus.remove(), 900); if(pendingClicks >= 10) claimClickReward(true); });
+    async function claimClickReward(silent = false){ if(!hasTelegramInitData()){ showMiniAppOpenScreen(); return; } if(isClaiming) return; if(pendingClicks <= 0){ if(!silent) clickLog.innerText = "Göndəriləcək click yoxdur."; return; } isClaiming = true; const clicksToSend = pendingClicks; const rewardToLog = pendingCoins; try{ const data = await api("claim_click_reward",{ click_count: clicksToSend, selected_card_id: selectedCard? selectedCard.user_card_id : null }); pendingClicks = 0; pendingCoins = 0; applyProfile(data.profile); saveFirebaseClickReward(clicksToSend, rewardToLog); clickLog.innerText = silent? "✅ Click xalları avtomatik saxlandı." : "✅ Click reward serverdə təsdiqləndi."; }catch(err){ clickLog.innerText = "❌ Saxlama xətası: " + err.message; } isClaiming = false; }
+    async function watchEnergyAd(){ const watched = await showAd("energy_100"); if(!watched) return; try{ const data = await api("claim_ad_reward",{ reward_type:"energy_100" }); applyProfile(data.profile); adLog.innerText = "✅ Enerji serverdə təsdiqləndi."; }catch(err){ adLog.innerText = "❌ Enerji reward xətası: " + err.message; } }
+    async function openRewardBox(minutes, reward){ const key = "box_" + minutes + "_ready_at"; const readyAt = Number(profile? profile[key] : 0) || 0; if(Date.now() < readyAt){ adLog.innerText = "⏳ Bu qutu hələ hazır deyil."; return; } const btn = document.getElementById("boxBtn" + minutes); btn.disabled = true; const watched = await showAd("box_" + minutes); if(!watched){ btn.disabled = false; return; } try{ const data = await api("claim_box_reward",{ box_minutes: minutes }); applyProfile(data.profile); updateBoxTimers(); adLog.innerText = "✅ " + minutes + " dəqiqəlik qutu açıldı! +" + reward + " coin"; }catch(err){ adLog.innerText = "❌ Qutu reward xətası: " + err.message; btn.disabled = false; } }
+    function updateBoxTimers(){ updateSingleTimer(2); updateSingleTimer(5); updateSingleTimer(10); }
+    function updateSingleTimer(minutes){ const timer = document.getElementById("timer" + minutes); const button = document.getElementById("boxBtn" + minutes); if(!profile){ timer.innerText = "Yüklənir..."; button.disabled = true; return; } const key = "box_" + minutes + "_ready_at"; const readyAt = Number(profile[key]) || 0; const now = Date.now(); if(now >= readyAt){ timer.innerText = "✅ Hazırdır"; button.disabled = false; }else{ const diff = readyAt - now; const min = Math.floor(diff / 60000); const sec = Math.floor((diff % 60000) / 1000); timer.innerText = min + " dəq " + (sec < 10? "0" : "") + sec + " san"; button.disabled = true; } }
+    async function loadMiningPower(){ try{ if(!hasTelegramInitData()){ miningLog.innerText = "Mining üçün PLAY ilə aç."; return; } const data = await miningApi("load_power"); totalPowerText.innerText = data.total_power || 0; miningLog.innerText = "Mining Power yükləndi."; }catch(err){ miningLog.innerText = "❌ Mining xətası: " + err.message; } }
+    async function claimMiningIncome(){ try{ const data = await miningApi("claim_power_income"); const claim = data.claim || {}; totalPowerText.innerText = data.total_power || claim.total_power || 0; lastIncomeText.innerText = claim.income || 0; if(claim.income && Number(claim.income) > 0){ await loadProfile(); miningLog.innerText = "✅ Mining income: +" + claim.income + " coin"; }else{ miningLog.innerText = claim.message || ("Qalan: " + (claim.seconds_left || 0) + " san"); } }catch(err){ miningLog.innerText = "❌ Mining claim xətası: " + err.message; } }
+    function renderReferralStats(stats){ if(!telegramUser) return; refLink.innerText = getMyReferralLink(); refCount.innerText = stats?.referral_count || 0; refEarned.innerText = stats?.referral_earned_coins || 0; refLog.innerText = "Referal linkin hazırdır."; }
+    async function copyReferralLink(){ const link = getMyReferralLink(); if(!link){ alert("Telegram ID yüklənməyib."); return; } try{ await navigator.clipboard.writeText(link); refLog.innerText = "✅ Referal link kopyalandı."; }catch(e){ alert(link); } }
+    function renderMyCards(cards){ myCardsCache = cards || []; myCards.innerHTML = ""; if(myCardsCache.length === 0){ myCards.innerHTML = `<div class="listing-card"><div class="card-art">🎴</div><h3>Kart yoxdur</h3><p>Starter kart serverdən veriləcək. Səhifəni yenilə.</p></div>`; return; } myCardsCache.forEach((item, index) => { const t = item.tg_card_templates || {}; const div = document.createElement("div"); const isActive = selectedCard && selectedCard.user_card_id === item.id; div.className = "card-item" + (isActive? " active" : ""); const rarity = String(t.rarity || "rare").toLowerCase(); const img = t.image_url? `<img src="${escapeHtml(t.image_url)}" alt="${escapeHtml(t.name||"Card")}" onerror="this.style.display='none';this.parentElement.innerHTML='🎴';">` : "🎴"; div.innerHTML = `<div class="card-art">${img}</div><h3>${escapeHtml(t.name || "Cyber Card")}</h3><span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span><p>Boost: ${Number(t.click_boost) || 1}x</p><p class="power-text">Power: ${Number(t.mining_power) || 0}</p><p>Level: ${Number(item.level) || 1}</p><div class="input-row"><input type="number" min="1" id="price_${String(item.id).replaceAll("_","")}" placeholder="Qiymət"><button class="btn btn-gold" onclick="event.stopPropagation(); listCardForSale('${item.id}')">Sat</button></div>`; div.addEventListener("click", () => { selectedCard = { user_card_id:item.id, template_id:t.id, name:t.name, boost:Number(t.click_boost)||1 }; selectedBoost = Number(t.click_boost) || 1; renderMyCards(myCardsCache); updateUI(); cardLog.innerText = "Seçildi: " + (t.name || "Cyber Card") + " / Boost: " + selectedBoost + "x"; }); myCards.appendChild(div); if(index === 0 &&!selectedCard){ selectedCard = { user_card_id:item.id, template_id:t.id, name:t.name, boost:Number(t.click_boost)||1 }; selectedBoost = Number(t.click_boost) || 1; updateUI(); } }); }
+    async function listCardForSale(userCardId){ const safeId = String(userCardId).replaceAll("_",""); const input = document.getElementById("price_" + safeId); const price = Number(input? input.value : 0); if(!price || price <= 0){ alert("Düzgün qiymət yaz."); return; } try{ const data = await api("list_card_for_sale",{ user_card_id:Number(userCardId), price }); renderMyCards(data.myCards || []); saveFirebaseMarketEvent("list_card_for_sale",{ user_card_id:Number(userCardId), price }); cardLog.innerText = "✅ Kart satışa qoyuldu."; }catch(err){ cardLog.innerText = "❌ Satış xətası: " + err.message; } }
+    async function refreshAll(){ try{ const data = await api("init",{ referrer_id: getReferrerIdFromStartParam() }); telegramUser = data.user; applyProfile(data.profile); renderMyCards(data.myCards || []); renderReferralStats(data.referralStats); updateBoxTimers(); clickLog.innerText = "✅ Yeniləndi."; }catch(err){ clickLog.innerText = "❌ Yeniləmə xətası: " + err.message; } }
+    function escapeHtml(text){ return String(text).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+    setInterval(() => { if(pendingClicks > 0 && hasTelegramInitData()) claimClickReward(true); }, 5000);
+    init();
 </script>
 </body>
 </html>
