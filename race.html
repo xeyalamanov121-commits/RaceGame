@@ -5,23 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Bearbee Arena | Deposit & Race</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <style>
 :root{
 --bg:#02060d; --gold:#ffd700; --green:#22ff66; --red:#ff2438; --blue:#1597ff; --muted:#9aa7b8;
 --panel:#08111c; --panel2:#0c1624;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{
-min-height:100vh;
-background:
-radial-gradient(circle at top, rgba(0,93,255,0.20), transparent 35%),
-radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 30%),
-linear-gradient(180deg,#01040a,#030812 60%,#000);
-color:#fff;
-font-family:'Segoe UI',Arial,sans-serif;
-padding:20px 16px 100px;
-}
+body{min-height:100vh;background:radial-gradient(circle at top, rgba(0,93,255,0.20), transparent 35%),radial-gradient(circle at bottom, rgba(255,215,0,0.12), transparent 30%),linear-gradient(180deg,#01040a,#030812 60%,#000);color:#fff;font-family:'Segoe UI',Arial,sans-serif;padding:20px 16px 100px;}
 .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
 .back{color:var(--gold);text-decoration:none;font-weight:900;background:rgba(8,18,32,0.85);border:1px solid rgba(60,91,128,0.7);border-radius:14px;padding:10px 14px;}
 .logo{text-align:center;}
@@ -60,7 +50,6 @@ padding:20px 16px 100px;
 </style>
 </head>
 <body>
-
 <!-- Top Bar -->
 <div class="top-bar">
 <a href="./index.html" class="back">← Menyu</a>
@@ -147,7 +136,7 @@ padding:20px 16px 100px;
 <script type="module">
 // ---------- Firebase Setup ----------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, push, set, update, onValue, runTransaction, onDisconnect, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, push, set, update, onValue, runTransaction, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {apiKey:"AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",authDomain:"racegane.firebaseapp.com",databaseURL:"https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"racegane",storageBucket:"racegane.firebasestorage.app",messagingSenderId:"477893876737",appId:"1:477893876737:web:1b561bb3224b0086c63400"};
 const app = initializeApp(firebaseConfig);
@@ -187,7 +176,23 @@ document.getElementById("cancelBtn").style.display="block";
 const depRef=push(ref(rdb, `users/${myId}/deposits`));
 pendingKey=depRef.key;
 await set(depRef,{user_tg_id:myId,user_name:myName,ton_amount:selectedTon,coin_amount:Math.round(selectedTon*10000),status:"pending",timestamp:Date.now()});
-onValue(ref(rdb, `users/${myId}/deposits/${pendingKey}/status`),snap=>{const st=snap.val();if(st==="completed"){setStatus("success","✅ Depozit təsdiqləndi! Coin hesabınıza əlavə edildi.");document.getElementById("cancelBtn").style.display="none";pendingKey=null;loadHistory();}});
+// TON balansını da update et
+onValue(ref(rdb, `users/${myId}/deposits/${pendingKey}/status`),snap=>{
+const st=snap.val();
+if(st==="completed"){
+runTransaction(ref(rdb, `users/${myId}`), d=>{
+if(d){
+d.coins=(d.coins||0)+Math.round(selectedTon*10000);
+d.ton_balance=(d.ton_balance||0)+selectedTon;
+}
+return d;
+});
+setStatus("success","✅ Depozit təsdiqləndi! Coin və TON hesabınıza əlavə edildi.");
+document.getElementById("cancelBtn").style.display="none";
+pendingKey=null;
+loadHistory();
+}
+});
 loadHistory();
 });
 
@@ -198,8 +203,19 @@ loadHistory();
 function setStatus(type,msg){const box=document.getElementById("statusBox");box.className="status-box status-"+type;box.innerText=msg;}
 
 // ---------- Race Logic ----------
-// ... burada sənin Race JS kodu eyni şəkildə əlavə olunacaq, yuxarıda göndərdiyin Race listener və funksiyalar
-</script>
+let roomCode=null;
+let players=[];
+let isCreator=false;
 
-</body>
-</html>
+const roomInput=document.getElementById("roomInput");
+const roomCodeText=document.getElementById("roomCodeText");
+const playerCountText=document.getElementById("playerCountText");
+const playersList=document.getElementById("playersList");
+
+const createBtn=document.getElementById("createBtn");
+const joinBtn=document.getElementById("joinBtn");
+const readyBtn=document.getElementById("readyBtn");
+const startBtn=document.getElementById("startBtn");
+const speedBtn=document.getElementById("speedBtn");
+const leaveBtn=document.getElementById("leaveBtn");
+const gameControls
