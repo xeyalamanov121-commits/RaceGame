@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="az">
 <head>
@@ -8,8 +7,8 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <!-- ✅ OnClickA TMA Mükafatlı Video SDK -->
-    <script src="https://cdn.onclicka.com/tma/1.0/sdk.js" async></script>
+    <!-- ✅ OnClickA TMA Mükafatlı Video SDK — defer ilə yüklə -->
+    <script src="https://cdn.onclicka.com/tma/1.0/sdk.js" defer></script>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -844,17 +843,16 @@
 
     /* ════════════════════════════════════════
        ✅ OnClickA TMA Mükafatlı Video — showAd()
-       Bütün reklamlar (qutular + enerji) buradan keçir.
-       Block ID: 442774
+       DÜZƏLDİLMİŞ VERSİYA: xəta vermir, yumşaq keçir
     ════════════════════════════════════════ */
     function showAd(label) {
         return new Promise((resolve) => {
             adLog.innerText = "🎥 Reklam yüklənir...";
 
-            // OnClickA SDK-nın hazır olmasını gözlə
             const waitForSDK = (attempts) => {
                 if (attempts <= 0) {
-                    adLog.innerText = "⚠️ OnClickA SDK yüklənmədi. Yenidən cəhd edin.";
+                    // SDK yüklənmədisə — xəta mesajı yox, sadəcə keç
+                    adLog.innerText = "⚠️ Reklam sistemi hazır deyil. Sonra cəhd edin.";
                     resolve(false);
                     return;
                 }
@@ -862,7 +860,7 @@
                 if (window.OnClickaSDK) {
                     startAd();
                 } else {
-                    setTimeout(() => waitForSDK(attempts - 1), 300);
+                    setTimeout(() => waitForSDK(attempts - 1), 500);
                 }
             };
 
@@ -870,10 +868,12 @@
                 try {
                     const adBlock = window.OnClickaSDK.createRewardedAd({
                         blockId: ONCLICKA_BLOCK_ID,
+
                         onReward: () => {
                             adLog.innerText = "✅ Reklam tamamlandı: " + label;
                             resolve(true);
                         },
+
                         onClose: () => {
                             // onReward çağrılmadısa mükafat verilmir
                             setTimeout(() => {
@@ -883,22 +883,26 @@
                                 }
                             }, 400);
                         },
+
                         onError: (err) => {
-                            console.log("OnClickA xətası:", err);
-                            adLog.innerText = "❌ Reklam xətası. Mükafat verilmədi.";
+                            // Reklam tapılmadı və ya fill rate sıfırdır
+                            console.log("OnClickA onError:", err);
+                            adLog.innerText = "⚠️ Hal-hazırda reklam yoxdur. Bir az sonra cəhd edin.";
                             resolve(false);
                         }
                     });
 
                     adBlock.show();
+
                 } catch (err) {
                     console.log("OnClickA createRewardedAd xətası:", err);
-                    adLog.innerText = "❌ Reklam başladıla bilmədi.";
+                    adLog.innerText = "⚠️ Reklam başladıla bilmədi. Yenidən cəhd edin.";
                     resolve(false);
                 }
             };
 
-            waitForSDK(20); // 20 × 300ms = 6 saniyə gözlər
+            // 30 × 500ms = 15 saniyə gözlər (əvvəl 20×300ms=6s idi)
+            waitForSDK(30);
         });
     }
 
