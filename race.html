@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bearbee Arena | Manual</title>
+<title>Bearbee Arena | Manual Deposit</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0b0f1a;--panel:#121927;--accent:#8b3cff;--gold:#ffd700;--green:#22ff66;--red:#ff2438;}
+:root{--bg:#0b0f1a;--panel:#121927;--accent:#8b3cff;--gold:#ffd700;--green:#22ff66;--red:#ff2438;--blue:#0088cc;}
 body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:#fff;min-height:100vh;}
 .container{max-width:600px;margin:0 auto;padding:10px;}
 .panel{background:var(--panel);margin:12px 0;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;}
@@ -14,6 +14,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:#fff;min
 .copy-btn{background:linear-gradient(180deg,#8b3cff,#5a00ff);border:none;color:#fff;padding:14px;border-radius:10px;width:100%;cursor:pointer;font-weight:700;font-size:16px;transition:0.2s;}
 .copy-btn:hover{transform:scale(1.02);}
 .copy-btn:disabled{background:#333;color:#666;cursor:not-allowed;transform:none;}
+.telegram-btn{background:var(--blue)!important;}
 .status-box{padding:12px;border-radius:10px;background:rgba(139,60,255,0.1);text-align:center;font-weight:900;word-break:break-all;}
 input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;font-size:16px;}
 .bet-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
@@ -25,46 +26,49 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
 .car{width:50px;height:50px;border-radius:10px;position:absolute;transition:left 0.3s ease;display:flex;align-items:center;justify-content:center;font-size:24px;}
 .finish{position:absolute;right:0;top:0;width:8px;height:100%;background:repeating-linear-gradient(0deg,#fff 0px,#fff 10px,#000 10px,#000 20px);}
 .hidden{display:none!important;}
-.tab-btns{display:flex;gap:10px;margin-bottom:10px;}
-.tab-btn{flex:1;padding:12px;border-radius:10px;border:none;background:#1a2332;color:#fff;font-weight:700;cursor:pointer;}
-.tab-btn.active{background:#8b3cff;}
 .address-box{background:#000;padding:12px;border-radius:8px;font-family:monospace;font-size:12px;text-align:center;cursor:pointer;}
 .address-box:hover{background:#111;}
+.step{padding:10px;background:rgba(255,149,0,0.1);border-left:3px solid #ff9500;border-radius:5px;font-size:14px;}
 </style>
 </head>
 <body>
 <div class="container">
 
-<div class="tab-btns">
-  <button class="tab-btn active" id="tabDeposit">💎 Deposit</button>
-  <button class="tab-btn" id="tabLobby">🎮 Lobby</button>
-  <button class="tab-btn" id="tabGame" disabled>🏎️ Oyun</button>
-</div>
-
-<!-- DEPOSIT PANEL - MANUAL -->
+<!-- DEPOSIT PANEL -->
 <div class="panel" id="depositPanel">
-  <div class="panel-title">💎 Manual Deposit & Balans</div>
+  <div class="panel-title">💎 Deposit Et və Oyna</div>
   <div class="balance" id="balance">Balans: 0.00 TON</div>
   
-  <div class="status-box" style="background:rgba(255,149,0,0.2);">
-    <b>1.</b> Aşağıdakı ünvana TON göndər<br>
-    <b>2.</b> Transaction hash-i Admin-ə göndər<br>
-    <b>3.</b> Balansın artırılacaq
+  <div class="step">
+    <b>Addım 1:</b> Aşağıdakı ünvana TON göndər<br>
+    <small>Min: 0.5 TON</small>
   </div>
   
-  <div class="address-box" id="walletAddress" onclick="copyAddress()">
+  <div class="address-box" onclick="copyAddress()">
     EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp
   </div>
-  
   <button class="copy-btn" onclick="copyAddress()">📋 Ünvanı Kopyala</button>
   
-  <div class="status-box">
-    Admin: 9947429 | Komissiya: 30%<br>
-    Min deposit: 0.5 TON
+  <div class="step">
+    <b>Addım 2:</b> Telegram-a yaz<br>
+    <small>User ID + Transaction Hash göndər</small>
+  </div>
+  
+  <button class="copy-btn telegram-btn" onclick="openTelegram()">
+    ✈️ @avanqard12 - Telegram-da Yaz
+  </button>
+  
+  <div class="step">
+    <b>Addım 3:</b> Admin balansını artıracaq<br>
+    <small>"Balansı Yenilə" bas və oyna</small>
   </div>
   
   <button class="copy-btn" id="refreshBtn">🔄 Balansı Yenilə</button>
-  <div class="status-box" id="depositStatus">Deposit et və Admin-ə yaz</div>
+  
+  <div class="status-box">
+    User ID: <span id="userIdDisplay"></span><br>
+    <small>Kopyala və Admin-ə göndər</small>
+  </div>
 </div>
 
 <!-- LOBBY PANEL -->
@@ -80,6 +84,7 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
   <button class="copy-btn" id="createRoomBtn">➕ Yeni Otaq Yarat</button>
   <button class="copy-btn" id="joinRoomBtn">🔗 Otağa Qatıl</button>
   <div class="status-box" id="lobbyStatus">Bet: 0.5 TON seçildi</div>
+  <button class="copy-btn" onclick="showDeposit()">⬅️ Geri Qayıt</button>
 </div>
 
 <!-- OYUN PANEL -->
@@ -100,8 +105,6 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
   </div>
 </div>
 
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, update, onValue, get, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -119,44 +122,48 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const rdb = getDatabase(app);
 
-// USER ID - localStorage-də saxla ki, refresh edəndə itməsin
 let myId = localStorage.getItem('bearbee_userid');
 if (!myId) {
   myId = "user_" + Math.floor(Math.random()*100000);
   localStorage.setItem('bearbee_userid', myId);
 }
+document.getElementById('userIdDisplay').innerText = myId;
 
 let myBalance = 0, selectedBet = 0.5;
 let roomCode = null, isMyTurn = false, gameStarted = false;
 let playerPos = 0, opponentPos = 0, roomData = null;
 
-// ÜNVANI KOPYALA
+const ADMIN_TG = "avanqard12";
+const WALLET = "EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp";
+
+// KOPYALA FUNKSİYALARI
 window.copyAddress = function() {
-  const addr = "EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp";
-  navigator.clipboard.writeText(addr);
-  document.getElementById('depositStatus').innerText = "✅ Ünvan kopyalandı!";
-  setTimeout(() => {
-    document.getElementById('depositStatus').innerText = "Deposit et və Admin-ə yaz";
-  }, 2000);
+  navigator.clipboard.writeText(WALLET);
+  alert("✅ Ünvan kopyalandı!\n\n" + WALLET);
 }
 
-// TAB SWITCHING
-const tabs = {
-  deposit: document.getElementById('depositPanel'),
-  lobby: document.getElementById('lobbyPanel'),
-  game: document.getElementById('gamePanel')
-};
-
-function showTab(tab) {
-  Object.values(tabs).forEach(p => p.classList.add('hidden'));
-  tabs[tab].classList.remove('hidden');
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+window.openTelegram = function() {
+  const msg = encodeURIComponent(`Salam! Deposit etdim.\nUser ID: ${myId}\nHash: `);
+  window.open(`https://t.me/${ADMIN_TG}?text=${msg}`, '_blank');
 }
 
-document.getElementById('tabDeposit').onclick = () => showTab('deposit');
-document.getElementById('tabLobby').onclick = () => { if(myBalance > 0) showTab('lobby'); else alert("Əvvəl deposit et"); };
-document.getElementById('tabGame').onclick = () => { if(roomCode) showTab('game'); };
+window.showDeposit = function() {
+  document.getElementById('depositPanel').classList.remove('hidden');
+  document.getElementById('lobbyPanel').classList.add('hidden');
+  document.getElementById('gamePanel').classList.add('hidden');
+}
+
+function showLobby() {
+  document.getElementById('depositPanel').classList.add('hidden');
+  document.getElementById('lobbyPanel').classList.remove('hidden');
+  document.getElementById('gamePanel').classList.add('hidden');
+}
+
+function showGame() {
+  document.getElementById('depositPanel').classList.add('hidden');
+  document.getElementById('lobbyPanel').classList.add('hidden');
+  document.getElementById('gamePanel').classList.remove('hidden');
+}
 
 // BALANS
 async function loadBalance() {
@@ -164,10 +171,10 @@ async function loadBalance() {
   myBalance = snap.val() || 0;
   document.getElementById('balance').innerText = `Balans: ${myBalance.toFixed(2)} TON`;
   updateBetButtons();
+  
+  // Balans varsa Lobby-ni göstər
   if (myBalance > 0) {
-    document.getElementById('tabLobby').disabled = false;
-  } else {
-    document.getElementById('tabLobby').disabled = true;
+    showLobby();
   }
 }
 
@@ -178,7 +185,14 @@ function updateBetButtons() {
   });
 }
 
-document.getElementById('refreshBtn').onclick = loadBalance;
+document.getElementById('refreshBtn').onclick = async () => {
+  await loadBalance();
+  if (myBalance > 0) {
+    alert(`✅ Balans yeniləndi: ${myBalance.toFixed(2)} TON\n\nOynaya bilərsən!`);
+  } else {
+    alert("⚠️ Balans hələ 0-dır.\n\nAdmin hələ artırmayıb. Telegram-dan yaz.");
+  }
+};
 
 // BET SEÇİMİ
 document.querySelectorAll('.bet-btn').forEach(btn => {
@@ -210,8 +224,7 @@ document.getElementById('createRoomBtn').onclick = async () => {
   });
 
   await loadBalance();
-  showTab('game');
-  document.getElementById('tabGame').disabled = false;
+  showGame();
   document.getElementById('potAmount').innerText = selectedBet;
   listenRoom();
 };
@@ -240,8 +253,7 @@ document.getElementById('joinRoomBtn').onclick = async () => {
   await update(ref(rdb, `rooms/${roomCode}`), { pot: roomBet * 2 });
 
   await loadBalance();
-  showTab('game');
-  document.getElementById('tabGame').disabled = false;
+  showGame();
   listenRoom();
 };
 
@@ -306,8 +318,7 @@ document.getElementById("leaveBtn").onclick = () => leaveRoom();
 
 async function leaveRoom() {
   if (unsubscribe) unsubscribe();
-  showTab('lobby');
-  document.getElementById('tabGame').disabled = true;
+  showLobby();
   roomCode = null;
   document.getElementById("readyBtn").disabled = false;
   await loadBalance();
