@@ -11,14 +11,14 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:#fff;min
 .container{max-width:600px;margin:0 auto;padding:10px;}
 .panel{background:var(--panel);margin:12px 0;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;}
 .panel-title{color:var(--gold);font-weight:900;text-align:center;font-size:20px;}
-.copy-btn{background:linear-gradient(180deg,#8b3cff,#5a00ff);border:none;color:#fff;padding:14px;border-radius:10px;width:100%;cursor:pointer;font-weight:700;font-size:16px;transition:0.2s;}
-.copy-btn:hover{transform:scale(1.02);}
-.copy-btn:disabled{background:#333;color:#666;cursor:not-allowed;transform:none;}
+.copy-btn{background:linear-gradient(180deg,#8b3cff,#5a00ff);border:none;color:#fff;padding:14px;border-radius:10px;width:100%;cursor:pointer;font-weight:700;font-size:16px;}
+.copy-btn:active{transform:scale(0.98);}
+.copy-btn:disabled{background:#333;color:#666;cursor:not-allowed;}
 .telegram-btn{background:var(--blue)!important;}
 .status-box{padding:12px;border-radius:10px;background:rgba(139,60,255,0.1);text-align:center;font-weight:900;word-break:break-all;}
 input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#fff;font-size:16px;}
 .bet-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-.bet-btn{background:#1a2332;border:2px solid #8b3cff;padding:20px;border-radius:10px;color:#fff;font-weight:900;cursor:pointer;transition:0.2s;}
+.bet-btn{background:#1a2332;border:2px solid #8b3cff;padding:20px;border-radius:10px;color:#fff;font-weight:900;cursor:pointer;}
 .bet-btn.active{background:#8b3cff;box-shadow:0 0 20px rgba(139,60,255,0.5);}
 .bet-btn:disabled{border-color:#333;color:#666;cursor:not-allowed;opacity:0.3;}
 .balance{font-size:28px;color:var(--green);text-align:center;font-weight:900;}
@@ -36,11 +36,10 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
 <body>
 <div class="container">
 
-<!-- TAB DÜYMƏLƏRİ - HƏMİŞƏ GÖRÜNÜR -->
 <div class="tab-btns">
-  <button class="tab-btn active" onclick="showTab('deposit')">💎 Deposit</button>
-  <button class="tab-btn" onclick="showTab('lobby')">🎮 Lobby</button>
-  <button class="tab-btn" onclick="showTab('game')">🏎️ Oyun</button>
+  <button class="tab-btn active" id="tabDepositBtn">💎 Deposit</button>
+  <button class="tab-btn" id="tabLobbyBtn">🎮 Lobby</button>
+  <button class="tab-btn" id="tabGameBtn">🏎️ Oyun</button>
 </div>
 
 <!-- DEPOSIT PANEL -->
@@ -53,17 +52,17 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
     <small>Min: 0.5 TON</small>
   </div>
   
-  <div class="address-box" onclick="copyAddress()">
+  <div class="address-box" id="walletAddress">
     EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp
   </div>
-  <button class="copy-btn" onclick="copyAddress()">📋 Ünvanı Kopyala</button>
+  <button class="copy-btn" id="copyAddressBtn">📋 Ünvanı Kopyala</button>
   
   <div class="step">
     <b>Addım 2:</b> Telegram-a yaz<br>
     <small>User ID + Transaction Hash göndər</small>
   </div>
   
-  <button class="copy-btn telegram-btn" onclick="openTelegram()">
+  <button class="copy-btn telegram-btn" id="telegramBtn">
     ✈️ @avanqard12 - Telegram-da Yaz
   </button>
   
@@ -116,8 +115,6 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
   </div>
 </div>
 
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, update, onValue, get, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -148,27 +145,35 @@ let playerPos = 0, opponentPos = 0, roomData = null;
 
 const WALLET = "EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp";
 
-// KOPYALA FUNKSİYALARI
-window.copyAddress = function() {
-  navigator.clipboard.writeText(WALLET);
-  alert("✅ Ünvan kopyalandı!\n\n" + WALLET);
-}
-
-window.openTelegram = function() {
-  const msg = encodeURIComponent(`Salam! Deposit etdim.\nUser ID: ${myId}\nMəbləğ: TON\nHash: `);
-  window.open(`https://t.me/avanqard12?text=${msg}`, '_blank');
-}
-
-// TAB SWITCHING
-window.showTab = function(tab) {
+// TAB SWITCHING - DÜZƏLDİ
+function showTab(tab) {
   document.getElementById('depositPanel').classList.add('hidden');
   document.getElementById('lobbyPanel').classList.add('hidden');
   document.getElementById('gamePanel').classList.add('hidden');
   document.getElementById(tab + 'Panel').classList.remove('hidden');
   
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Btn').classList.add('active');
 }
+
+// TAB DÜYMƏLƏRİ
+document.getElementById('tabDepositBtn').addEventListener('click', () => showTab('deposit'));
+document.getElementById('tabLobbyBtn').addEventListener('click', () => showTab('lobby'));
+document.getElementById('tabGameBtn').addEventListener('click', () => {
+  if(roomCode) showTab('game');
+  else alert('Əvvəl otaq yarat və ya qoşul');
+});
+
+// KOPYALA
+document.getElementById('copyAddressBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(WALLET);
+  alert("✅ Ünvan kopyalandı!\n\n" + WALLET);
+});
+
+document.getElementById('telegramBtn').addEventListener('click', () => {
+  const msg = encodeURIComponent(`Salam! Deposit etdim.\nUser ID: ${myId}\nMəbləğ: TON\nHash: `);
+  window.open(`https://t.me/avanqard12?text=${msg}`, '_blank');
+});
 
 // BALANS
 async function loadBalance() {
@@ -191,7 +196,7 @@ function updateBetButtons() {
   });
 }
 
-document.getElementById('refreshBtn').onclick = async () => {
+document.getElementById('refreshBtn').addEventListener('click', async () => {
   await loadBalance();
   if (myBalance > 0) {
     alert(`✅ Balans yeniləndi: ${myBalance.toFixed(2)} TON\n\nLobby-ə keçə bilərsən!`);
@@ -199,21 +204,21 @@ document.getElementById('refreshBtn').onclick = async () => {
   } else {
     alert("⚠️ Balans hələ 0-dır.\n\nAdmin hələ artırmayıb. @avanqard12 yaz.");
   }
-};
+});
 
 // BET SEÇİMİ
 document.querySelectorAll('.bet-btn').forEach(btn => {
-  btn.onclick = () => {
+  btn.addEventListener('click', () => {
     document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     selectedBet = parseFloat(btn.dataset.bet);
     const win = (selectedBet * 2 * 0.7).toFixed(2);
     document.getElementById('lobbyStatus').innerText = `Bet: ${selectedBet} TON | Uduş: ${win} TON`;
-  };
+  });
 });
 
 // OTAQ YARAT
-document.getElementById('createRoomBtn').onclick = async () => {
+document.getElementById('createRoomBtn').addEventListener('click', async () => {
   if (myBalance < selectedBet) return alert("Balans kifayət deyil. Deposit et");
 
   const result = await runTransaction(ref(rdb, `users/${myId}/balance`), (c) => {
@@ -234,10 +239,10 @@ document.getElementById('createRoomBtn').onclick = async () => {
   showTab('game');
   document.getElementById('potAmount').innerText = selectedBet;
   listenRoom();
-};
+});
 
 // OTAĞA QATIL
-document.getElementById('joinRoomBtn').onclick = async () => {
+document.getElementById('joinRoomBtn').addEventListener('click', async () => {
   roomCode = document.getElementById('roomInput').value.trim();
   if (!roomCode) return alert("Oda kodu yaz");
   
@@ -262,7 +267,7 @@ document.getElementById('joinRoomBtn').onclick = async () => {
   await loadBalance();
   showTab('game');
   listenRoom();
-};
+});
 
 // OYUN
 function getTrackWidth() { return document.getElementById("track").offsetWidth - 55; }
@@ -303,25 +308,25 @@ function listenRoom() {
   });
 }
 
-document.getElementById("readyBtn").onclick = async () => {
+document.getElementById("readyBtn").addEventListener('click', async () => {
   await update(ref(rdb, `rooms/${roomCode}/players/${myId}`), 0);
   document.getElementById("readyBtn").disabled = true;
-};
+});
 
-document.getElementById("startBtn").onclick = async () => {
+document.getElementById("startBtn").addEventListener('click', async () => {
   await update(ref(rdb, `rooms/${roomCode}`), { started: true, status: "playing" });
-};
+});
 
-document.getElementById("clickBtn").onclick = async () => {
+document.getElementById("clickBtn").addEventListener('click', async () => {
   if (!isMyTurn ||!gameStarted) return;
   const newPos = playerPos + 30;
   const oppId = getOpponentId();
   if (!oppId) return;
   await set(ref(rdb, `rooms/${roomCode}/players/${myId}`), newPos);
   await update(ref(rdb, `rooms/${roomCode}`), { turn: oppId });
-};
+});
 
-document.getElementById("leaveBtn").onclick = () => leaveRoom();
+document.getElementById("leaveBtn").addEventListener('click', () => leaveRoom());
 
 async function leaveRoom() {
   if (unsubscribe) unsubscribe();
