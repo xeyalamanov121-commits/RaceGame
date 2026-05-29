@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="az">
 <head>
@@ -7,15 +8,8 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <!-- RichAds Telegram Ads -->
-    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
-    <script>
-        window.TelegramAdsController = new TelegramAdsController();
-        window.TelegramAdsController.initialize({
-            pubId: "1012853",
-            appId: "7573",
-        });
-    </script>
+    <!-- ✅ OnClickA TMA Mükafatlı Video SDK -->
+    <script src="https://cdn.onclicka.com/tma/1.0/sdk.js" async></script>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -652,7 +646,7 @@
             <!-- QUTULAR -->
             <section class="panel">
                 <h2 class="panel-title">Reklamlı Qutular</h2>
-                <p class="panel-sub">Qutu yalnız Telegram reklam tamamlanandan sonra mükafat verir.</p>
+                <p class="panel-sub">Qutu yalnız reklam tamamlanandan sonra mükafat verir.</p>
 
                 <div class="grid-3">
                     <div class="box-card">
@@ -796,6 +790,11 @@
     const MINING_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-mining";
     const MINI_APP_URL   = "https://t.me/Bearbeee_bot/GameR";
 
+    /* ════════════════════════════════════════
+       ✅ OnClickA TMA Mükafatlı Video — BLOCK ID
+    ════════════════════════════════════════ */
+    const ONCLICKA_BLOCK_ID = "442774";
+
     const firebaseConfig = {
         apiKey: "AIzaSyCzywfKRvjp0stL9ptl1ox3mUpfZ8VG27o",
         authDomain: "gamer-d11ba.firebaseapp.com",
@@ -844,27 +843,62 @@
     const tapBear        = document.getElementById("tapBear");
 
     /* ════════════════════════════════════════
-       TELEGRAM ADS — bütün reklamlar üçün
-       Həm qutular, həm enerji butonu buradan keçir
+       ✅ OnClickA TMA Mükafatlı Video — showAd()
+       Bütün reklamlar (qutular + enerji) buradan keçir.
+       Block ID: 442774
     ════════════════════════════════════════ */
-    function showAd(label){
-        return new Promise(async (resolve) => {
-            const ctrl = window.TelegramAdsController;
-            if(!ctrl){
-                adLog.innerText = "⚠️ Telegram Ads yüklənmədi, yenidən cəhd edin.";
-                resolve(false);
-                return;
-            }
-            try{
-                adLog.innerText = "🎥 Telegram reklam açılır...";
-                await ctrl.show();
-                adLog.innerText = "✅ Reklam tamamlandı: " + label;
-                resolve(true);
-            }catch(err){
-                console.log("TelegramAds xətası:", err);
-                adLog.innerText = "❌ Reklam tamamlanmadı. Mükafat verilmədi.";
-                resolve(false);
-            }
+    function showAd(label) {
+        return new Promise((resolve) => {
+            adLog.innerText = "🎥 Reklam yüklənir...";
+
+            // OnClickA SDK-nın hazır olmasını gözlə
+            const waitForSDK = (attempts) => {
+                if (attempts <= 0) {
+                    adLog.innerText = "⚠️ OnClickA SDK yüklənmədi. Yenidən cəhd edin.";
+                    resolve(false);
+                    return;
+                }
+
+                if (window.OnClickaSDK) {
+                    startAd();
+                } else {
+                    setTimeout(() => waitForSDK(attempts - 1), 300);
+                }
+            };
+
+            const startAd = () => {
+                try {
+                    const adBlock = window.OnClickaSDK.createRewardedAd({
+                        blockId: ONCLICKA_BLOCK_ID,
+                        onReward: () => {
+                            adLog.innerText = "✅ Reklam tamamlandı: " + label;
+                            resolve(true);
+                        },
+                        onClose: () => {
+                            // onReward çağrılmadısa mükafat verilmir
+                            setTimeout(() => {
+                                if (adLog.innerText.includes("yüklənir")) {
+                                    adLog.innerText = "❌ Reklam tamamlanmadı. Mükafat verilmədi.";
+                                    resolve(false);
+                                }
+                            }, 400);
+                        },
+                        onError: (err) => {
+                            console.log("OnClickA xətası:", err);
+                            adLog.innerText = "❌ Reklam xətası. Mükafat verilmədi.";
+                            resolve(false);
+                        }
+                    });
+
+                    adBlock.show();
+                } catch (err) {
+                    console.log("OnClickA createRewardedAd xətası:", err);
+                    adLog.innerText = "❌ Reklam başladıla bilmədi.";
+                    resolve(false);
+                }
+            };
+
+            waitForSDK(20); // 20 × 300ms = 6 saniyə gözlər
         });
     }
 
@@ -1156,7 +1190,7 @@
     }
 
     /* ════════════════════════════════════════
-       ENERJİ BUTONU — TelegramAdsController
+       ENERJİ BUTONU — OnClickA Mükafatlı Video
     ════════════════════════════════════════ */
     async function watchEnergyAd(){
         const watched = await showAd("energy_100");
@@ -1172,7 +1206,7 @@
     }
 
     /* ════════════════════════════════════════
-       QUTULAR — TelegramAdsController
+       QUTULAR — OnClickA Mükafatlı Video
     ════════════════════════════════════════ */
     async function openRewardBox(minutes, reward){
         const key     = "box_" + minutes + "_ready_at";
