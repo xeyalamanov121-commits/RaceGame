@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Bearbee Arena | Manual Deposit</title>
+<title>Bearbee Arena</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0b0f1a;--panel:#121927;--accent:#8b3cff;--gold:#ffd700;--green:#22ff66;--red:#ff2438;--blue:#0088cc;}
@@ -26,13 +26,22 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
 .car{width:50px;height:50px;border-radius:10px;position:absolute;transition:left 0.3s ease;display:flex;align-items:center;justify-content:center;font-size:24px;}
 .finish{position:absolute;right:0;top:0;width:8px;height:100%;background:repeating-linear-gradient(0deg,#fff 0px,#fff 10px,#000 10px,#000 20px);}
 .hidden{display:none!important;}
-.address-box{background:#000;padding:12px;border-radius:8px;font-family:monospace;font-size:12px;text-align:center;cursor:pointer;}
-.address-box:hover{background:#111;}
+.tab-btns{display:flex;gap:8px;margin-bottom:10px;}
+.tab-btn{flex:1;padding:12px;border-radius:10px;border:none;background:#1a2332;color:#fff;font-weight:700;cursor:pointer;font-size:14px;}
+.tab-btn.active{background:#8b3cff;}
+.address-box{background:#000;padding:12px;border-radius:8px;font-family:monospace;font-size:11px;text-align:center;cursor:pointer;}
 .step{padding:10px;background:rgba(255,149,0,0.1);border-left:3px solid #ff9500;border-radius:5px;font-size:14px;}
 </style>
 </head>
 <body>
 <div class="container">
+
+<!-- TAB DÜYMƏLƏRİ - HƏMİŞƏ GÖRÜNÜR -->
+<div class="tab-btns">
+  <button class="tab-btn active" onclick="showTab('deposit')">💎 Deposit</button>
+  <button class="tab-btn" onclick="showTab('lobby')">🎮 Lobby</button>
+  <button class="tab-btn" onclick="showTab('game')">🏎️ Oyun</button>
+</div>
 
 <!-- DEPOSIT PANEL -->
 <div class="panel" id="depositPanel">
@@ -74,6 +83,9 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
 <!-- LOBBY PANEL -->
 <div class="panel hidden" id="lobbyPanel">
   <div class="panel-title">🏎️ Otaq Seç - Bet Məbləği</div>
+  <div class="status-box" id="balanceWarn" style="background:rgba(255,36,56,0.2);">
+    ⚠️ Balans kifayət deyil. Deposit et
+  </div>
   <div class="bet-grid">
     <button class="bet-btn active" data-bet="0.5">0.5 TON<br><small>Uduş: 0.7 TON</small></button>
     <button class="bet-btn" data-bet="1">1 TON<br><small>Uduş: 1.4 TON</small></button>
@@ -84,7 +96,6 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
   <button class="copy-btn" id="createRoomBtn">➕ Yeni Otaq Yarat</button>
   <button class="copy-btn" id="joinRoomBtn">🔗 Otağa Qatıl</button>
   <div class="status-box" id="lobbyStatus">Bet: 0.5 TON seçildi</div>
-  <button class="copy-btn" onclick="showDeposit()">⬅️ Geri Qayıt</button>
 </div>
 
 <!-- OYUN PANEL -->
@@ -103,6 +114,8 @@ input{width:100%;padding:12px;border-radius:8px;border:none;background:rgba(255,
     <div class="car" id="opponentCar" style="background:#ff2438;top:75px;left:0;">🏎️</div>
     <div class="finish"></div>
   </div>
+</div>
+
 </div>
 
 <script type="module">
@@ -133,7 +146,6 @@ let myBalance = 0, selectedBet = 0.5;
 let roomCode = null, isMyTurn = false, gameStarted = false;
 let playerPos = 0, opponentPos = 0, roomData = null;
 
-const ADMIN_TG = "avanqard12";
 const WALLET = "EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp";
 
 // KOPYALA FUNKSİYALARI
@@ -143,26 +155,19 @@ window.copyAddress = function() {
 }
 
 window.openTelegram = function() {
-  const msg = encodeURIComponent(`Salam! Deposit etdim.\nUser ID: ${myId}\nHash: `);
-  window.open(`https://t.me/${ADMIN_TG}?text=${msg}`, '_blank');
+  const msg = encodeURIComponent(`Salam! Deposit etdim.\nUser ID: ${myId}\nMəbləğ: TON\nHash: `);
+  window.open(`https://t.me/avanqard12?text=${msg}`, '_blank');
 }
 
-window.showDeposit = function() {
-  document.getElementById('depositPanel').classList.remove('hidden');
-  document.getElementById('lobbyPanel').classList.add('hidden');
-  document.getElementById('gamePanel').classList.add('hidden');
-}
-
-function showLobby() {
-  document.getElementById('depositPanel').classList.add('hidden');
-  document.getElementById('lobbyPanel').classList.remove('hidden');
-  document.getElementById('gamePanel').classList.add('hidden');
-}
-
-function showGame() {
+// TAB SWITCHING
+window.showTab = function(tab) {
   document.getElementById('depositPanel').classList.add('hidden');
   document.getElementById('lobbyPanel').classList.add('hidden');
-  document.getElementById('gamePanel').classList.remove('hidden');
+  document.getElementById('gamePanel').classList.add('hidden');
+  document.getElementById(tab + 'Panel').classList.remove('hidden');
+  
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
 }
 
 // BALANS
@@ -172,9 +177,10 @@ async function loadBalance() {
   document.getElementById('balance').innerText = `Balans: ${myBalance.toFixed(2)} TON`;
   updateBetButtons();
   
-  // Balans varsa Lobby-ni göstər
   if (myBalance > 0) {
-    showLobby();
+    document.getElementById('balanceWarn').style.display = 'none';
+  } else {
+    document.getElementById('balanceWarn').style.display = 'block';
   }
 }
 
@@ -188,9 +194,10 @@ function updateBetButtons() {
 document.getElementById('refreshBtn').onclick = async () => {
   await loadBalance();
   if (myBalance > 0) {
-    alert(`✅ Balans yeniləndi: ${myBalance.toFixed(2)} TON\n\nOynaya bilərsən!`);
+    alert(`✅ Balans yeniləndi: ${myBalance.toFixed(2)} TON\n\nLobby-ə keçə bilərsən!`);
+    showTab('lobby');
   } else {
-    alert("⚠️ Balans hələ 0-dır.\n\nAdmin hələ artırmayıb. Telegram-dan yaz.");
+    alert("⚠️ Balans hələ 0-dır.\n\nAdmin hələ artırmayıb. @avanqard12 yaz.");
   }
 };
 
@@ -224,7 +231,7 @@ document.getElementById('createRoomBtn').onclick = async () => {
   });
 
   await loadBalance();
-  showGame();
+  showTab('game');
   document.getElementById('potAmount').innerText = selectedBet;
   listenRoom();
 };
@@ -253,7 +260,7 @@ document.getElementById('joinRoomBtn').onclick = async () => {
   await update(ref(rdb, `rooms/${roomCode}`), { pot: roomBet * 2 });
 
   await loadBalance();
-  showGame();
+  showTab('game');
   listenRoom();
 };
 
@@ -318,7 +325,7 @@ document.getElementById("leaveBtn").onclick = () => leaveRoom();
 
 async function leaveRoom() {
   if (unsubscribe) unsubscribe();
-  showLobby();
+  showTab('lobby');
   roomCode = null;
   document.getElementById("readyBtn").disabled = false;
   await loadBalance();
