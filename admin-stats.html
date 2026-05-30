@@ -1,65 +1,474 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-<meta charset="UTF-8">
-<title>Admin Dashboard</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<style>
-body { font-family: Arial; padding: 20px; }
-h2 { margin-bottom: 20px; }
-table { border-collapse: collapse; width: 100%; }
-th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-th { background: #f2f2f2; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Bearbee Admin | Statistika</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+      background:#000;
+      color:#fff;
+      font-family:'Segoe UI',Arial,sans-serif;
+      min-height:100vh;
+      padding:16px;
+      padding-bottom:40px;
+    }
+
+    #page{
+      display:none;
+    }
+
+    #denied{
+      display:none;
+      min-height:80vh;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    #denied h1{
+      color:#ff4d4d;
+      font-size:28px;
+    }
+
+    #denied p{
+      color:#aaa;
+      font-size:15px;
+    }
+
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:16px;
+    }
+
+    .title{
+      color:#ffd700;
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:1px;
+    }
+
+    .btn{
+      display:inline-block;
+      background:#ffd700;
+      color:#000;
+      border:none;
+      border-radius:12px;
+      padding:11px 14px;
+      font-weight:900;
+      text-decoration:none;
+      cursor:pointer;
+      font-size:13px;
+      white-space:nowrap;
+    }
+
+    .btn.dark{
+      background:#181818;
+      color:#ffd700;
+      border:1px solid rgba(255,215,0,0.35);
+    }
+
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-bottom:16px;
+    }
+
+    .card{
+      background:#111;
+      border:1px solid rgba(255,215,0,0.35);
+      border-radius:18px;
+      padding:15px;
+      box-shadow:0 0 22px rgba(255,215,0,0.08);
+    }
+
+    .card span{
+      display:block;
+      color:#aaa;
+      font-size:13px;
+      margin-bottom:8px;
+      font-weight:700;
+    }
+
+    .card strong{
+      color:#ffd700;
+      font-size:23px;
+      font-weight:900;
+      word-break:break-word;
+    }
+
+    .search{
+      width:100%;
+      background:#101010;
+      color:#fff;
+      border:1px solid #333;
+      border-radius:12px;
+      padding:12px;
+      outline:none;
+      font-size:14px;
+      margin-bottom:14px;
+    }
+
+    .search:focus{
+      border-color:#ffd700;
+    }
+
+    .table-wrap{
+      width:100%;
+      overflow-x:auto;
+      border-radius:16px;
+      border:1px solid #222;
+      background:#0b0b0b;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:720px;
+    }
+
+    th,td{
+      padding:12px;
+      border-bottom:1px solid #222;
+      text-align:left;
+      font-size:14px;
+    }
+
+    th{
+      color:#ffd700;
+      background:#151515;
+      font-weight:900;
+    }
+
+    tr:hover{
+      background:#151515;
+    }
+
+    .muted{
+      color:#999;
+    }
+
+    .loading{
+      color:#aaa;
+      text-align:center;
+      padding:18px;
+    }
+
+    .error{
+      display:none;
+      background:#190000;
+      border:1px solid #ff4d4d;
+      color:#ffb3b3;
+      padding:12px;
+      border-radius:12px;
+      margin-bottom:14px;
+      line-height:1.5;
+    }
+
+    @media(max-width:800px){
+      .cards{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .title{
+        font-size:20px;
+      }
+    }
+
+    @media(max-width:520px){
+      .cards{
+        grid-template-columns:1fr;
+      }
+
+      .top{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+
+      .btn{
+        font-size:12px;
+        padding:10px 12px;
+      }
+
+      th,td{
+        font-size:13px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>Admin Dashboard (Firebase-only)</h2>
+  <div id="denied">
+    <h1>Access Denied</h1>
+    <p>Bu səhifə yalnız admin üçündür.</p>
+  </div>
 
-<table id="statsTable">
-<thead>
-<tr><th>İstifadəçi</th><th>Token Balansı</th><th>Əməliyyat Sayı</th></tr>
-</thead>
-<tbody></tbody>
-</table>
+  <div id="page">
 
-<script>
-// Admin Telegram ID yoxlaması
-const adminId = "8591374417";
-const userId = prompt("Telegram ID-ni daxil et:");
-if(userId !== adminId){
-  document.body.innerHTML = "<h2>Access Denied</h2>";
-  throw new Error("Not admin");
-}
+    <div class="top">
+      <h1 class="title">BEARBEE STATİSTİKA</h1>
 
-// Firebase konfiqurasiyası
-var firebaseConfig = {
-  apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
-  authDomain: "racegane.firebaseapp.com",
-  databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "racegane",
-  storageBucket: "racegane.firebasestorage.app",
-  messagingSenderId: "477893876737",
-  appId: "1:477893876737:web:1b561bb3224b0086c63400"
-};
+      <div>
+        <a href="./admin-room.html" class="btn">Admin Room</a>
+      </div>
+    </div>
 
-firebase.initializeApp(firebaseConfig);
-var db = firebase.database();
-var tbody = document.querySelector("#statsTable tbody");
+    <div id="errorBox" class="error"></div>
 
-// Realtime Database-dən istifadəçiləri çəkmək
-db.ref("users").on("value", function(snapshot){
-  tbody.innerHTML = "";
-  var users = snapshot.val();
-  for(var uid in users){
-    var user = users[uid];
-    var transactions = user.transactions ? user.transactions.length : 0;
-    var row = "<tr><td>"+user.username+"</td><td>"+(user.balance||0)+"</td><td>"+transactions+"</td></tr>";
-    tbody.innerHTML += row;
-  }
-});
-</script>
+    <div class="cards">
+      <div class="card">
+        <span>Ümumi istifadəçi</span>
+        <strong id="totalUsers">0</strong>
+      </div>
+
+      <div class="card">
+        <span>Ümumi coin</span>
+        <strong id="totalCoins">0</strong>
+      </div>
+
+      <div class="card">
+        <span>Ümumi win</span>
+        <strong id="totalWins">0</strong>
+      </div>
+
+      <div class="card">
+        <span>Ən çox coin</span>
+        <strong id="topUser">-</strong>
+      </div>
+    </div>
+
+    <input
+      id="searchInput"
+      class="search"
+      type="text"
+      placeholder="Ad və ya Telegram ID axtar..."
+    />
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>İstifadəçi</th>
+            <th>Telegram ID</th>
+            <th>Coin</th>
+            <th>Win</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody id="usersTable">
+          <tr>
+            <td colspan="6" class="loading">Yüklənir...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    const ADMIN_TELEGRAM_ID = 8591374417;
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
+      authDomain: "racegane.firebaseapp.com",
+      databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "racegane",
+      storageBucket: "racegane.firebasestorage.app",
+      messagingSenderId: "477893876737",
+      appId: "1:477893876737:web:1b561bb3224b0086c63400"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const rdb = firebase.database();
+
+    let allUsers = [];
+
+    function initTelegram(){
+      if(window.Telegram && window.Telegram.WebApp){
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+      }
+    }
+
+    function getTelegramUserId(){
+      return window.Telegram?.WebApp?.initDataUnsafe?.user?.id || null;
+    }
+
+    function checkAdmin(){
+      const tgId = getTelegramUserId();
+
+      if(Number(tgId) === ADMIN_TELEGRAM_ID){
+        showPage();
+        loadStats();
+        return;
+      }
+
+      if(!tgId){
+        const manualId = prompt("Admin Telegram ID daxil et:");
+        if(Number(manualId) === ADMIN_TELEGRAM_ID){
+          showPage();
+          loadStats();
+          return;
+        }
+      }
+
+      showDenied();
+    }
+
+    function showPage(){
+      document.getElementById("page").style.display = "block";
+      document.getElementById("denied").style.display = "none";
+    }
+
+    function showDenied(){
+      document.getElementById("page").style.display = "none";
+      document.getElementById("denied").style.display = "flex";
+    }
+
+    function showError(text){
+      const box = document.getElementById("errorBox");
+      box.style.display = "block";
+      box.textContent = text;
+    }
+
+    function safeNumber(value){
+      const num = Number(value);
+      return Number.isFinite(num) ? num : 0;
+    }
+
+    function normalizeUser(uid, data){
+      data = data || {};
+
+      return {
+        uid: String(uid),
+        name: data.name || data.username || data.first_name || data.fullname || "Adsız istifadəçi",
+        coins: safeNumber(data.coins ?? data.coin ?? data.balance ?? data.tokens ?? 0),
+        wins: safeNumber(data.wins ?? data.win ?? 0),
+        banned: Boolean(data.banned || data.blocked || false)
+      };
+    }
+
+    function loadStats(){
+      rdb.ref("users").on("value", function(snapshot){
+        const usersData = snapshot.val() || {};
+
+        allUsers = Object.keys(usersData).map(function(uid){
+          return normalizeUser(uid, usersData[uid]);
+        });
+
+        renderUsers(allUsers);
+      }, function(error){
+        showError("Firebase oxuma xətası: " + error.message);
+      });
+    }
+
+    function renderUsers(list){
+      const tbody = document.getElementById("usersTable");
+
+      let totalUsers = list.length;
+      let totalCoins = 0;
+      let totalWins = 0;
+
+      list.forEach(function(user){
+        totalCoins += user.coins;
+        totalWins += user.wins;
+      });
+
+      const sorted = [...list].sort(function(a,b){
+        return b.coins - a.coins;
+      });
+
+      const top = sorted[0];
+
+      document.getElementById("totalUsers").textContent = totalUsers;
+      document.getElementById("totalCoins").textContent = totalCoins;
+      document.getElementById("totalWins").textContent = totalWins;
+      document.getElementById("topUser").textContent = top ? top.name + " / " + top.coins : "-";
+
+      tbody.innerHTML = "";
+
+      if(sorted.length === 0){
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="loading">Hələ istifadəçi yoxdur.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      sorted.forEach(function(user, index){
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${escapeHtml(user.name)}</td>
+          <td>${escapeHtml(user.uid)}</td>
+          <td>${user.coins}</td>
+          <td>${user.wins}</td>
+          <td class="${user.banned ? "" : "muted"}">${user.banned ? "Blocked" : "Active"}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterUsers(){
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+
+      if(!q){
+        renderUsers(allUsers);
+        return;
+      }
+
+      const filtered = allUsers.filter(function(user){
+        return (
+          user.name.toLowerCase().includes(q) ||
+          user.uid.toLowerCase().includes(q)
+        );
+      });
+
+      renderUsers(filtered);
+    }
+
+    function escapeHtml(text){
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    document.getElementById("searchInput").addEventListener("input", filterUsers);
+
+    initTelegram();
+    checkAdmin();
+  </script>
 
 </body>
 </html>
