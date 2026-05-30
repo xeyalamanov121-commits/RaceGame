@@ -294,5 +294,210 @@
     setInterval(() => { if(pendingClicks > 0 && hasTelegramInitData()) claimClickReward(true); }, 5000);
     init();
 </script>
+<!-- ✅ BEARBEE STATS SYNC PATCH -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+(function(){
+    var STATS_FIREBASE_CONFIG = {
+        apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
+        authDomain: "racegane.firebaseapp.com",
+        databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "racegane",
+        storageBucket: "racegane.firebasestorage.app",
+        messagingSenderId: "477893876737",
+        appId: "1:477893876737:web:1b561bb3224b0086c63400"
+    };
+
+    var statsRdb = null;
+    var statsReady = false;
+
+    function initStatsDb(){
+        try{
+            if(!window.firebase){
+                console.log("Firebase SDK yoxdur");
+                return;
+            }
+
+            var statsApp = null;
+
+            for(var i = 0; i < firebase.apps.length; i++){
+                if(firebase.apps[i].name === "bearbeeStatsApp"){
+                    statsApp = firebase.apps[i];
+                    break;
+                }
+            }
+
+            if(!statsApp){
+                statsApp = firebase.initializeApp(STATS_FIREBASE_CONFIG, "bearbeeStatsApp");
+            }
+
+            statsRdb = firebase.database(statsApp);
+            statsReady = true;
+
+            console.log("✅ Statistika Firebase hazırdır");
+        }catch(e){
+            console.log("❌ Statistika Firebase xətası:", e);
+        }
+    }
+
+    function getSafeTelegramUser(){
+        try{
+            if(typeof telegramUser !== "undefined" && telegramUser){
+                return telegramUser;
+            }
+        }catch(e){}
+
+        try{
+            return window.Telegram?.WebApp?.initDataUnsafe?.user || null;
+        }catch(e){
+            return null;
+        }
+    }
+
+    function getSafeCoins(){
+        try{
+            if(typeof coins !== "undefined"){
+                return Number(coins) || 0;
+            }
+        }catch(e){}
+
+        return 0;
+    }
+
+    function getSafeEnergy(){
+        try{
+            if(typeof energy !== "undefined"){
+                return Number(energy) || 0;
+            }
+        }catch(e){}
+
+        return 0;
+    }
+
+    function getSafeAdPoints(){
+        try{
+            if(typeof adPoints !== "undefined"){
+                return Number(adPoints) || 0;
+            }
+        }catch(e){}
+
+        return 0;
+    }
+
+    window.syncBearbeeStats = function(extra){
+        try{
+            if(!statsReady || !statsRdb){
+                return;
+            }
+
+            var user = getSafeTelegramUser();
+
+            if(!user || !user.id){
+                console.log("Telegram user yoxdur, stats yazılmadı");
+                return;
+            }
+
+            var uid = String(user.id);
+
+            var fullName = [
+                user.first_name || "",
+                user.last_name || ""
+            ].join(" ").trim();
+
+            var data = {
+                name: fullName || user.username || "Adsız istifadəçi",
+                username: user.username || "",
+                telegram_id: Number(user.id),
+                coins: getSafeCoins(),
+                energy: getSafeEnergy(),
+                ad_points: getSafeAdPoints(),
+                last_active_at: Date.now()
+            };
+
+            if(extra && typeof extra === "object"){
+                Object.assign(data, extra);
+            }
+
+            statsRdb.ref("users/" + uid).update(data);
+
+            console.log("✅ Stats yazıldı:", data);
+        }catch(e){
+            console.log("❌ Stats sync xətası:", e);
+        }
+    };
+
+    initStatsDb();
+
+    var waitTimer = setInterval(function(){
+        var user = getSafeTelegramUser();
+
+        if(user && user.id){
+            window.syncBearbeeStats();
+            clearInterval(waitTimer);
+        }
+    }, 1000);
+
+    try{
+        if(typeof applyProfile === "function"){
+            var oldApplyProfile = applyProfile;
+
+            applyProfile = function(p){
+                oldApplyProfile(p);
+
+                setTimeout(function(){
+                    window.syncBearbeeStats();
+                }, 300);
+            };
+        }
+    }catch(e){
+        console.log("applyProfile patch xətası:", e);
+    }
+
+    try{
+        if(typeof saveFirebaseClickReward === "function"){
+            var oldSaveFirebaseClickReward = saveFirebaseClickReward;
+
+            saveFirebaseClickReward = async function(clicks, rewardCoins){
+                try{
+                    await oldSaveFirebaseClickReward(clicks, rewardCoins);
+                }catch(e){
+                    console.log("Köhnə click log xətası:", e);
+                }
+
+                try{
+                    window.syncBearbeeStats({
+                        last_clicks: Number(clicks) || 0,
+                        last_click_reward: Number(rewardCoins) || 0,
+                        last_click_at: Date.now()
+                    });
+
+                    var user = getSafeTelegramUser();
+
+                    if(statsRdb && user && user.id){
+                        var uid = String(user.id);
+
+                        statsRdb.ref("users/" + uid + "/total_clicks").transaction(function(current){
+                            return (Number(current) || 0) + (Number(clicks) || 0);
+                        });
+
+                        statsRdb.ref("users/" + uid + "/total_click_coins").transaction(function(current){
+                            return (Number(current) || 0) + (Number(rewardCoins) || 0);
+                        });
+                    }
+                }catch(e){
+                    console.log("Click stats yazma xətası:", e);
+                }
+            };
+        }
+    }catch(e){
+        console.log("saveFirebaseClickReward patch xətası:", e);
+    }
+
+    setInterval(function(){
+        window.syncBearbeeStats();
+    }, 10000);
+})();
+                </script>
 </body>
 </html>
