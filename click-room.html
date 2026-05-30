@@ -6,15 +6,11 @@
     <title>Bearbee Arena | Click Room + Card Market</title>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <!-- ✅ OnClickA TMA Mükafatlı Video SDK - defer ilə yüklə -->
     <script src="https://cdn.onclicka.com/tma/1.0/sdk.js" defer></script>
-
-    <!-- ✅ Monetag Rewarded - show_11073465 -->
     <script src="https://libtl.com/sdk.js" data-zone="11073465" data-sdk="show_11073465" async></script>
-
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
     <style>
         :root{
@@ -199,14 +195,119 @@
     const MINING_API_URL = "https://tddvicvdndrckoiynbay.supabase.co/functions/v1/tg-mining";
     const MINI_APP_URL = "https://t.me/Bearbeee_bot/GameR";
     const ONCLICKA_BLOCK_ID = "442774";
-    const firebaseConfig = {apiKey: "AIzaSyCzywfKRvjp0stL9ptl1ox3mUpfZ8VG27o",authDomain: "gamer-d11ba.firebaseapp.com",projectId: "gamer-d11ba",storageBucket: "gamer-d11ba.firebasestorage.app",messagingSenderId: "696457199951",appId: "1:696457199951:web:d1ec83b76af07b47a6853a"};
-    const MAX_ENERGY = 100;
-    let telegramUser = null; let profile = null; let coins = 0; let energy = MAX_ENERGY; let adPoints = 0; let pendingClicks = 0; let pendingCoins = 0; let isClaiming = false; let selectedCard = null; let selectedBoost = 1; let myCardsCache = []; let firebaseDb = null;
-    const coinText = document.getElementById("coinText"); const energyText = document.getElementById("energyText"); const energyFill = document.getElementById("energyFill"); const boostText = document.getElementById("boostText"); const adPointText = document.getElementById("adPointText"); const clickLog = document.getElementById("clickLog"); const adLog = document.getElementById("adLog"); const cardLog = document.getElementById("cardLog"); const myCards = document.getElementById("myCards"); const totalPowerText = document.getElementById("totalPowerText"); const lastIncomeText = document.getElementById("lastIncomeText"); const miningLog = document.getElementById("miningLog"); const refLink = document.getElementById("refLink"); const refCount = document.getElementById("refCount"); const refEarned = document.getElementById("refEarned"); const refLog = document.getElementById("refLog"); const tapBear = document.getElementById("tapBear");
 
-    /* ════════════════════════════════════════
-       BİRLƏŞDİRİLMİŞ REKLAM - 1.OnClickA 2.show_11073465
-    ════════════════════════════════════════ */
+    const firebaseConfig = {
+        apiKey: "AIzaSyCzywfKRvjp0stL9ptl1ox3mUpfZ8VG27o",
+        authDomain: "gamer-d11ba.firebaseapp.com",
+        projectId: "gamer-d11ba",
+        storageBucket: "gamer-d11ba.firebasestorage.app",
+        messagingSenderId: "696457199951",
+        appId: "1:696457199951:web:d1ec83b76af07b47a6853a"
+    };
+
+    const STATS_FIREBASE_CONFIG = {
+        apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
+        authDomain: "racegane.firebaseapp.com",
+        databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "racegane",
+        storageBucket: "racegane.firebasestorage.app",
+        messagingSenderId: "477893876737",
+        appId: "1:477893876737:web:1b561bb3224b0086c63400"
+    };
+
+    const MAX_ENERGY = 100;
+    let telegramUser = null;
+    let profile = null;
+    let coins = 0;
+    let energy = MAX_ENERGY;
+    let adPoints = 0;
+    let pendingClicks = 0;
+    let pendingCoins = 0;
+    let isClaiming = false;
+    let selectedCard = null;
+    let selectedBoost = 1;
+    let myCardsCache = [];
+    let firebaseDb = null;
+    let statsRdb = null;
+    let statsReady = false;
+
+    const coinText = document.getElementById("coinText");
+    const energyText = document.getElementById("energyText");
+    const energyFill = document.getElementById("energyFill");
+    const boostText = document.getElementById("boostText");
+    const adPointText = document.getElementById("adPointText");
+    const clickLog = document.getElementById("clickLog");
+    const adLog = document.getElementById("adLog");
+    const cardLog = document.getElementById("cardLog");
+    const myCards = document.getElementById("myCards");
+    const totalPowerText = document.getElementById("totalPowerText");
+    const lastIncomeText = document.getElementById("lastIncomeText");
+    const miningLog = document.getElementById("miningLog");
+    const refLink = document.getElementById("refLink");
+    const refCount = document.getElementById("refCount");
+    const refEarned = document.getElementById("refEarned");
+    const refLog = document.getElementById("refLog");
+    const tapBear = document.getElementById("tapBear");
+
+    /* ════════ FIREBASE INIT ════════ */
+    function initFirebaseStats() {
+        try {
+            // Ana Firestore app
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            firebaseDb = firebase.firestore();
+
+            // Stats Realtime DB - ayrı app
+            let statsApp = null;
+            for (let i = 0; i < firebase.apps.length; i++) {
+                if (firebase.apps[i].name === "bearbeeStatsApp") {
+                    statsApp = firebase.apps[i];
+                    break;
+                }
+            }
+            if (!statsApp) {
+                statsApp = firebase.initializeApp(STATS_FIREBASE_CONFIG, "bearbeeStatsApp");
+            }
+            statsRdb = firebase.database(statsApp);
+            statsReady = true;
+            console.log("✅ Firebase hazırdır");
+        } catch (e) {
+            console.log("❌ Firebase init xətası:", e);
+        }
+    }
+
+    /* ════════ STATS SYNC ════════ */
+    function syncBearbeeStats(extra) {
+        try {
+            if (!statsReady || !statsRdb) return;
+            if (!telegramUser || !telegramUser.id) return;
+
+            const uid = String(telegramUser.id);
+            const fullName = [telegramUser.first_name || "", telegramUser.last_name || ""].join(" ").trim();
+
+            const data = {
+                name: fullName || telegramUser.username || "Adsız",
+                username: telegramUser.username || "",
+                telegram_id: Number(telegramUser.id),
+                coins: Number(coins) || 0,
+                energy: Number(energy) || 0,
+                ad_points: Number(adPoints) || 0,
+                last_active_at: Date.now()
+            };
+
+            if (extra && typeof extra === "object") {
+                Object.assign(data, extra);
+            }
+
+            statsRdb.ref("users/" + uid).update(data);
+            console.log("✅ Stats yazıldı - coins:", data.coins);
+        } catch (e) {
+            console.log("❌ Stats sync xətası:", e);
+        }
+    }
+
+    /* ════════ REKLAM ════════ */
     function showAd(label) {
         return new Promise(async (resolve) => {
             adLog.innerText = "🎥 Reklam yüklənir...";
@@ -217,6 +318,7 @@
             resolve(second);
         });
     }
+
     function tryOnClickA(label) {
         return new Promise((resolve) => {
             let attempts = 30;
@@ -230,27 +332,24 @@
                         blockId: ONCLICKA_BLOCK_ID,
                         onReward: () => { adLog.innerText = "✅ Reklam tamamlandı: " + label; resolve(true); },
                         onClose: () => { setTimeout(() => resolve(false), 300); },
-                        onError: (err) => { console.log("OnClickA onError:", err); resolve(false); }
+                        onError: (err) => { console.log("OnClickA xəta:", err); resolve(false); }
                     });
                     adBlock.show();
-                } catch (err) { console.log("OnClickA createRewardedAd xətası:", err); resolve(false); }
+                } catch (err) { console.log("OnClickA xətası:", err); resolve(false); }
             };
             wait();
         });
     }
+
     function trySecondAd(label) {
         return new Promise((resolve) => {
-            if (typeof window.show_11073465!== 'function') { adLog.innerText = "⚠️ İkinci reklam tapılmadı"; resolve(false); return; }
+            if (typeof window.show_11073465 !== 'function') { adLog.innerText = "⚠️ İkinci reklam tapılmadı"; resolve(false); return; }
             try {
-                // Rewarded interstitial
                 show_11073465().then(() => {
-                    // You need to add your user reward function here, which will be executed after the user watches the ad.
-                    // For more details, please refer to the detailed instructions.
-                    alert('You have seen an ad!');
                     adLog.innerText = "✅ Reklam tamamlandı: " + label;
                     resolve(true);
                 }).catch((err) => {
-                    console.log("show_11073465 error:", err);
+                    console.log("show_11073465 xəta:", err);
                     adLog.innerText = "❌ Reklam bağlandı";
                     resolve(false);
                 });
@@ -258,246 +357,434 @@
         });
     }
 
-    function initFirebaseStats(){ try{ if(window.firebase &&!firebase.apps.length) firebase.initializeApp(firebaseConfig); if(window.firebase) firebaseDb = firebase.firestore(); }catch(e){ console.log("Firebase init:", e); } }
-    function getPlayerDocId(){ return telegramUser? String(telegramUser.id) : ""; }
-    async function saveFirebaseLogin(){ if(!firebaseDb ||!telegramUser) return; try{ await firebaseDb.collection("players").doc(getPlayerDocId()).set({telegram_id:Number(telegramUser.id),username:telegramUser.username||"",first_name:telegramUser.first_name||"",last_name:telegramUser.last_name||"",coins:Number(coins)||0,energy:Number(energy)||0,ad_points:Number(adPoints)||0,login_count:firebase.firestore.FieldValue.increment(1),last_login_at:firebase.firestore.FieldValue.serverTimestamp(),last_active_at:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}); await firebaseDb.collection("login_events").add({telegram_id:Number(telegramUser.id),username:telegramUser.username||"",first_name:telegramUser.first_name||"",page:"click-room",user_agent:navigator.userAgent,created_at:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){ console.log("Firebase login log:", e); } }
-    async function saveFirebaseClickReward(clicks, rewardCoins){ if(!firebaseDb ||!telegramUser) return; try{ await firebaseDb.collection("players").doc(getPlayerDocId()).set({telegram_id:Number(telegramUser.id),username:telegramUser.username||"",first_name:telegramUser.first_name||"",coins:Number(coins)||0,energy:Number(energy)||0,total_clicks:firebase.firestore.FieldValue.increment(Number(clicks)||0),total_click_coins:firebase.firestore.FieldValue.increment(Number(rewardCoins)||0),last_active_at:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}); await firebaseDb.collection("click_events").add({telegram_id:Number(telegramUser.id),username:telegramUser.username||"",clicks:Number(clicks)||0,reward_coins:Number(rewardCoins)||0,boost:Number(selectedBoost)||1,created_at:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){ console.log("Firebase click log:", e); } }
-    async function saveFirebaseMarketEvent(type, data = {}){ if(!firebaseDb ||!telegramUser) return; try{ await firebaseDb.collection("market_events").add({telegram_id:Number(telegramUser.id),username:telegramUser.username||"",type,data,created_at:firebase.firestore.FieldValue.serverTimestamp()}); }catch(e){ console.log("Firebase market log:", e); } }
-    function initTelegramMiniApp(){ if(window.Telegram?.WebApp){ window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); } }
-    function hasTelegramInitData(){ return Boolean(window.Telegram?.WebApp?.initData && window.Telegram.WebApp.initData.length > 10); }
-    function getTelegramInitData(){ if(!hasTelegramInitData()){ showMiniAppOpenScreen(); throw new Error("Mini App kimi açılmayıb. PLAY ilə aç."); } return window.Telegram.WebApp.initData; }
-    function openTelegramMiniApp(){ window.location.href = MINI_APP_URL; }
-    function showMiniAppOpenScreen(){ const html = `Bu səhifə adi link kimi açılıb. Coin/kart yadda qalması üçün oyunu Telegram Mini App kimi açmaq lazımdır.<button class="miniapp-open" onclick="openTelegramMiniApp()">🎮 PLAY ilə aç</button>`; if(clickLog) clickLog.innerHTML = html; if(cardLog) cardLog.innerText = "Telegram initData yoxdur. PLAY ilə aç."; }
-    function getStartParam(){ const p = window.Telegram?.WebApp?.initDataUnsafe?.start_param; if(p) return String(p); const u = new URLSearchParams(window.location.search); return u.get("startapp") || u.get("ref") || ""; }
-    function getReferrerIdFromStartParam(){ const sp = getStartParam(); if(!sp) return null; const m = String(sp).match(/ref[_-]?(\d+)/i); if(m && m[1]) return Number(m[1]); if(/^\d+$/.test(String(sp))) return Number(sp); return null; }
-    function getMyReferralLink(){ return telegramUser? "https://t.me/Bearbeee_bot/GameR?startapp=ref_" + telegramUser.id : ""; }
-    async function api(action, payload = {}){ const res = await fetch(TG_API_URL, {method:"POST",headers:{"Content-Type":"application/json"},body: JSON.stringify({ initData: getTelegramInitData(), action, payload })}); const data = await res.json(); if(!res.ok ||!data.ok) throw new Error(data.error || "API xətası"); return data; }
-    async function miningApi(action, payload = {}){ const res = await fetch(MINING_API_URL, {method:"POST",headers:{"Content-Type":"application/json"},body: JSON.stringify({ initData: getTelegramInitData(), action, payload })}); const data = await res.json(); if(!res.ok ||!data.ok) throw new Error(data.error || "Mining API xətası"); return data; }
-    async function init(){ try{ initTelegramMiniApp(); if(!hasTelegramInitData()){ showMiniAppOpenScreen(); return; } initFirebaseStats(); const data = await api("init", { referrer_id: getReferrerIdFromStartParam() }); telegramUser = data.user; applyProfile(data.profile); renderMyCards(data.myCards || []); renderReferralStats(data.referralStats); if(data.referralResult?.status === "rewarded"){ refLog.innerText = "Referal bonus aktiv oldu: sən +25 coin qazandın."; } cardLog.innerText = "Telegram ID ilə giriş edildi: " + telegramUser.id; clickLog.innerText = "Hazırdır. Cyber ayıya klik et."; saveFirebaseLogin(); updateBoxTimers(); setInterval(updateBoxTimers, 1000); }catch(err){ console.error(err); clickLog.innerText = "Başlatma xətası: " + err.message; cardLog.innerText = "Telegram giriş alınmadı."; } }
-    function applyProfile(p){ profile = p; coins = Number(profile.coins) || 0; energy = profile.energy?? MAX_ENERGY; adPoints = Number(profile.ad_points) || 0; updateUI(); }
-    async function loadProfile(){ const data = await api("load_profile"); applyProfile(data.profile); }
-    function updateUI(){ coinText.innerText = coins; energyText.innerText = energy; adPointText.innerText = adPoints; boostText.innerText = selectedBoost + "x"; energyFill.style.width = energy + "%"; if(energy <= 20){ energyFill.style.background = "linear-gradient(90deg,#ff2438,#ff8c00)"; }else if(energy <= 50){ energyFill.style.background = "linear-gradient(90deg,#ff8c00,#ffd700)"; }else{ energyFill.style.background = "linear-gradient(90deg,#22ff66,#00d7ff)"; } }
-    tapBear.addEventListener("click", function(e){ if(!hasTelegramInitData()){ showMiniAppOpenScreen(); return; } if(energy <= 0){ clickLog.innerText = "⚡ Enerji bitdi! Reklama bax."; return; } const gain = 2 * selectedBoost; energy--; pendingClicks++; pendingCoins += gain; updateUI(); clickLog.innerText = "Pending: +" + pendingCoins + " coin (" + pendingClicks + " click)"; const plus = document.createElement("div"); plus.className = "tap-effect"; plus.innerText = "+" + gain; plus.style.left = e.pageX + "px"; plus.style.top = e.pageY + "px"; document.body.appendChild(plus); setTimeout(() => plus.remove(), 900); if(pendingClicks >= 10) claimClickReward(true); });
-    async function claimClickReward(silent = false){ if(!hasTelegramInitData()){ showMiniAppOpenScreen(); return; } if(isClaiming) return; if(pendingClicks <= 0){ if(!silent) clickLog.innerText = "Göndəriləcək click yoxdur."; return; } isClaiming = true; const clicksToSend = pendingClicks; const rewardToLog = pendingCoins; try{ const data = await api("claim_click_reward",{ click_count: clicksToSend, selected_card_id: selectedCard? selectedCard.user_card_id : null }); pendingClicks = 0; pendingCoins = 0; applyProfile(data.profile); saveFirebaseClickReward(clicksToSend, rewardToLog); clickLog.innerText = silent? "✅ Click xalları avtomatik saxlandı." : "✅ Click reward serverdə təsdiqləndi."; }catch(err){ clickLog.innerText = "❌ Saxlama xətası: " + err.message; } isClaiming = false; }
-    async function watchEnergyAd(){ const watched = await showAd("energy_100"); if(!watched) return; try{ const data = await api("claim_ad_reward",{ reward_type:"energy_100" }); applyProfile(data.profile); adLog.innerText = "✅ Enerji serverdə təsdiqləndi."; }catch(err){ adLog.innerText = "❌ Enerji reward xətası: " + err.message; } }
-    async function openRewardBox(minutes, reward){ const key = "box_" + minutes + "_ready_at"; const readyAt = Number(profile? profile[key] : 0) || 0; if(Date.now() < readyAt){ adLog.innerText = "⏳ Bu qutu hələ hazır deyil."; return; } const btn = document.getElementById("boxBtn" + minutes); btn.disabled = true; const watched = await showAd("box_" + minutes); if(!watched){ btn.disabled = false; return; } try{ const data = await api("claim_box_reward",{ box_minutes: minutes }); applyProfile(data.profile); updateBoxTimers(); adLog.innerText = "✅ " + minutes + " dəqiqəlik qutu açıldı! +" + reward + " coin"; }catch(err){ adLog.innerText = "❌ Qutu reward xətası: " + err.message; btn.disabled = false; } }
-    function updateBoxTimers(){ updateSingleTimer(2); updateSingleTimer(5); updateSingleTimer(10); }
-    function updateSingleTimer(minutes){ const timer = document.getElementById("timer" + minutes); const button = document.getElementById("boxBtn" + minutes); if(!profile){ timer.innerText = "Yüklənir..."; button.disabled = true; return; } const key = "box_" + minutes + "_ready_at"; const readyAt = Number(profile[key]) || 0; const now = Date.now(); if(now >= readyAt){ timer.innerText = "✅ Hazırdır"; button.disabled = false; }else{ const diff = readyAt - now; const min = Math.floor(diff / 60000); const sec = Math.floor((diff % 60000) / 1000); timer.innerText = min + " dəq " + (sec < 10? "0" : "") + sec + " san"; button.disabled = true; } }
-    async function loadMiningPower(){ try{ if(!hasTelegramInitData()){ miningLog.innerText = "Mining üçün PLAY ilə aç."; return; } const data = await miningApi("load_power"); totalPowerText.innerText = data.total_power || 0; miningLog.innerText = "Mining Power yükləndi."; }catch(err){ miningLog.innerText = "❌ Mining xətası: " + err.message; } }
-    async function claimMiningIncome(){ try{ const data = await miningApi("claim_power_income"); const claim = data.claim || {}; totalPowerText.innerText = data.total_power || claim.total_power || 0; lastIncomeText.innerText = claim.income || 0; if(claim.income && Number(claim.income) > 0){ await loadProfile(); miningLog.innerText = "✅ Mining income: +" + claim.income + " coin"; }else{ miningLog.innerText = claim.message || ("Qalan: " + (claim.seconds_left || 0) + " san"); } }catch(err){ miningLog.innerText = "❌ Mining claim xətası: " + err.message; } }
-    function renderReferralStats(stats){ if(!telegramUser) return; refLink.innerText = getMyReferralLink(); refCount.innerText = stats?.referral_count || 0; refEarned.innerText = stats?.referral_earned_coins || 0; refLog.innerText = "Referal linkin hazırdır."; }
-    async function copyReferralLink(){ const link = getMyReferralLink(); if(!link){ alert("Telegram ID yüklənməyib."); return; } try{ await navigator.clipboard.writeText(link); refLog.innerText = "✅ Referal link kopyalandı."; }catch(e){ alert(link); } }
-    function renderMyCards(cards){ myCardsCache = cards || []; myCards.innerHTML = ""; if(myCardsCache.length === 0){ myCards.innerHTML = `<div class="listing-card"><div class="card-art">🎴</div><h3>Kart yoxdur</h3><p>Starter kart serverdən veriləcək. Səhifəni yenilə.</p></div>`; return; } myCardsCache.forEach((item, index) => { const t = item.tg_card_templates || {}; const div = document.createElement("div"); const isActive = selectedCard && selectedCard.user_card_id === item.id; div.className = "card-item" + (isActive? " active" : ""); const rarity = String(t.rarity || "rare").toLowerCase(); const img = t.image_url? `<img src="${escapeHtml(t.image_url)}" alt="${escapeHtml(t.name||"Card")}" onerror="this.style.display='none';this.parentElement.innerHTML='🎴';">` : "🎴"; div.innerHTML = `<div class="card-art">${img}</div><h3>${escapeHtml(t.name || "Cyber Card")}</h3><span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span><p>Boost: ${Number(t.click_boost) || 1}x</p><p class="power-text">Power: ${Number(t.mining_power) || 0}</p><p>Level: ${Number(item.level) || 1}</p><div class="input-row"><input type="number" min="1" id="price_${String(item.id).replaceAll("_","")}" placeholder="Qiymət"><button class="btn btn-gold" onclick="event.stopPropagation(); listCardForSale('${item.id}')">Sat</button></div>`; div.addEventListener("click", () => { selectedCard = { user_card_id:item.id, template_id:t.id, name:t.name, boost:Number(t.click_boost)||1 }; selectedBoost = Number(t.click_boost) || 1; renderMyCards(myCardsCache); updateUI(); cardLog.innerText = "Seçildi: " + (t.name || "Cyber Card") + " / Boost: " + selectedBoost + "x"; }); myCards.appendChild(div); if(index === 0 &&!selectedCard){ selectedCard = { user_card_id:item.id, template_id:t.id, name:t.name, boost:Number(t.click_boost)||1 }; selectedBoost = Number(t.click_boost) || 1; updateUI(); } }); }
-    async function listCardForSale(userCardId){ const safeId = String(userCardId).replaceAll("_",""); const input = document.getElementById("price_" + safeId); const price = Number(input? input.value : 0); if(!price || price <= 0){ alert("Düzgün qiymət yaz."); return; } try{ const data = await api("list_card_for_sale",{ user_card_id:Number(userCardId), price }); renderMyCards(data.myCards || []); saveFirebaseMarketEvent("list_card_for_sale",{ user_card_id:Number(userCardId), price }); cardLog.innerText = "✅ Kart satışa qoyuldu."; }catch(err){ cardLog.innerText = "❌ Satış xətası: " + err.message; } }
-    async function refreshAll(){ try{ const data = await api("init",{ referrer_id: getReferrerIdFromStartParam() }); telegramUser = data.user; applyProfile(data.profile); renderMyCards(data.myCards || []); renderReferralStats(data.referralStats); updateBoxTimers(); clickLog.innerText = "✅ Yeniləndi."; }catch(err){ clickLog.innerText = "❌ Yeniləmə xətası: " + err.message; } }
-    function escapeHtml(text){ return String(text).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
-    setInterval(() => { if(pendingClicks > 0 && hasTelegramInitData()) claimClickReward(true); }, 5000);
+    /* ════════ TELEGRAM ════════ */
+    function initTelegramMiniApp() {
+        if (window.Telegram?.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+        }
+    }
+
+    function hasTelegramInitData() {
+        return Boolean(window.Telegram?.WebApp?.initData && window.Telegram.WebApp.initData.length > 10);
+    }
+
+    function getTelegramInitData() {
+        if (!hasTelegramInitData()) { showMiniAppOpenScreen(); throw new Error("Mini App kimi açılmayıb."); }
+        return window.Telegram.WebApp.initData;
+    }
+
+    function openTelegramMiniApp() { window.location.href = MINI_APP_URL; }
+
+    function showMiniAppOpenScreen() {
+        const html = `Bu səhifə adi link kimi açılıb. Coin/kart yadda qalması üçün oyunu Telegram Mini App kimi açmaq lazımdır.<button class="miniapp-open" onclick="openTelegramMiniApp()">🎮 PLAY ilə aç</button>`;
+        if (clickLog) clickLog.innerHTML = html;
+        if (cardLog) cardLog.innerText = "Telegram initData yoxdur. PLAY ilə aç.";
+    }
+
+    function getStartParam() {
+        const p = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+        if (p) return String(p);
+        const u = new URLSearchParams(window.location.search);
+        return u.get("startapp") || u.get("ref") || "";
+    }
+
+    function getReferrerIdFromStartParam() {
+        const sp = getStartParam();
+        if (!sp) return null;
+        const m = String(sp).match(/ref[_-]?(\d+)/i);
+        if (m && m[1]) return Number(m[1]);
+        if (/^\d+$/.test(String(sp))) return Number(sp);
+        return null;
+    }
+
+    function getMyReferralLink() {
+        return telegramUser ? "https://t.me/Bearbeee_bot/GameR?startapp=ref_" + telegramUser.id : "";
+    }
+
+    /* ════════ API ════════ */
+    async function api(action, payload = {}) {
+        const res = await fetch(TG_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ initData: getTelegramInitData(), action, payload })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || "API xətası");
+        return data;
+    }
+
+    async function miningApi(action, payload = {}) {
+        const res = await fetch(MINING_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ initData: getTelegramInitData(), action, payload })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || "Mining API xətası");
+        return data;
+    }
+
+    /* ════════ PROFILE ════════ */
+    function applyProfile(p) {
+        profile = p;
+        coins = Number(profile.coins) || 0;
+        energy = profile.energy ?? MAX_ENERGY;
+        adPoints = Number(profile.ad_points) || 0;
+        updateUI();
+        // Profile tətbiq olunandan 800ms sonra sync et - dəyərlər hazır olsun
+        setTimeout(() => {
+            syncBearbeeStats();
+        }, 800);
+    }
+
+    async function loadProfile() {
+        const data = await api("load_profile");
+        applyProfile(data.profile);
+    }
+
+    function updateUI() {
+        coinText.innerText = coins;
+        energyText.innerText = energy;
+        adPointText.innerText = adPoints;
+        boostText.innerText = selectedBoost + "x";
+        energyFill.style.width = energy + "%";
+        if (energy <= 20) {
+            energyFill.style.background = "linear-gradient(90deg,#ff2438,#ff8c00)";
+        } else if (energy <= 50) {
+            energyFill.style.background = "linear-gradient(90deg,#ff8c00,#ffd700)";
+        } else {
+            energyFill.style.background = "linear-gradient(90deg,#22ff66,#00d7ff)";
+        }
+    }
+
+    /* ════════ FIREBASE LOGS ════════ */
+    async function saveFirebaseLogin() {
+        if (!firebaseDb || !telegramUser) return;
+        try {
+            await firebaseDb.collection("players").doc(String(telegramUser.id)).set({
+                telegram_id: Number(telegramUser.id),
+                username: telegramUser.username || "",
+                first_name: telegramUser.first_name || "",
+                last_name: telegramUser.last_name || "",
+                coins: Number(coins) || 0,
+                energy: Number(energy) || 0,
+                ad_points: Number(adPoints) || 0,
+                login_count: firebase.firestore.FieldValue.increment(1),
+                last_login_at: firebase.firestore.FieldValue.serverTimestamp(),
+                last_active_at: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            await firebaseDb.collection("login_events").add({
+                telegram_id: Number(telegramUser.id),
+                username: telegramUser.username || "",
+                first_name: telegramUser.first_name || "",
+                page: "click-room",
+                user_agent: navigator.userAgent,
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("✅ Firestore login yazıldı");
+        } catch (e) {
+            console.log("❌ Firestore login xətası:", e);
+        }
+    }
+
+    async function saveFirebaseClickReward(clicks, rewardCoins) {
+        if (!firebaseDb || !telegramUser) return;
+        try {
+            await firebaseDb.collection("players").doc(String(telegramUser.id)).set({
+                telegram_id: Number(telegramUser.id),
+                username: telegramUser.username || "",
+                first_name: telegramUser.first_name || "",
+                coins: Number(coins) || 0,
+                energy: Number(energy) || 0,
+                total_clicks: firebase.firestore.FieldValue.increment(Number(clicks) || 0),
+                total_click_coins: firebase.firestore.FieldValue.increment(Number(rewardCoins) || 0),
+                last_active_at: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            await firebaseDb.collection("click_events").add({
+                telegram_id: Number(telegramUser.id),
+                username: telegramUser.username || "",
+                clicks: Number(clicks) || 0,
+                reward_coins: Number(rewardCoins) || 0,
+                boost: Number(selectedBoost) || 1,
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Realtime DB-ə də yaz
+            if (statsRdb && telegramUser) {
+                const uid = String(telegramUser.id);
+                syncBearbeeStats({
+                    last_clicks: Number(clicks) || 0,
+                    last_click_reward: Number(rewardCoins) || 0,
+                    last_click_at: Date.now()
+                });
+                statsRdb.ref("users/" + uid + "/total_clicks").transaction(current => (Number(current) || 0) + (Number(clicks) || 0));
+                statsRdb.ref("users/" + uid + "/total_click_coins").transaction(current => (Number(current) || 0) + (Number(rewardCoins) || 0));
+            }
+        } catch (e) {
+            console.log("❌ Firestore click xətası:", e);
+        }
+    }
+
+    async function saveFirebaseMarketEvent(type, data = {}) {
+        if (!firebaseDb || !telegramUser) return;
+        try {
+            await firebaseDb.collection("market_events").add({
+                telegram_id: Number(telegramUser.id),
+                username: telegramUser.username || "",
+                type, data,
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } catch (e) {
+            console.log("❌ Market event xətası:", e);
+        }
+    }
+
+    /* ════════ INIT ════════ */
+    async function init() {
+        try {
+            initTelegramMiniApp();
+            if (!hasTelegramInitData()) { showMiniAppOpenScreen(); return; }
+
+            // Firebase init - əvvəlcə
+            initFirebaseStats();
+
+            const data = await api("init", { referrer_id: getReferrerIdFromStartParam() });
+            telegramUser = data.user;
+
+            // Profile tətbiq et - bu coins/energy dəyərlərini set edir
+            applyProfile(data.profile);
+
+            renderMyCards(data.myCards || []);
+            renderReferralStats(data.referralStats);
+
+            if (data.referralResult?.status === "rewarded") {
+                refLog.innerText = "Referal bonus aktiv oldu: sən +25 coin qazandın.";
+            }
+
+            cardLog.innerText = "Telegram ID ilə giriş edildi: " + telegramUser.id;
+            clickLog.innerText = "Hazırdır. Cyber ayıya klik et.";
+
+            // Login yaz - profile artıq tətbiq olunub, coins/energy dolu
+            saveFirebaseLogin();
+
+            updateBoxTimers();
+            setInterval(updateBoxTimers, 1000);
+
+            // Hər 10 saniyədə stats sync
+            setInterval(() => { syncBearbeeStats(); }, 10000);
+
+        } catch (err) {
+            console.error(err);
+            clickLog.innerText = "Başlatma xətası: " + err.message;
+            cardLog.innerText = "Telegram giriş alınmadı.";
+        }
+    }
+
+    /* ════════ CLICK ════════ */
+    tapBear.addEventListener("click", function (e) {
+        if (!hasTelegramInitData()) { showMiniAppOpenScreen(); return; }
+        if (energy <= 0) { clickLog.innerText = "⚡ Enerji bitdi! Reklama bax."; return; }
+        const gain = 2 * selectedBoost;
+        energy--;
+        pendingClicks++;
+        pendingCoins += gain;
+        updateUI();
+        clickLog.innerText = "Pending: +" + pendingCoins + " coin (" + pendingClicks + " click)";
+        const plus = document.createElement("div");
+        plus.className = "tap-effect";
+        plus.innerText = "+" + gain;
+        plus.style.left = e.pageX + "px";
+        plus.style.top = e.pageY + "px";
+        document.body.appendChild(plus);
+        setTimeout(() => plus.remove(), 900);
+        if (pendingClicks >= 10) claimClickReward(true);
+    });
+
+    async function claimClickReward(silent = false) {
+        if (!hasTelegramInitData()) { showMiniAppOpenScreen(); return; }
+        if (isClaiming) return;
+        if (pendingClicks <= 0) { if (!silent) clickLog.innerText = "Göndəriləcək click yoxdur."; return; }
+        isClaiming = true;
+        const clicksToSend = pendingClicks;
+        const rewardToLog = pendingCoins;
+        try {
+            const data = await api("claim_click_reward", {
+                click_count: clicksToSend,
+                selected_card_id: selectedCard ? selectedCard.user_card_id : null
+            });
+            pendingClicks = 0;
+            pendingCoins = 0;
+            applyProfile(data.profile); // bu syncBearbeeStats-ı 800ms sonra çağırır
+            saveFirebaseClickReward(clicksToSend, rewardToLog);
+            clickLog.innerText = silent ? "✅ Click xalları avtomatik saxlandı." : "✅ Click reward serverdə təsdiqləndi.";
+        } catch (err) {
+            clickLog.innerText = "❌ Saxlama xətası: " + err.message;
+        }
+        isClaiming = false;
+    }
+
+    /* ════════ REKLAM / QUTU ════════ */
+    async function watchEnergyAd() {
+        const watched = await showAd("energy_100");
+        if (!watched) return;
+        try {
+            const data = await api("claim_ad_reward", { reward_type: "energy_100" });
+            applyProfile(data.profile);
+            adLog.innerText = "✅ Enerji serverdə təsdiqləndi.";
+        } catch (err) {
+            adLog.innerText = "❌ Enerji reward xətası: " + err.message;
+        }
+    }
+
+    async function openRewardBox(minutes, reward) {
+        const key = "box_" + minutes + "_ready_at";
+        const readyAt = Number(profile ? profile[key] : 0) || 0;
+        if (Date.now() < readyAt) { adLog.innerText = "⏳ Bu qutu hələ hazır deyil."; return; }
+        const btn = document.getElementById("boxBtn" + minutes);
+        btn.disabled = true;
+        const watched = await showAd("box_" + minutes);
+        if (!watched) { btn.disabled = false; return; }
+        try {
+            const data = await api("claim_box_reward", { box_minutes: minutes });
+            applyProfile(data.profile);
+            updateBoxTimers();
+            adLog.innerText = "✅ " + minutes + " dəqiqəlik qutu açıldı! +" + reward + " coin";
+        } catch (err) {
+            adLog.innerText = "❌ Qutu reward xətası: " + err.message;
+            btn.disabled = false;
+        }
+    }
+
+    function updateBoxTimers() { updateSingleTimer(2); updateSingleTimer(5); updateSingleTimer(10); }
+
+    function updateSingleTimer(minutes) {
+        const timer = document.getElementById("timer" + minutes);
+        const button = document.getElementById("boxBtn" + minutes);
+        if (!profile) { timer.innerText = "Yüklənir..."; button.disabled = true; return; }
+        const key = "box_" + minutes + "_ready_at";
+        const readyAt = Number(profile[key]) || 0;
+        const now = Date.now();
+        if (now >= readyAt) { timer.innerText = "✅ Hazırdır"; button.disabled = false; }
+        else {
+            const diff = readyAt - now;
+            const min = Math.floor(diff / 60000);
+            const sec = Math.floor((diff % 60000) / 1000);
+            timer.innerText = min + " dəq " + (sec < 10 ? "0" : "") + sec + " san";
+            button.disabled = true;
+        }
+    }
+
+    /* ════════ MINING ════════ */
+    async function loadMiningPower() {
+        try {
+            if (!hasTelegramInitData()) { miningLog.innerText = "Mining üçün PLAY ilə aç."; return; }
+            const data = await miningApi("load_power");
+            totalPowerText.innerText = data.total_power || 0;
+            miningLog.innerText = "Mining Power yükləndi.";
+        } catch (err) { miningLog.innerText = "❌ Mining xətası: " + err.message; }
+    }
+
+    async function claimMiningIncome() {
+        try {
+            const data = await miningApi("claim_power_income");
+            const claim = data.claim || {};
+            totalPowerText.innerText = data.total_power || claim.total_power || 0;
+            lastIncomeText.innerText = claim.income || 0;
+            if (claim.income && Number(claim.income) > 0) {
+                await loadProfile();
+                miningLog.innerText = "✅ Mining income: +" + claim.income + " coin";
+            } else {
+                miningLog.innerText = claim.message || ("Qalan: " + (claim.seconds_left || 0) + " san");
+            }
+        } catch (err) { miningLog.innerText = "❌ Mining claim xətası: " + err.message; }
+    }
+
+    /* ════════ REFERRAL ════════ */
+    function renderReferralStats(stats) {
+        if (!telegramUser) return;
+        refLink.innerText = getMyReferralLink();
+        refCount.innerText = stats?.referral_count || 0;
+        refEarned.innerText = stats?.referral_earned_coins || 0;
+        refLog.innerText = "Referal linkin hazırdır.";
+    }
+
+    async function copyReferralLink() {
+        const link = getMyReferralLink();
+        if (!link) { alert("Telegram ID yüklənməyib."); return; }
+        try { await navigator.clipboard.writeText(link); refLog.innerText = "✅ Referal link kopyalandı."; }
+        catch (e) { alert(link); }
+    }
+
+    /* ════════ KARTLAR ════════ */
+    function renderMyCards(cards) {
+        myCardsCache = cards || [];
+        myCards.innerHTML = "";
+        if (myCardsCache.length === 0) {
+            myCards.innerHTML = `<div class="listing-card"><div class="card-art">🎴</div><h3>Kart yoxdur</h3><p>Starter kart serverdən veriləcək. Səhifəni yenilə.</p></div>`;
+            return;
+        }
+        myCardsCache.forEach((item, index) => {
+            const t = item.tg_card_templates || {};
+            const div = document.createElement("div");
+            const isActive = selectedCard && selectedCard.user_card_id === item.id;
+            div.className = "card-item" + (isActive ? " active" : "");
+            const rarity = String(t.rarity || "rare").toLowerCase();
+            const img = t.image_url ? `<img src="${escapeHtml(t.image_url)}" alt="${escapeHtml(t.name || "Card")}" onerror="this.style.display='none';this.parentElement.innerHTML='🎴';">` : "🎴";
+            div.innerHTML = `<div class="card-art">${img}</div><h3>${escapeHtml(t.name || "Cyber Card")}</h3><span class="rarity ${rarity}">${escapeHtml(t.rarity || "rare")}</span><p>Boost: ${Number(t.click_boost) || 1}x</p><p class="power-text">Power: ${Number(t.mining_power) || 0}</p><p>Level: ${Number(item.level) || 1}</p><div class="input-row"><input type="number" min="1" id="price_${String(item.id).replaceAll("_", "")}" placeholder="Qiymət"><button class="btn btn-gold" onclick="event.stopPropagation(); listCardForSale('${item.id}')">Sat</button></div>`;
+            div.addEventListener("click", () => {
+                selectedCard = { user_card_id: item.id, template_id: t.id, name: t.name, boost: Number(t.click_boost) || 1 };
+                selectedBoost = Number(t.click_boost) || 1;
+                renderMyCards(myCardsCache);
+                updateUI();
+                cardLog.innerText = "Seçildi: " + (t.name || "Cyber Card") + " / Boost: " + selectedBoost + "x";
+            });
+            myCards.appendChild(div);
+            if (index === 0 && !selectedCard) {
+                selectedCard = { user_card_id: item.id, template_id: t.id, name: t.name, boost: Number(t.click_boost) || 1 };
+                selectedBoost = Number(t.click_boost) || 1;
+                updateUI();
+            }
+        });
+    }
+
+    async function listCardForSale(userCardId) {
+        const safeId = String(userCardId).replaceAll("_", "");
+        const input = document.getElementById("price_" + safeId);
+        const price = Number(input ? input.value : 0);
+        if (!price || price <= 0) { alert("Düzgün qiymət yaz."); return; }
+        try {
+            const data = await api("list_card_for_sale", { user_card_id: Number(userCardId), price });
+            renderMyCards(data.myCards || []);
+            saveFirebaseMarketEvent("list_card_for_sale", { user_card_id: Number(userCardId), price });
+            cardLog.innerText = "✅ Kart satışa qoyuldu.";
+        } catch (err) { cardLog.innerText = "❌ Satış xətası: " + err.message; }
+    }
+
+    async function refreshAll() {
+        try {
+            const data = await api("init", { referrer_id: getReferrerIdFromStartParam() });
+            telegramUser = data.user;
+            applyProfile(data.profile);
+            renderMyCards(data.myCards || []);
+            renderReferralStats(data.referralStats);
+            updateBoxTimers();
+            clickLog.innerText = "✅ Yeniləndi.";
+        } catch (err) { clickLog.innerText = "❌ Yeniləmə xətası: " + err.message; }
+    }
+
+    function escapeHtml(text) {
+        return String(text).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    }
+
+    // Hər 5 saniyədə pending click-ləri göndər
+    setInterval(() => {
+        if (pendingClicks > 0 && hasTelegramInitData()) claimClickReward(true);
+    }, 5000);
+
     init();
 </script>
-<!-- ✅ BEARBEE STATS SYNC PATCH -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
-<script>
-(function(){
-    var STATS_FIREBASE_CONFIG = {
-        apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
-        authDomain: "racegane.firebaseapp.com",
-        databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "racegane",
-        storageBucket: "racegane.firebasestorage.app",
-        messagingSenderId: "477893876737",
-        appId: "1:477893876737:web:1b561bb3224b0086c63400"
-    };
-
-    var statsRdb = null;
-    var statsReady = false;
-
-    function initStatsDb(){
-        try{
-            if(!window.firebase){
-                console.log("Firebase SDK yoxdur");
-                return;
-            }
-
-            var statsApp = null;
-
-            for(var i = 0; i < firebase.apps.length; i++){
-                if(firebase.apps[i].name === "bearbeeStatsApp"){
-                    statsApp = firebase.apps[i];
-                    break;
-                }
-            }
-
-            if(!statsApp){
-                statsApp = firebase.initializeApp(STATS_FIREBASE_CONFIG, "bearbeeStatsApp");
-            }
-
-            statsRdb = firebase.database(statsApp);
-            statsReady = true;
-
-            console.log("✅ Statistika Firebase hazırdır");
-        }catch(e){
-            console.log("❌ Statistika Firebase xətası:", e);
-        }
-    }
-
-    function getSafeTelegramUser(){
-        try{
-            if(typeof telegramUser !== "undefined" && telegramUser){
-                return telegramUser;
-            }
-        }catch(e){}
-
-        try{
-            return window.Telegram?.WebApp?.initDataUnsafe?.user || null;
-        }catch(e){
-            return null;
-        }
-    }
-
-    function getSafeCoins(){
-        try{
-            if(typeof coins !== "undefined"){
-                return Number(coins) || 0;
-            }
-        }catch(e){}
-
-        return 0;
-    }
-
-    function getSafeEnergy(){
-        try{
-            if(typeof energy !== "undefined"){
-                return Number(energy) || 0;
-            }
-        }catch(e){}
-
-        return 0;
-    }
-
-    function getSafeAdPoints(){
-        try{
-            if(typeof adPoints !== "undefined"){
-                return Number(adPoints) || 0;
-            }
-        }catch(e){}
-
-        return 0;
-    }
-
-    window.syncBearbeeStats = function(extra){
-        try{
-            if(!statsReady || !statsRdb){
-                return;
-            }
-
-            var user = getSafeTelegramUser();
-
-            if(!user || !user.id){
-                console.log("Telegram user yoxdur, stats yazılmadı");
-                return;
-            }
-
-            var uid = String(user.id);
-
-            var fullName = [
-                user.first_name || "",
-                user.last_name || ""
-            ].join(" ").trim();
-
-            var data = {
-                name: fullName || user.username || "Adsız istifadəçi",
-                username: user.username || "",
-                telegram_id: Number(user.id),
-                coins: getSafeCoins(),
-                energy: getSafeEnergy(),
-                ad_points: getSafeAdPoints(),
-                last_active_at: Date.now()
-            };
-
-            if(extra && typeof extra === "object"){
-                Object.assign(data, extra);
-            }
-
-            statsRdb.ref("users/" + uid).update(data);
-
-            console.log("✅ Stats yazıldı:", data);
-        }catch(e){
-            console.log("❌ Stats sync xətası:", e);
-        }
-    };
-
-    initStatsDb();
-
-    var waitTimer = setInterval(function(){
-        var user = getSafeTelegramUser();
-
-        if(user && user.id){
-            window.syncBearbeeStats();
-            clearInterval(waitTimer);
-        }
-    }, 1000);
-
-    try{
-        if(typeof applyProfile === "function"){
-            var oldApplyProfile = applyProfile;
-
-            applyProfile = function(p){
-                oldApplyProfile(p);
-
-                setTimeout(function(){
-                    window.syncBearbeeStats();
-                }, 300);
-            };
-        }
-    }catch(e){
-        console.log("applyProfile patch xətası:", e);
-    }
-
-    try{
-        if(typeof saveFirebaseClickReward === "function"){
-            var oldSaveFirebaseClickReward = saveFirebaseClickReward;
-
-            saveFirebaseClickReward = async function(clicks, rewardCoins){
-                try{
-                    await oldSaveFirebaseClickReward(clicks, rewardCoins);
-                }catch(e){
-                    console.log("Köhnə click log xətası:", e);
-                }
-
-                try{
-                    window.syncBearbeeStats({
-                        last_clicks: Number(clicks) || 0,
-                        last_click_reward: Number(rewardCoins) || 0,
-                        last_click_at: Date.now()
-                    });
-
-                    var user = getSafeTelegramUser();
-
-                    if(statsRdb && user && user.id){
-                        var uid = String(user.id);
-
-                        statsRdb.ref("users/" + uid + "/total_clicks").transaction(function(current){
-                            return (Number(current) || 0) + (Number(clicks) || 0);
-                        });
-
-                        statsRdb.ref("users/" + uid + "/total_click_coins").transaction(function(current){
-                            return (Number(current) || 0) + (Number(rewardCoins) || 0);
-                        });
-                    }
-                }catch(e){
-                    console.log("Click stats yazma xətası:", e);
-                }
-            };
-        }
-    }catch(e){
-        console.log("saveFirebaseClickReward patch xətası:", e);
-    }
-
-    setInterval(function(){
-        window.syncBearbeeStats();
-    }, 10000);
-})();
-                </script>
 </body>
 </html>
