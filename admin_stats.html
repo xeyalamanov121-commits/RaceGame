@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<title>Admin - Bot Statistikası</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h2 { margin-bottom: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    tr.total-row td { font-weight: bold; }
+    #chartContainer { width: 80%; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<h2>Admin - Telegram Bot Statistikası</h2>
+
+<table id="statsTable">
+    <thead>
+        <tr>
+            <th>İstifadəçi Adı</th>
+            <th>Token Balansı</th>
+            <th>Əməliyyat Sayı</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<div id="chartContainer">
+    <canvas id="tokenChart"></canvas>
+</div>
+
+<script type="module">
+  // Admin Telegram ID-si
+  const adminId = "8591374417";
+  const userId = prompt("Telegram ID-ni daxil edin:");
+  if(userId !== adminId){
+      alert("Giriş icazəsi yoxdur!");
+      document.body.innerHTML = "<h2>Access Denied</h2>";
+      throw new Error("Not admin");
+  }
+
+  // Firebase konfiqurasiyası
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnbIgRIgQn7rO06epoPnHKYlzpE8wQJIQ",
+    authDomain: "racegane.firebaseapp.com",
+    databaseURL: "https://racegane-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "racegane",
+    storageBucket: "racegane.firebasestorage.app",
+    messagingSenderId: "477893876737",
+    appId: "1:477893876737:web:1b561bb3224b0086c63400"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const tbody = document.querySelector("#statsTable tbody");
+  const ctx = document.getElementById('tokenChart').getContext('2d');
+
+  let chart;
+
+  // Firebase-də 'users' node-u
+  const usersRef = ref(db, "users");
+  onValue(usersRef, (snapshot) => {
+      tbody.innerHTML = "";
+      const users = snapshot.val();
+      let totalCoins = 0;
+
+      const chartLabels = [];
+      const chartData = [];
+
+      for (const userId in users) {
+          const user = users[userId];
+          const balance = user.balance || 0;
+          const transactions = user.transactions ? user.transactions.length : 0;
+          totalCoins += balance;
+
+          // Cədvəl
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${user.username}</td><td>${balance}</td><td>${transactions}</td>`;
+          tbody.appendChild(row);
+
+          // Qrafik üçün
+          chartLabels.push(user.username);
+          chartData.push(balance);
+      }
+
+      // Ümumi tokenlər
+      const totalRow = document.createElement("tr");
+      totalRow.classList.add("total-row");
+      totalRow.innerHTML = `<td>Ümumi Tokenlər</td><td>${totalCoins}</td><td>-</td>`;
+      tbody.appendChild(totalRow);
+
+      // Chart.js bar chart
+      if(chart) chart.destroy();
+      chart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+              labels: chartLabels,
+              datasets: [{
+                  label: 'Token Balansı',
+                  data: chartData,
+                  backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                  borderColor: 'rgba(54, 162, 235, 1)',
+                  borderWidth: 1
+              }]
+          },
+          options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true } }
+          }
+      });
+  });
+</script>
+
+</body>
+</html>
